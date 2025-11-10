@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  name           String?
+  email          String    @unique
+  emailVerified  DateTime?
+  image          String?
+  password       String?
+  role           String    @default("user")
+  level          UserLevel @default(Beginner)
+  topics         String[]
+  nativeLanguage String    @default("English")
+  goals          String?
+  createdAt      DateTime  @default(now())
+
+  words    Word[]
+  reviews  ReviewSession[]
+  quizzes  Quiz[]
+  accounts Account[]
+  sessions Session[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @id
+  userId       String
+  expires      DateTime @db.Timestamp(6)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+enum UserLevel {
+  Beginner
+  Intermediate
+  Advanced
+}
+
+model Word {
+  id            String          @id @default(cuid())
+  word          String          @unique
+  userId        String
+  user          User            @relation(fields: [userId], references: [id])
+  cefrLevel     DifficultyLevel @default(A1)
+  topic         String
+  pronunciation String
+  masteryLevel  MasteryLevel
+  audioUrl      String?
+  tags          String[]        @default([])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  meanings WordMeaning[]
+  reviews  ReviewSession[]
+  quizzes  Quiz[]
+}
+
+enum MasteryLevel {
+  New
+  Learning
+  Familiar
+  Mastered
+}
+
+model WordMeaning {
+  id               String   @id @default(cuid())
+  wordId           String
+  word             Word     @relation(fields: [wordId], references: [id])
+  definition       String
+  partOfSpeech     String
+  exampleSentences String[]
+  synonyms         String[]
+  antonyms         String[]
+  usageNotes       String[]
+}
+
+enum DifficultyLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+}
+
+model Quiz {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  wordId    String
+  word      Word     @relation(fields: [wordId], references: [id])
+  correct   Boolean
+  createdAt DateTime @default(now())
+
+  questions QuizQuestion[]
+}
+
+model QuizQuestion {
+  id String @id @default(cuid())
+
+  quizId String
+  quiz   Quiz   @relation(fields: [quizId], references: [id])
+
+  question   String
+  type       QuestionType
+  options    String[]     @default([])
+  leftItems  String[]     @default([])
+  rightItems String[]     @default([])
+  answer     Json?
+  createdAt  DateTime     @default(now())
+}
+
+enum QuestionType {
+  MultipleChoice
+  Matching
+  FillInBlank
+}
+
+model ReviewSession {
+  id        String   @id @default(cuid())
+  wordId    String
+  word      Word     @relation(fields: [wordId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  scheduledAt  DateTime
+  completedAt  DateTime
+  intervalDays Int
+}
