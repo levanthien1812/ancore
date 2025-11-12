@@ -6,7 +6,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="my-auto">
+    <div className="h-screen flex flex-col justify-center">
       <main>{children}</main>
     </div>
   );

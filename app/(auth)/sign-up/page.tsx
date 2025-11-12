@@ -8,10 +8,10 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/public/images/logo-ancore-cut.png";
-import CredentialsSigninForm from "./credentials-signin-form";
 import { Metadata } from "next";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import CredentialsSignupForm from "./credentials-signup-form";
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -27,7 +27,7 @@ const SignInPage = async (props: {
   const session = await auth();
 
   if (session && session.user) {
-    return redirect(callbackUrl || "/");
+    return redirect(callbackUrl || "sign-in");
   }
 
   return (
@@ -37,11 +37,11 @@ const SignInPage = async (props: {
           <Link href={"/"}>
             <Image src={Logo} height={50} alt="ancore-logo" />
           </Link>
-          <CardTitle className="text-3xl">Sign In</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardTitle className="text-3xl">Sign Up</CardTitle>
+          <CardDescription>Create a new account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <CredentialsSigninForm />
+          <CredentialsSignupForm />
         </CardContent>
       </Card>
     </div>
