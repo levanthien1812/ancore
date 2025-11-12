@@ -3,6 +3,7 @@ import Link from "next/link";
 import React from "react";
 import Logo from "@/public/images/logo-ancore-cut.png";
 import UserButton from "./user-button";
+import AddWord from "../../word/add-word";
 
 const Header = () => {
   return (
@@ -13,6 +14,7 @@ const Header = () => {
             <Image src={Logo} height={50} alt="ancore-logo" />
           </Link>
         </div>
+        <AddWord />
         <UserButton />
       </div>
     </header>

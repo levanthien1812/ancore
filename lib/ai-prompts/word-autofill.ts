@@ -1,11 +1,18 @@
 import type { User } from "@/lib/generated/prisma/client";
 
 export function buildWordAutofillPrompt(word: string, user: User): string {
+  let userInfo;
+  if (user.topics && user.topics.length > 0) {
+    userInfo = `The user is a ${
+      user.level
+    } learner interested in topics: ${user.topics.join(", ")}.`;
+  } else {
+    userInfo = `The user is a ${user.level} learner.`;
+  }
+
   return `
     You are an English learning assistant.
-    The user is a ${
-      user.level
-    } learner interested in topics: ${user.topics.join(", ")}.
+    ${userInfo}
     Given the word "${word}", return complete learning information in JSON format.
 
     Respond ONLY with valid JSON that matches this structure:

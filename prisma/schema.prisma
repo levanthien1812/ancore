@@ -86,8 +86,7 @@ model Word {
   userId        String
   user          User            @relation(fields: [userId], references: [id])
   cefrLevel     DifficultyLevel @default(A1)
-  topic         String
-  pronunciation String
+  pronunciation String?
   masteryLevel  MasteryLevel
   audioUrl      String?
   tags          String[]        @default([])
@@ -111,11 +110,11 @@ model WordMeaning {
   wordId           String
   word             Word     @relation(fields: [wordId], references: [id])
   definition       String
-  partOfSpeech     String
-  exampleSentences String[]
-  synonyms         String[]
-  antonyms         String[]
-  usageNotes       String[]
+  partOfSpeech     String?
+  exampleSentences String[] @default([])
+  synonyms         String[] @default([])
+  antonyms         String[] @default([])
+  usageNotes       String?
 }
 
 enum DifficultyLevel {

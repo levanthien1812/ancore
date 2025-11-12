@@ -25,20 +25,20 @@ export const config = {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await prisma.user.findFirst({
           where: {
             email: credentials.email as string,
           },
         });
 
-        if (user && user.password) {
+        if (user === null) {
+          return null;
+        }
+
+        if (user.password) {
           if (!compareSync(credentials.password as string, user.password)) {
             return null;
           }
-        }
-
-        if (user === null) {
-          return null;
         }
 
         return user;
@@ -46,11 +46,15 @@ export const config = {
     }),
   ],
   callbacks: {
-    async session({ session, user, trigger, token }) {
-      session.user.id = user.id;
-
-      if (trigger === "update") {
-        session.user.name = token.name;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token.id) {
+        session.user.id = token.id as string;
       }
       return session;
     },
