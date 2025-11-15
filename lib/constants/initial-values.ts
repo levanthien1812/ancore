@@ -1,13 +1,13 @@
-import { Word, WordMeaning } from "../generated/prisma/client";
+import type { Word, WordMeaning } from "../generated/prisma/client";
 
 export const INITIAL_MEANING: WordMeaning = {
   id: "",
   wordId: "",
   definition: "",
   partOfSpeech: "",
-  exampleSentences: [],
-  synonyms: [],
-  antonyms: [],
+  exampleSentences: "",
+  synonyms: "",
+  antonyms: "",
   usageNotes: "",
 };
 

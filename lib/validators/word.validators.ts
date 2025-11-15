@@ -1,27 +1,39 @@
-import { DifficultyLevel, MasteryLevel } from "../generated/prisma/enums";
 import z from "zod";
+import { CEFRLevel, MasteryLevel } from "../constants/enums";
 
 export const saveWordMeaningValidator = z.object({
-  definition: z.string().min(1, "Definition is required."),
-  partOfSpeech: z.string().optional(),
-  exampleSentences: z.array(z.string()).optional(),
-  synonyms: z.array(z.string()).optional(),
-  antonyms: z.array(z.string()).optional(),
-  usageNotes: z.string().optional(),
+  definition: z.string().trim().min(1, "Definition is required."),
+  partOfSpeech: z.string().trim().optional(),
+  exampleSentences: z.string().trim().optional(),
+  synonyms: z.string().trim().optional(),
+  antonyms: z.string().trim().optional(),
+  usageNotes: z.string().trim().optional(),
 });
 
 export const saveWordValidator = z.object({
-  word: z.string().min(1, "Word is required."),
-  pronunciation: z.string().optional(),
-  cefrLevel: z.nativeEnum(DifficultyLevel).default(DifficultyLevel.A1),
-  topic: z.string().optional(),
+  word: z.string().trim().min(1, "Word is required."),
+  pronunciation: z.string().trim().optional(),
+  cefrLevel: z.nativeEnum(CEFRLevel).default(CEFRLevel.A1),
+  topic: z.string().trim().optional(),
   masteryLevel: z.nativeEnum(MasteryLevel).default(MasteryLevel.New),
-  audioUrl: z.string().optional(),
+  audioUrl: z
+    .string()
+    .trim()
+    .url("Please enter a valid URL.")
+    .optional()
+    .or(z.literal("")),
   tags: z
     .string()
     .optional()
     .transform((val) => (val ? val.split(",").map((tag) => tag.trim()) : [])),
-  meanings: z
-    .array(saveWordMeaningValidator)
-    .min(1, "At least one meaning is required."),
+  meanings: z.preprocess((val) => {
+    if (typeof val === "string") {
+      try {
+        return JSON.parse(val);
+      } catch (e) {
+        return val; // Return original string if parsing fails
+      }
+    }
+    return val;
+  }, z.array(saveWordMeaningValidator).min(1, "At least one meaning is required.")),
 });

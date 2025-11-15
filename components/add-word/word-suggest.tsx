@@ -8,27 +8,39 @@ import {
   CommandItem,
   CommandList,
 } from "../ui/command";
+import { debounce } from "@/lib/utils/debounce";
 
 interface WordSuggestProps {
   enteredWord: string;
   setEnteredWord: (value: string) => void;
+  existingWord?: string;
 }
 
-const WordSuggest = ({ enteredWord, setEnteredWord }: WordSuggestProps) => {
+const WordSuggest = ({
+  enteredWord,
+  setEnteredWord,
+  existingWord,
+}: WordSuggestProps) => {
   const [suggestedWordList, setSuggestedWordList] = useState<string[]>([]);
-  const [isChosen, setIsChosen] = useState(false);
+  const [isChosen, setIsChosen] = useState(existingWord ? true : false);
+
+  const handleSuggest = async (value: string) => {
+    const response = await fetch(`/api/datamuse?w=${value}`);
+    if (response.ok) {
+      const data = await response.json();
+      setSuggestedWordList(data);
+    } else {
+      setSuggestedWordList([]);
+    }
+  };
+
+  const debouncedSuggest = debounce(handleSuggest, 500);
 
   const handleWordChange = async (value: string) => {
     setEnteredWord(value);
     setIsChosen(false);
     if (value.trim().length > 0) {
-      const response = await fetch(`/api/datamuse?w=${value}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestedWordList(data);
-      } else {
-        setSuggestedWordList([]);
-      }
+      debouncedSuggest(value);
     } else {
       setSuggestedWordList([]);
     }
