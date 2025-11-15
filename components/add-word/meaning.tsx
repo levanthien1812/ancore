@@ -1,5 +1,4 @@
 "use client";
-import { WordMeaning } from "@/lib/generated/prisma/client";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -10,24 +9,23 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
-
+import { UseFormRegister } from "react-hook-form";
+import { WordWithMeanings } from "./add-word-form";
+import FieldError from "../shared/field-error";
 interface MeaningProps {
-  meaning: WordMeaning;
   index: number;
   onRemove: (index: number) => void;
-  setMeaning: (meaning: WordMeaning) => void;
+  register: UseFormRegister<WordWithMeanings>;
+  errors: string[] | undefined;
 }
 
-const Meaning = ({ meaning, index, onRemove, setMeaning }: MeaningProps) => {
+const Meaning = ({ index, onRemove, register, errors }: MeaningProps) => {
   const handleRemove = () => {
     onRemove(index);
   };
 
   return (
-    <div
-      className="border border-dashed rounded-lg p-4 grid gap-3"
-      key={meaning.id}
-    >
+    <div className="border border-border-2 border-dashed rounded-lg p-4 grid gap-3">
       <div className="flex justify-between items-center">
         <p className="text-lg">Meaning {index + 1}:</p>
         <Button
@@ -39,18 +37,15 @@ const Meaning = ({ meaning, index, onRemove, setMeaning }: MeaningProps) => {
           Remove
         </Button>
       </div>
+      {errors && <FieldError error={errors.join("\n")} />}
       <div className="grid gap-1">
         <Label htmlFor="definition" className="text-right">
           Definition
         </Label>
         <Textarea
           id="definition"
-          name="definition"
           required
-          value={meaning.definition}
-          onChange={(event) => {
-            setMeaning({ ...meaning, definition: event.target.value });
-          }}
+          {...register(`meanings.${index}.definition`)}
         />
       </div>
       <div className="grid gap-1">
@@ -59,15 +54,8 @@ const Meaning = ({ meaning, index, onRemove, setMeaning }: MeaningProps) => {
         </Label>
         <Textarea
           id="example"
-          name="example"
           placeholder="e.g. An apple a day keeps the doctor away."
-          value={meaning.exampleSentences.join("\n")}
-          onChange={(event) => {
-            setMeaning({
-              ...meaning,
-              exampleSentences: event.target.value.split("\n"),
-            });
-          }}
+          {...register(`meanings.${index}.exampleSentences`)}
         />
       </div>
       <Accordion type="single" collapsible className="w-full">
@@ -83,14 +71,7 @@ const Meaning = ({ meaning, index, onRemove, setMeaning }: MeaningProps) => {
                 </Label>
                 <Input
                   id="part-of-speech"
-                  name="part-of-speech"
-                  value={meaning.partOfSpeech || ""}
-                  onChange={(event) => {
-                    setMeaning({
-                      ...meaning,
-                      partOfSpeech: event.target.value,
-                    });
-                  }}
+                  {...register(`meanings.${index}.partOfSpeech`)}
                 />
               </div>
               <div className="grid gap-1">
@@ -99,14 +80,8 @@ const Meaning = ({ meaning, index, onRemove, setMeaning }: MeaningProps) => {
                 </Label>
                 <Input
                   id="synonyms"
-                  name="synonyms"
-                  value={meaning.synonyms.join(", ")}
-                  onChange={(event) => {
-                    setMeaning({
-                      ...meaning,
-                      synonyms: event.target.value.split(", "),
-                    });
-                  }}
+                  {...register(`meanings.${index}.synonyms`)}
+                  placeholder="synonym 1, synonym 2, synonym 3"
                 />
               </div>
               <div className="grid gap-1">
@@ -115,14 +90,8 @@ const Meaning = ({ meaning, index, onRemove, setMeaning }: MeaningProps) => {
                 </Label>
                 <Input
                   id="antonyms"
-                  name="antonyms"
-                  value={meaning.antonyms.join(", ")}
-                  onChange={(event) => {
-                    setMeaning({
-                      ...meaning,
-                      antonyms: event.target.value.split(", "),
-                    });
-                  }}
+                  {...register(`meanings.${index}.antonyms`)}
+                  placeholder="antonym 1, antonym 2, antonym 3"
                 />
               </div>
               <div className="grid gap-1">
@@ -131,14 +100,7 @@ const Meaning = ({ meaning, index, onRemove, setMeaning }: MeaningProps) => {
                 </Label>
                 <Textarea
                   id="user-notes"
-                  name="user-notes"
-                  value={meaning.usageNotes || ""}
-                  onChange={(event) => {
-                    setMeaning({
-                      ...meaning,
-                      usageNotes: event.target.value,
-                    });
-                  }}
+                  {...register(`meanings.${index}.usageNotes`)}
                 />
               </div>
             </div>

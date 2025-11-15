@@ -106,14 +106,14 @@ enum MasteryLevel {
 }
 
 model WordMeaning {
-  id               String   @id @default(cuid())
+  id               String  @id @default(cuid())
   wordId           String
-  word             Word     @relation(fields: [wordId], references: [id])
+  word             Word    @relation(fields: [wordId], references: [id])
   definition       String
   partOfSpeech     String?
-  exampleSentences String[] @default([])
-  synonyms         String[] @default([])
-  antonyms         String[] @default([])
+  exampleSentences String?
+  synonyms         String?
+  antonyms         String?
   usageNotes       String?
 }
 
