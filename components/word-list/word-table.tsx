@@ -6,13 +6,12 @@ import {
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHeader,
   TableHead,
   TableRow,
 } from "../ui/table";
 import WordMasteryLevel from "./word-mastery-level";
-import { MasteryLevel } from "@/lib/constants/enums";
+import { MASTERY_LEVELS, MasteryLevel } from "@/lib/constants/enums";
 import WordPronunciation from "./word-pronunciation";
 import WordDefinition from "./word-definition";
 import WordTitle from "./word-title";
@@ -40,6 +39,14 @@ import {
 } from "../ui/dropdown-menu";
 import { Input } from "../ui/input";
 import { format } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const WordTable = ({
   words,
@@ -173,15 +180,33 @@ const WordTable = ({
 
   return (
     <div>
-      <div className="flex items-center py-4">
+      <div className="flex items-center gap-2 py-4">
         <Input
           placeholder="Filter words..."
           value={(table.getColumn("word")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("word")?.setFilterValue(event.target.value)
           }
-          className="max-w-sm"
+          className="w-52"
         />
+        <Select
+          onValueChange={(value) =>
+            table.getColumn("masteryLevel")?.setFilterValue(value)
+          }
+        >
+          <SelectTrigger className="">
+            <SelectValue placeholder="Select CEFR level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {MASTERY_LEVELS.map((level) => (
+                <SelectItem key={level} value={level}>
+                  {level}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">

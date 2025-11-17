@@ -1,4 +1,5 @@
 import type { Word, WordMeaning } from "../generated/prisma/client";
+import { WordsCountByMasteryLevel } from "../type";
 
 export const INITIAL_MEANING: WordMeaning = {
   id: "",
@@ -22,4 +23,11 @@ export const INITIAL_WORD: Word = {
   tags: [],
   userId: "",
   audioUrl: "",
+};
+
+export const defaultWordsCountByMasteryLevel: WordsCountByMasteryLevel = {
+  New: 0,
+  Learning: 0,
+  Familiar: 0,
+  Mastered: 0,
 };
