@@ -1,10 +1,17 @@
 import { User } from "@/lib/generated/prisma/client";
 
 export function buildWordOfTheDayPrompt(user: User): string {
-  return `
-    Suggest one English "Word of the Day" suitable for a ${
+  let userInfo;
+  if (user.topics && user.topics.length > 0) {
+    userInfo = `a ${
       user.level
-    } learner interested in ${user.topics.join(", ")}.
+    } learner interested in topics: ${user.topics.join(", ")}.`;
+  } else {
+    userInfo = `a ${user.level} learner.`;
+  }
+
+  return `
+    Suggest one English "Word of the Day" suitable for a ${userInfo}.
     The word should be educational, not slang or a proper noun.
 
     Respond ONLY in valid JSON matching this structure:
@@ -12,12 +19,11 @@ export function buildWordOfTheDayPrompt(user: User): string {
     "word": "",
     "pronunciation": "",
     "cefrLevel": "",
-    "topic": "",
     "meanings": [
         {
         "definition": "",
         "partOfSpeech": "",
-        "exampleSentences": []
+        "exampleSentences": "<example_1 \n example_2 \n example_3>",
         }
     ]
     }
