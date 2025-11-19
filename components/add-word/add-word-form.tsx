@@ -22,6 +22,7 @@ import { saveWord } from "@/lib/actions/word.actions";
 import { CEFR_LEVELS, MASTERY_LEVELS } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { Volume2Icon } from "lucide-react";
+import { WordOfTheDay } from "../home/word-of-the-day";
 
 const initialState = {
   success: false,
@@ -36,13 +37,31 @@ export type WordWithMeanings = Word & {
 interface AddWordFormProps {
   word?: WordWithMeanings;
   onClose: () => void;
+  wordOfTheDay?: WordOfTheDay;
 }
 
-const AddWordForm = ({ word, onClose }: AddWordFormProps) => {
-  const [enteredWord, setEnteredWord] = useState(word?.word || "");
+const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
+  const [enteredWord, setEnteredWord] = useState(
+    word?.word || wordOfTheDay?.word || ""
+  );
+  const defaultValues = (): WordWithMeanings => {
+    if (word) return word;
+    if (wordOfTheDay) {
+      return {
+        ...INITIAL_WORD,
+        ...wordOfTheDay,
+        meanings: wordOfTheDay.meanings.map((meaning) => ({
+          ...INITIAL_MEANING,
+          ...meaning,
+        })),
+      } as WordWithMeanings;
+    }
+    return { ...INITIAL_WORD, meanings: [INITIAL_MEANING] };
+  };
+
   const { register, setValue, handleSubmit, reset, control } =
     useForm<WordWithMeanings>({
-      defaultValues: word || { ...INITIAL_WORD, meanings: [INITIAL_MEANING] },
+      defaultValues: defaultValues(),
     });
   const { fields, append, remove } = useFieldArray({
     control,
@@ -149,7 +168,7 @@ const AddWordForm = ({ word, onClose }: AddWordFormProps) => {
         <WordSuggest
           enteredWord={enteredWord}
           setEnteredWord={handleWordChange}
-          existingWord={word?.word}
+          existingWord={word?.word || wordOfTheDay?.word}
         />
 
         {state.success === false && !state.errors && (
@@ -225,6 +244,7 @@ const AddWordForm = ({ word, onClose }: AddWordFormProps) => {
             index={index}
             onRemove={handleRemoveMeaning}
             register={register}
+            setValue={setValue}
             errors={state.errors?.meanings}
           />
         ))}

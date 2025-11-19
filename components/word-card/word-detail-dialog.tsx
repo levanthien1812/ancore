@@ -16,6 +16,7 @@ import { Popover, PopoverContent } from "../ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import AddWordForm from "../add-word/add-word-form";
+import AddWord from "../add-word/add-word";
 
 const WordDetailDialog = ({ word }: { word: WordWithMeanings }) => {
   const [api, setApi] = useState<CarouselApi | null>(null);
@@ -50,13 +51,19 @@ const WordDetailDialog = ({ word }: { word: WordWithMeanings }) => {
           <div className="text-4xl font-bold mt-2 text-white">{word.word}</div>
         </div>
         <div className="flex gap-1 justify-end">
-          <Button
-            variant={"outline"}
-            size={"icon"}
-            onClick={() => setIsEditing(true)}
-          >
-            <PenIcon />
-          </Button>
+          <AddWord
+            word={word}
+            triggerButton={
+              <Button
+                variant={"outline"}
+                size={"icon"}
+                onClick={() => setIsEditing(true)}
+              >
+                <PenIcon />
+              </Button>
+            }
+          />
+
           <Popover>
             <PopoverTrigger asChild>
               <Button variant={"outline"} size={"icon"}>
@@ -104,15 +111,6 @@ const WordDetailDialog = ({ word }: { word: WordWithMeanings }) => {
           </div>
         )}
       </Carousel>
-
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit word</DialogTitle>
-          </DialogHeader>
-          <AddWordForm onClose={() => setIsEditing(false)} word={word} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

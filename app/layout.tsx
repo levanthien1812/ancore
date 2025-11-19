@@ -3,6 +3,7 @@ import { Karma } from "next/font/google";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import Providers from "./providers";
+import { QueryProvider } from "@/lib/query-provider";
 
 const karmaSans = Karma({
   subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${karmaSans.className} antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <QueryProvider>{children}</QueryProvider>
+        </Providers>
       </body>
     </html>
   );

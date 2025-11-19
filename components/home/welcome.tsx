@@ -6,6 +6,7 @@ import { CircleQuestionMark, Plus, SquareStar } from "lucide-react";
 import { getLearnStreak } from "@/lib/actions/word.actions";
 import Image from "next/image";
 import fireGpt from "@/public/images/fire-gpt.png";
+import AddWord from "../add-word/add-word";
 
 const Welcome = () => {
   const [wordsLearned, setWordsLearned] = React.useState(0);
@@ -25,7 +26,7 @@ const Welcome = () => {
   const firstName = user.name?.split(" ")[0] || "You";
 
   return (
-    <div className=" flex flex-col bg-background-2 p-8 rounded-2xl">
+    <div className=" flex flex-col bg-background-2 p-8 rounded-2xl h-full">
       <p className="text-[40px] font-bold text-primary">👋Hi {firstName}!</p>
       <p className="text-xl mt-2">
         You&apos;ve learned{" "}
@@ -40,9 +41,14 @@ const Welcome = () => {
       </p>
       <div className="flex justify-between mt-auto items-end">
         <div className="flex flex-col gap-2">
-          <Button className="justify-start">
-            <Plus className="text-primary-2" /> Add word
-          </Button>
+          <AddWord
+            triggerButton={
+              <Button className="justify-start">
+                <Plus className="text-primary-2" /> Add word
+              </Button>
+            }
+          />
+
           <Button className="justify-start">
             <SquareStar className="text-primary-2" /> Review now
           </Button>
@@ -50,7 +56,7 @@ const Welcome = () => {
             <CircleQuestionMark className="text-primary-2" /> Take quit
           </Button>
         </div>
-        <Image src={fireGpt} alt="fire" height={160} />
+        <Image src={fireGpt} alt="fire" height={120} />
       </div>
     </div>
   );
