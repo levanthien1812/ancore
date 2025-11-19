@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import AddWordForm from "./add-word-form";
+import AddWordForm, { WordWithMeanings } from "./add-word-form";
 import {
   Dialog,
   DialogContent,
@@ -9,23 +9,41 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { WordOfTheDay } from "../home/word-of-the-day";
 
-const AddWord = () => {
+type AddWordProps = {
+  word?: WordWithMeanings;
+  triggerButton?: React.ReactNode;
+  wordOfTheDay?: WordOfTheDay;
+};
+
+const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger className="bg-primary-2 rounded-full px-4 py-1 text-primary font-bold">
-        Add word
+      <DialogTrigger asChild>
+        {triggerButton || (
+          <Button className="bg-primary-2 rounded-full px-4 py-1 text-primary font-bold hover:bg-primary-2/90">
+            {word ? "Edit word" : "Add word"}
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add new word</DialogTitle>
-          <DialogDescription>
-            Add a new word to your vocabulary list. Fill in the details below.
-          </DialogDescription>
+          <DialogTitle>{word ? "Edit word" : "Add new word"}</DialogTitle>
+          {!word && (
+            <DialogDescription>
+              Add a new word to your vocabulary list. Fill in the details below.
+            </DialogDescription>
+          )}
         </DialogHeader>
-        <AddWordForm onClose={() => setIsOpen(false)} />
+        <AddWordForm
+          onClose={() => setIsOpen(false)}
+          word={word}
+          wordOfTheDay={wordOfTheDay}
+        />
       </DialogContent>
     </Dialog>
   );

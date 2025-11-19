@@ -29,3 +29,17 @@ export const MASTERY_LEVELS: MasteryLevel[] = [
   MasteryLevel.Familiar,
   MasteryLevel.Mastered,
 ];
+
+export enum PartOfSpeech {
+  Noun = "noun",
+  Verb = "verb",
+  Adjective = "adjective",
+  Adverb = "adverb",
+}
+
+export const PARTS_OF_SPEECH: PartOfSpeech[] = [
+  PartOfSpeech.Noun,
+  PartOfSpeech.Verb,
+  PartOfSpeech.Adjective,
+  PartOfSpeech.Adverb,
+];

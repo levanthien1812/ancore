@@ -9,17 +9,26 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
-import { UseFormRegister } from "react-hook-form";
+import { UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { WordWithMeanings } from "./add-word-form";
 import FieldError from "../shared/field-error";
+import { PARTS_OF_SPEECH } from "@/lib/constants/enums";
+import { Badge } from "../ui/badge";
 interface MeaningProps {
   index: number;
   onRemove: (index: number) => void;
   register: UseFormRegister<WordWithMeanings>;
+  setValue: UseFormSetValue<WordWithMeanings>;
   errors: string[] | undefined;
 }
 
-const Meaning = ({ index, onRemove, register, errors }: MeaningProps) => {
+const Meaning = ({
+  index,
+  onRemove,
+  register,
+  setValue,
+  errors,
+}: MeaningProps) => {
   const handleRemove = () => {
     onRemove(index);
   };
@@ -73,6 +82,20 @@ const Meaning = ({ index, onRemove, register, errors }: MeaningProps) => {
                   id="part-of-speech"
                   {...register(`meanings.${index}.partOfSpeech`)}
                 />
+                <div className="flex gap-1">
+                  {PARTS_OF_SPEECH.map((part) => (
+                    <Badge
+                      key={part}
+                      variant={"secondary"}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        setValue(`meanings.${index}.partOfSpeech`, part)
+                      }
+                    >
+                      {part}
+                    </Badge>
+                  ))}
+                </div>
               </div>
               <div className="grid gap-1">
                 <Label htmlFor="synonyms" className="text-right">
