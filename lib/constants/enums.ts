@@ -43,3 +43,26 @@ export const PARTS_OF_SPEECH: PartOfSpeech[] = [
   PartOfSpeech.Adjective,
   PartOfSpeech.Adverb,
 ];
+
+export const SAMPLE_TOPICS = [
+  "Daily Activities",
+  "Food & Cooking",
+  "Travel",
+  "Work & Careers",
+  "Education & Learning",
+  "Health & Medicine",
+  "Technology",
+  "Shopping",
+  "Weather & Seasons",
+  "Relationships & Family",
+  "Hobbies & Free Time",
+  "Environment",
+  "Culture",
+  "Housing & Furniture",
+  "Transportation",
+  "Business & Finance",
+  "News & Media",
+  "Entertainment",
+  "Science",
+  "Emotions & Personality",
+];

@@ -1,5 +1,6 @@
-import type { Word, WordMeaning } from "../generated/prisma/client";
 import { WordsCountByMasteryLevel } from "../type";
+import { CEFRLevel, MasteryLevel } from "./enums";
+import { Word, WordMeaning } from "../generated/prisma/client";
 
 export const INITIAL_MEANING: WordMeaning = {
   id: "",
@@ -16,11 +17,11 @@ export const INITIAL_WORD: Word = {
   id: "",
   word: "",
   pronunciation: "",
-  cefrLevel: "A1",
+  cefrLevel: CEFRLevel.A1,
   createdAt: new Date(),
   updatedAt: new Date(),
-  masteryLevel: "New",
-  tags: [],
+  masteryLevel: MasteryLevel.New,
+  tags: "",
   userId: "",
   audioUrl: "",
 };

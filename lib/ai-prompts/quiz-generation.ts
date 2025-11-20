@@ -7,9 +7,7 @@ export function buildQuizGenerationPrompt(
 ): string {
   return `
     You are a quiz generator for an English learning website.
-    The user is a ${
-      user.level
-    } learner interested in topics: ${user.topics.join(", ")}.
+    The user is a ${user.level} learner interested in topics: ${user.topics}.
 
     Generate 2–3 short quiz questions about the word "${word}" meaning "${meaning}".
     Questions should be suitable for the user's level and reflect their topics of interest.

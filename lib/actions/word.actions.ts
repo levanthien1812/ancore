@@ -1,7 +1,7 @@
 "use server";
 import { prisma } from "@/db/prisma";
 import { MasteryLevel, Word, WordMeaning } from "../generated/prisma/client";
-import { saveWordValidator } from "../validators";
+import { saveWordSchema } from "../validators";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
@@ -80,8 +80,8 @@ export async function saveWord(prevState: unknown, formData: FormData) {
   const userId = session.user.id;
 
   const wordId = formData.get("id") as string | null;
-  console.log({ wordId, userId });
-  const validatedFields = saveWordValidator.safeParse({
+
+  const validatedFields = saveWordSchema.safeParse({
     word: formData.get("word"),
     pronunciation: formData.get("pronunciation"),
     cefrLevel: formData.get("cefrLevel"),
@@ -316,3 +316,46 @@ export async function getWordsCountByPeriod(
 
   return finalData.reverse(); // Return in chronological order
 }
+
+export const getWordCountLearned = async () => {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return 0;
+  }
+
+  const userId = session.user.id;
+
+  const wordsCount = await prisma.word.count({
+    where: {
+      userId,
+      masteryLevel: {
+        in: [MasteryLevel.Familiar, MasteryLevel.Mastered],
+      },
+    },
+  });
+
+  return wordsCount;
+};
+
+export const getWordsToReview = async () => {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return [];
+  }
+  const words = await prisma.word.findMany({
+    where: {
+      userId: session.user.id,
+      masteryLevel: {
+        in: [MasteryLevel.Learning, MasteryLevel.New],
+      },
+    },
+    include: {
+      meanings: true,
+    },
+    take: 10,
+  });
+
+  return words;
+};

@@ -1,7 +1,8 @@
 "use server";
 
-import { signIn, signOut } from "@/auth";
+import { auth, signIn, signOut } from "@/auth";
 import {
+  onboardingFormSchema,
   signInFormSchema,
   signUpFormSchema,
 } from "../validators/user.validators";
@@ -9,6 +10,8 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/db/prisma";
 import { hashSync } from "bcrypt-ts-edge";
 import z from "zod";
+import { UserLevel } from "../generated/prisma/enums";
+import { revalidatePath } from "next/cache";
 
 export async function signInWithCredentials(
   prevState: unknown,
@@ -91,5 +94,46 @@ export async function signUpWithCredentials(
       success: false,
       message: "Something went wrong",
     };
+  }
+}
+
+export async function updateUserOnboarding(
+  prevState: unknown,
+  formData: FormData
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Authentication required.", errors: {} };
+  }
+
+  const validatedFields = onboardingFormSchema.safeParse({
+    level: formData.get("level"),
+    topics: formData.get("topics"),
+    dailyGoal: parseInt(formData.get("dailyGoal") as string),
+  });
+
+  console.log(validatedFields);
+
+  if (!validatedFields.success) {
+    return {
+      success: false,
+      message: "Validation failed.",
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        ...validatedFields.data,
+        level: validatedFields.data.level as UserLevel,
+        onboarded: true,
+      },
+    });
+    revalidatePath("/");
+    return { success: true, message: "Welcome!", errors: {} };
+  } catch (error) {
+    return { success: false, message: "Database error.", errors: {} };
   }
 }

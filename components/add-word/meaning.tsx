@@ -10,10 +10,10 @@ import {
   AccordionTrigger,
 } from "../ui/accordion";
 import { UseFormRegister, UseFormSetValue } from "react-hook-form";
-import { WordWithMeanings } from "./add-word-form";
 import FieldError from "../shared/field-error";
 import { PARTS_OF_SPEECH } from "@/lib/constants/enums";
 import { Badge } from "../ui/badge";
+import { WordWithMeanings } from "./add-word-form";
 interface MeaningProps {
   index: number;
   onRemove: (index: number) => void;

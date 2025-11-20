@@ -3,9 +3,7 @@ import type { User } from "@/lib/generated/prisma/client";
 export function buildWordAutofillPrompt(word: string, user: User): string {
   let userInfo;
   if (user.topics && user.topics.length > 0) {
-    userInfo = `The user is a ${
-      user.level
-    } learner interested in topics: ${user.topics.join(", ")}.`;
+    userInfo = `The user is a ${user.level} learner interested in topics: ${user.topics}.`;
   } else {
     userInfo = `The user is a ${user.level} learner.`;
   }
