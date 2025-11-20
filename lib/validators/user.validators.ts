@@ -25,3 +25,13 @@ export const signUpFormSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+export const onboardingFormSchema = z.object({
+  level: z.string().min(1, "Please select your level."),
+  topics: z
+    .string()
+    .refine((topics) => topics.split(",").filter(Boolean).length <= 3, {
+      message: "You can only enter up to 3 topics.",
+    }),
+  dailyGoal: z.number().min(5, "Goal must be at least 5 minutes."),
+});

@@ -23,9 +23,11 @@ model User {
   password       String?
   role           String    @default("user")
   level          UserLevel @default(Beginner)
-  topics         String[]
+  topics         String?
   nativeLanguage String    @default("English")
   goals          String?
+  dailyGoal      Int?      @default(15) // e.g., time in minutes
+  onboarded      Boolean   @default(false)
   createdAt      DateTime  @default(now())
 
   words    Word[]
@@ -89,7 +91,7 @@ model Word {
   pronunciation String?
   masteryLevel  MasteryLevel
   audioUrl      String?
-  tags          String[]        @default([])
+  tags          String?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 

@@ -3,9 +3,7 @@ import { User } from "@/lib/generated/prisma/client";
 export function buildWordOfTheDayPrompt(user: User): string {
   let userInfo;
   if (user.topics && user.topics.length > 0) {
-    userInfo = `a ${
-      user.level
-    } learner interested in topics: ${user.topics.join(", ")}.`;
+    userInfo = `a ${user.level} learner interested in topics: ${user.topics}.`;
   } else {
     userInfo = `a ${user.level} learner.`;
   }

@@ -1,44 +1,81 @@
 "use client";
 import { useSession } from "next-auth/react";
-import React, { useEffect } from "react";
 import { Button } from "../ui/button";
 import { CircleQuestionMark, Plus, SquareStar } from "lucide-react";
-import { getLearnStreak } from "@/lib/actions/word.actions";
+import {
+  getLearnStreak,
+  getWordCountLearned,
+} from "@/lib/actions/word.actions";
 import Image from "next/image";
 import fireGpt from "@/public/images/fire-gpt.png";
 import AddWord from "../add-word/add-word";
+import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "../ui/skeleton";
+import Link from "next/link";
 
 const Welcome = () => {
-  const [wordsLearned, setWordsLearned] = React.useState(0);
-  const [streak, setStreak] = React.useState(0);
+  const { data: streak, isFetching: isFetchingStreak } = useQuery({
+    queryKey: ["learnStreak"],
+    queryFn: getLearnStreak,
+    initialData: 0,
+  });
 
-  useEffect(() => {
-    (async () => {
-      const streak = await getLearnStreak();
-      setStreak(streak);
-    })();
-  }, []);
+  const { data: wordsLearned, isFetching: isFetchingWordsLearned } = useQuery({
+    queryKey: ["wordsLearned"],
+    queryFn: getWordCountLearned,
+    initialData: 0,
+  });
 
-  const session = useSession();
+  const { data: session, status } = useSession();
 
-  if (!session || !session.data?.user) return null;
-  const user = session.data.user;
-  const firstName = user.name?.split(" ")[0] || "You";
+  if (status === "loading") {
+    return (
+      <div className=" flex flex-col bg-background-2 p-6 rounded-2xl h-full">
+        <Skeleton className="h-12 w-3/4" />
+        <div className="mt-2">
+          <Skeleton className="h-5 w-full" />
+        </div>
+        <div className="mt-2">
+          <Skeleton className="h-5 w-full" />
+        </div>
+        <div className="flex justify-between mt-auto items-end">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-32" />
+            <Skeleton className="h-9 w-32" />
+          </div>
+          <Skeleton className="h-[120px] w-[120px]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated" || !session?.user) return null;
 
   return (
     <div className=" flex flex-col bg-background-2 p-8 rounded-2xl h-full">
-      <p className="text-[40px] font-bold text-primary">👋Hi {firstName}!</p>
-      <p className="text-xl mt-2">
+      <p className="text-[40px] font-bold text-primary">
+        👋Hi {session.user.name?.split(" ")[0] || "You"}!
+      </p>
+      <div className="text-xl mt-2">
         You&apos;ve learned{" "}
-        <span className="font-bold text-primary-2 text-2xl">
-          {wordsLearned} words
-        </span>{" "}
+        {isFetchingWordsLearned ? (
+          <Skeleton className="h-5 w-20" />
+        ) : (
+          <span className="font-bold text-primary-2 text-2xl">
+            {wordsLearned} words
+          </span>
+        )}{" "}
         in a row
-      </p>
-      <p className="text-xl mt-2">
+      </div>
+      <div className="text-xl mt-2">
         Your current streak is{" "}
-        <span className="font-bold text-primary-2 text-2xl">{streak}</span>!
-      </p>
+        {isFetchingStreak ? (
+          <Skeleton className="h-5 w-20" />
+        ) : (
+          <span className="font-bold text-primary-2 text-2xl">{streak}</span>
+        )}
+      </div>
       <div className="flex justify-between mt-auto items-end">
         <div className="flex flex-col gap-2">
           <AddWord
@@ -49,9 +86,11 @@ const Welcome = () => {
             }
           />
 
-          <Button className="justify-start">
-            <SquareStar className="text-primary-2" /> Review now
-          </Button>
+          <Link href={"/review"}>
+            <Button className="justify-start">
+              <SquareStar className="text-primary-2" /> Review now
+            </Button>
+          </Link>
           <Button className="justify-start">
             <CircleQuestionMark className="text-primary-2" /> Take quit
           </Button>
