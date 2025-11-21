@@ -66,3 +66,11 @@ export const SAMPLE_TOPICS = [
   "Science",
   "Emotions & Personality",
 ];
+
+export enum ReviewPerformance {
+  FORGOT = 0,
+  HARD = 1,
+  MEDIUM = 2,
+  GOOD = 3,
+  EASY = 4,
+}

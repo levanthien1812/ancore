@@ -14,15 +14,12 @@ import { Button } from "../ui/button";
 import { ArrowLeft, ArrowRight, EllipsisIcon, PenIcon } from "lucide-react";
 import { Popover, PopoverContent } from "../ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
-import AddWordForm from "../add-word/add-word-form";
 import AddWord from "../add-word/add-word";
 
-const WordDetailDialog = ({ word }: { word: WordWithMeanings }) => {
+const WordDetail = ({ word }: { word: WordWithMeanings }) => {
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
 
   // Sync button disabled state when carousel initializes or changes
   useEffect(() => {
@@ -54,11 +51,7 @@ const WordDetailDialog = ({ word }: { word: WordWithMeanings }) => {
           <AddWord
             word={word}
             triggerButton={
-              <Button
-                variant={"outline"}
-                size={"icon"}
-                onClick={() => setIsEditing(true)}
-              >
+              <Button variant={"outline"} size={"icon"}>
                 <PenIcon />
               </Button>
             }
@@ -115,4 +108,4 @@ const WordDetailDialog = ({ word }: { word: WordWithMeanings }) => {
   );
 };
 
-export default WordDetailDialog;
+export default WordDetail;

@@ -25,9 +25,16 @@ export const saveWordSchema = z.object({
     .optional()
     .or(z.literal("")),
   tags: z.string().optional(),
-  meanings: z
-    .array(saveWordMeaningSchema)
-    .min(1, "At least one meaning is required."),
+  meanings: z.preprocess((value) => {
+    if (typeof value === "string") {
+      try {
+        return JSON.parse(value);
+      } catch (error) {
+        return [];
+      }
+    }
+    return value;
+  }, z.array(saveWordMeaningSchema).min(1, "At least one meaning is required.")),
 });
 
 export type SaveWordFormData = z.infer<typeof saveWordSchema>;

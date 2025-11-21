@@ -142,6 +142,21 @@ export async function saveWord(prevState: unknown, formData: FormData) {
       await prisma.wordMeaning.createMany({
         data: meaningData.map((meaning) => ({ ...meaning, wordId: word.id })),
       });
+
+      if (word) {
+        const now = new Date();
+        const initialInterval = 1; // Review again in 1 day
+
+        await prisma.reviewSession.create({
+          data: {
+            userId: word.userId,
+            wordId: word.id,
+            completedAt: now,
+            intervalDays: initialInterval,
+            scheduledAt: new Date(now.setDate(now.getDate() + initialInterval)),
+          },
+        });
+      }
     }
 
     revalidatePath("/"); // Or any other path you want to revalidate
@@ -338,24 +353,51 @@ export const getWordCountLearned = async () => {
   return wordsCount;
 };
 
-export const getWordsToReview = async () => {
+export const getWordsToReview = async (limit: number = 20) => {
   const session = await auth();
-
   if (!session?.user?.id) {
-    return [];
+    return []; // Return empty array if not logged in
   }
-  const words = await prisma.word.findMany({
+
+  const dueReviews = await prisma.reviewSession.findMany({
     where: {
       userId: session.user.id,
-      masteryLevel: {
-        in: [MasteryLevel.Learning, MasteryLevel.New],
+      scheduledAt: {
+        lte: new Date(), // lte = less than or equal to
       },
     },
+    take: limit, // Limit the number of words per session
     include: {
-      meanings: true,
+      word: {
+        // Include the full word details
+        include: {
+          meanings: true, // And its meanings
+        },
+      },
     },
-    take: 10,
+    orderBy: {
+      scheduledAt: "asc", // Show the most overdue words first
+    },
   });
 
-  return words;
+  // Extract the word data from the review session objects
+  return dueReviews.map((review) => review.word);
+};
+
+export const getWordsToReviewCount = async () => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return 0;
+  }
+
+  const count = await prisma.reviewSession.count({
+    where: {
+      userId: session.user.id,
+      scheduledAt: {
+        lte: new Date(),
+      },
+    },
+  });
+
+  return count;
 };
