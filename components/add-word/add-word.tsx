@@ -25,7 +25,10 @@ const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {triggerButton || (
-          <Button className="bg-primary-2 rounded-full px-4 py-1 text-primary font-bold hover:bg-primary-2/90">
+          <Button
+            className="bg-primary-2 rounded-full px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
+            onClick={(e) => e.stopPropagation()}
+          >
             {word ? "Edit word" : "Add word"}
           </Button>
         )}

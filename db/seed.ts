@@ -17,13 +17,19 @@ async function main() {
   const partsOfSpeech = ["noun", "verb", "adjective", "adverb"];
 
   await prisma.wordMeaning.deleteMany({ where: { wordId: { not: "" } } });
+  await prisma.reviewSession.deleteMany({ where: { userId: user.id } });
   await prisma.word.deleteMany({ where: { userId: user.id } });
 
   console.log("Generating 50 words...");
   for (let i = 0; i < 50; i++) {
     const randomWord = faker.lorem.word();
+    if (await prisma.word.findFirst({ where: { word: randomWord } })) {
+      i--;
+      continue;
+    }
+
     try {
-      await prisma.word.create({
+      const newWord = await prisma.word.create({
         data: {
           word: `${randomWord}`,
           userId: user.id,
@@ -31,8 +37,9 @@ async function main() {
           pronunciation: `/${randomWord}/`,
           masteryLevel: faker.helpers.arrayElement(masteryLevels),
           tags: faker.lorem
-            .words(faker.number.int({ min: 1, max: 4 }))
-            .split(" "),
+            .words(faker.number.int({ min: 0, max: 3 }))
+            .split(" ")
+            .join(","),
           meanings: {
             create: Array.from({
               length: faker.number.int({ min: 1, max: 2 }),
@@ -50,8 +57,23 @@ async function main() {
                 .words(faker.number.int({ min: 0, max: 5 }))
                 .split(" ")
                 .join(", "),
+              whenToUse: faker.lorem.sentence(),
+              usageNotes: faker.lorem.sentence(),
             })),
           },
+        },
+      });
+      const intervalDays = faker.number.int({ min: 1, max: 5 });
+
+      await prisma.reviewSession.create({
+        data: {
+          completedAt: new Date(),
+          intervalDays: intervalDays,
+          scheduledAt: new Date(
+            new Date().getTime() + (intervalDays - 1) * 24 * 60 * 60 * 1000
+          ),
+          userId: user.id,
+          wordId: newWord.id,
         },
       });
     } catch (e: unknown) {

@@ -1,6 +1,6 @@
 "use client";
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from "../ui/dialog";
-import WordDetailDialog from "../word-card/word-detail-dialog";
+import WordDetailDialog from "./word-detail";
 import { Button } from "../ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { WordWithMeanings } from "../add-word/add-word-form";
