@@ -4,12 +4,19 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { cn } from "@/lib/utils";
 import FrontFace from "./front-face";
 import BackFace from "./back-face";
+import { PerformanceSummary } from "./review-carousel";
 
-const ReviewWordCard = ({ word }: { word: WordWithMeanings }) => {
+const ReviewWordCard = ({
+  word,
+  onPerformanceUpdate,
+}: {
+  word: WordWithMeanings;
+  onPerformanceUpdate: (performance: keyof PerformanceSummary) => void;
+}) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div className="group w-full cursor-pointer perspective-[1000px] h-[800px]">
+    <div className="group w-full cursor-pointer perspective-[1000px] h-[760px]">
       <div
         className={cn(
           "relative h-full w-full shadow-xl transition-all duration-500 transform-3d",
@@ -18,7 +25,11 @@ const ReviewWordCard = ({ word }: { word: WordWithMeanings }) => {
       >
         {/* Front Face */}
         <div className="absolute inset-0 backface-hidden h-full rounded-xl">
-          <FrontFace word={word} setIsFlipped={setIsFlipped} />
+          <FrontFace
+            word={word}
+            setIsFlipped={setIsFlipped}
+            onPerformanceUpdate={onPerformanceUpdate}
+          />
         </div>
 
         {/* Back Face */}

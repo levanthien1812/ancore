@@ -16,6 +16,7 @@ async function main() {
   const masteryLevels = Object.values(MasteryLevel);
   const partsOfSpeech = ["noun", "verb", "adjective", "adverb"];
 
+  await prisma.reviewLog.deleteMany({ where: { userId: user.id } });
   await prisma.wordMeaning.deleteMany({ where: { wordId: { not: "" } } });
   await prisma.reviewSession.deleteMany({ where: { userId: user.id } });
   await prisma.word.deleteMany({ where: { userId: user.id } });

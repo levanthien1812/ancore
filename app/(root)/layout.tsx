@@ -8,7 +8,7 @@ export default function RootLayout({
   return (
     <div className="flex h-screen flex-col">
       <Header />
-      <main className="pt-4">{children}</main>
+      <main className="pt-4 grow">{children}</main>
     </div>
   );
 }
