@@ -11,6 +11,7 @@ import { User, Word, WordMeaning } from "@/lib/generated/prisma/client";
 import { updateReviewSession } from "@/lib/actions/review.actions";
 import { ReviewPerformance } from "@/lib/constants/enums";
 import { useCarousel } from "../ui/carousel";
+import { PerformanceSummary } from "./review-carousel";
 
 type Hint = Partial<
   Pick<Word, "tags"> &
@@ -39,9 +40,11 @@ const INITIAL_HINT_LIST: HintList = [
 const FrontFace = ({
   word,
   setIsFlipped,
+  onPerformanceUpdate,
 }: {
   word: WordWithMeanings;
   setIsFlipped: (value: boolean) => void;
+  onPerformanceUpdate: (performance: keyof PerformanceSummary) => void;
 }) => {
   const [showHint, setShowHint] = React.useState(false);
   const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
@@ -104,13 +107,6 @@ const FrontFace = ({
         console.log(response);
       },
       mutationKey: ["updateReviewSession"],
-      onSuccess: () => {
-        if (hintLevel) {
-          setIsFlipped(true);
-        } else {
-          scrollNext();
-        }
-      },
     });
 
   const handleClickShowHint = () => {
@@ -145,6 +141,7 @@ const FrontFace = ({
     setShowHint(false);
     setHintLevel(null);
     reviewSessionMutate(ReviewPerformance.FORGOT);
+    onPerformanceUpdate("Forgot");
     setIsFlipped(true);
   };
 
@@ -163,18 +160,25 @@ const FrontFace = ({
     switch (hintLevel) {
       case "tags":
         reviewSessionMutate(ReviewPerformance.GOOD);
+        onPerformanceUpdate("Good");
         break;
       case "whenToUse":
         reviewSessionMutate(ReviewPerformance.MEDIUM);
+        onPerformanceUpdate("Medium");
         break;
       case "exampleSentences":
       case "synonyms":
         reviewSessionMutate(ReviewPerformance.HARD);
+        onPerformanceUpdate("Hard");
         break;
       default:
         reviewSessionMutate(ReviewPerformance.EASY);
+        onPerformanceUpdate("Easy");
         break;
     }
+
+    if (hintLevel) setIsFlipped(true);
+    else scrollNext();
   };
 
   const currentHint = useMemo(() => {

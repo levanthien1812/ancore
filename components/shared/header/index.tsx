@@ -7,7 +7,7 @@ import AddWord from "../../add-word/add-word";
 
 const Header = () => {
   return (
-    <header className="w-full border-b">
+    <header className="w-full border-b sticky top-0 left-0 bg-white z-10">
       <div className="flex justify-between items-center container mx-auto py-2">
         <div className="flex-start">
           <Link href={"./"} className="flex-start">

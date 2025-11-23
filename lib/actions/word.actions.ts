@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
+import { dateFilter } from "../utils/date-filter";
 
 export async function getWordListByFilter(
   wordFilter: WordFitler
@@ -362,9 +363,7 @@ export const getWordsToReview = async (limit: number = 20) => {
   const dueReviews = await prisma.reviewSession.findMany({
     where: {
       userId: session.user.id,
-      scheduledAt: {
-        lte: new Date(), // lte = less than or equal to
-      },
+      scheduledAt: dateFilter(new Date()),
     },
     take: limit, // Limit the number of words per session
     include: {
@@ -393,9 +392,7 @@ export const getWordsToReviewCount = async () => {
   const count = await prisma.reviewSession.count({
     where: {
       userId: session.user.id,
-      scheduledAt: {
-        lte: new Date(),
-      },
+      scheduledAt: dateFilter(new Date()),
     },
   });
 
