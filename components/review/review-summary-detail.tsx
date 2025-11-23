@@ -4,6 +4,15 @@ import { Badge } from "../ui/badge";
 
 const WordList = ({ title, words }: { title: string; words: string[] }) => {
   if (words.length === 0) return null;
+
+  const colorMap: Record<string, string> = {
+    Forgot: "border-level-forgot bg-level-forgot/10",
+    Hard: "border-level-hard bg-level-hard/10",
+    Medium: "border-level-medium bg-level-medium/10",
+    Good: "border-level-good bg-level-good/10",
+    Easy: "border-level-easy bg-level-easy/10",
+  };
+
   return (
     <div>
       <h3 className="font-semibold">
@@ -13,8 +22,8 @@ const WordList = ({ title, words }: { title: string; words: string[] }) => {
         {words.map((word, index) => (
           <Badge
             key={`${word}-${index}`}
-            variant="secondary"
-            className="text-md"
+            className={`text-md ${colorMap[title]}`}
+            variant={"outline"}
           >
             {word}
           </Badge>

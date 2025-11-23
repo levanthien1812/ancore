@@ -122,17 +122,21 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
         {/* <CarouselNext />
         <CarouselPrevious /> */}
       </Carousel>
-      {current === words.length - 1 && (
-        <div className="mt-4 flex justify-center px-2 absolute top-0 right-0">
+      <div className="mt-4 px-8 flex justify-between absolute top-0 right-0 gap-2 items-center w-full">
+        <p className="text-white text-sm">
+          {current + 1} of {words.length}
+        </p>
+        {current === words.length - 1 && (
           <Button
             onClick={handleFinishSession}
             disabled={isPending}
             variant="outline"
+            size={"sm"}
           >
             {isPending ? "Saving..." : "Finish Session"}
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
