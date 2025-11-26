@@ -108,7 +108,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
           ></div>
         ))}
       </div>
-      <Carousel className="mt-1" setApi={setApi}>
+      <Carousel className="mt-1" setApi={setApi} opts={{ watchDrag: false }}>
         <CarouselContent>
           {words.map((word) => (
             <CarouselItem key={word.id}>

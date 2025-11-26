@@ -9,7 +9,7 @@ const WordMeaning = ({
   meaning: WordMeaning;
 }) => {
   const examples = meaning.exampleSentences
-    ? meaning.exampleSentences.split("\n").map((example) => (
+    ? meaning.exampleSentences.split("|").map((example) => (
         <li key={example} className="italic">
           <div
             dangerouslySetInnerHTML={{

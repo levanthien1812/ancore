@@ -32,10 +32,11 @@ model User {
 
   words      Word[]
   reviews    ReviewSession[]
-  quizzes    Quiz[]
+  quizzes    QuizQuestion[]
   reviewLogs ReviewLog[]
   accounts   Account[]
   sessions   Session[]
+  quizzesLog QuizzesLog[]
 }
 
 model Account {
@@ -98,7 +99,7 @@ model Word {
 
   meanings WordMeaning[]
   reviews  ReviewSession[]
-  quizzes  Quiz[]
+  quizzes  QuizQuestion[]  @relation("WordToQuizQuestion")
 }
 
 enum MasteryLevel {
@@ -130,37 +131,44 @@ enum DifficultyLevel {
   C2
 }
 
-model Quiz {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  wordId    String
-  word      Word     @relation(fields: [wordId], references: [id])
-  correct   Boolean
-  createdAt DateTime @default(now())
-
-  questions QuizQuestion[]
-}
-
 model QuizQuestion {
   id String @id @default(cuid())
 
-  quizId String
-  quiz   Quiz   @relation(fields: [quizId], references: [id])
-
+  userId     String
+  user       User         @relation(fields: [userId], references: [id])
+  direction  String
   question   String
   type       QuestionType
   options    String[]     @default([])
   leftItems  String[]     @default([])
   rightItems String[]     @default([])
-  answer     Json?
+  answer     String
   createdAt  DateTime     @default(now())
+
+  quizzesLogId String
+  quizzesLog   QuizzesLog @relation(fields: [quizzesLogId], references: [id])
+
+  // Many-to-many relationship with Word
+  words Word[] @relation("WordToQuizQuestion")
+}
+
+model QuizzesLog {
+  id               String    @id @default(cuid())
+  userId           String
+  user             User      @relation(fields: [userId], references: [id])
+  durationSeconds  Int
+  quizzesCompleted Int
+  createdAt        DateTime  @default(now())
+  completedAt      DateTime?
+
+  quizzes QuizQuestion[]
 }
 
 enum QuestionType {
-  MultipleChoice
+  MultipleChoice_DefinitionToWord
+  MultipleChoice_WordToSynonym
   Matching
-  FillInBlank
+  FillInTheBlank
 }
 
 model ReviewSession {

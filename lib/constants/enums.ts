@@ -74,3 +74,10 @@ export enum ReviewPerformance {
   GOOD = 3,
   EASY = 4,
 }
+
+export enum QuizQuestionType {
+  MultipleChoice_DefinitionToWord = "MultipleChoice_DefinitionToWord",
+  MultipleChoice_WordToSynonym = "MultipleChoice_WordToSynonym",
+  Matching = "Matching",
+  FillInTheBlank = "FillInTheBlank",
+}

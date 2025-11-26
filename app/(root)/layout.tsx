@@ -1,4 +1,5 @@
 import Header from "@/components/shared/header";
+import { Toaster } from "sonner";
 
 export default function RootLayout({
   children,
@@ -9,6 +10,7 @@ export default function RootLayout({
     <div className="flex h-screen flex-col">
       <Header />
       <main className="pt-4 grow">{children}</main>
+      <Toaster />
     </div>
   );
 }
