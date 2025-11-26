@@ -21,7 +21,7 @@ export function buildWordOfTheDayPrompt(user: User): string {
         {
         "definition": "",
         "partOfSpeech": "",
-        "exampleSentences": "<example_1 \n example_2 \n example_3>",
+        "exampleSentences": "<example_1|example_2|example_3>",
         }
     ]
     }

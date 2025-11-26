@@ -20,3 +20,5 @@ export type WordsCountByPeriod = {
 } & {
   [key in MasteryLevel]: number;
 };
+
+export type { QuizQuestion, QuestionType } from "./generated/prisma/client";

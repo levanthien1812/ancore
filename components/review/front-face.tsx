@@ -59,7 +59,7 @@ const FrontFace = ({
       availableHints.whenToUse = word.meanings[0]?.whenToUse;
     if (word.meanings[0]?.exampleSentences)
       availableHints.exampleSentences = word.meanings[0]?.exampleSentences
-        .split("\n")[0]
+        .split("|")[0]
         .replace(word.word, "_____");
     if (word.meanings[0]?.synonyms)
       availableHints.synonyms = word.meanings[0]?.synonyms;

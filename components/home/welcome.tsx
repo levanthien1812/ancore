@@ -91,9 +91,11 @@ const Welcome = () => {
               <SquareStar className="text-primary-2" /> Review now
             </Button>
           </Link>
-          <Button className="justify-start">
-            <CircleQuestionMark className="text-primary-2" /> Take quit
-          </Button>
+          <Link href={"/quizzes"}>
+            <Button className="justify-start">
+              <CircleQuestionMark className="text-primary-2" /> Take quit
+            </Button>
+          </Link>
         </div>
         <Image src={fireGpt} alt="fire" height={120} />
       </div>
