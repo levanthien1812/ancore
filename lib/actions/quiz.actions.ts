@@ -2,12 +2,9 @@
 import { prisma } from "@/db/prisma";
 import { quizQuestionSchema } from "../validators";
 import { auth } from "@/auth";
-import {
-  buildDistractorGenerationPrompt,
-  distractorSchema,
-} from "../ai-prompts/distractor-generation";
-import { generateObject } from "ai";
+import { buildDistractorGenerationPrompt } from "../ai-prompts/distractor-generation";
 import { MasteryLevel, QuestionType } from "../generated/prisma/enums";
+import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 
 export async function createQuizSession(
@@ -197,13 +194,14 @@ export async function createQuizSession(
   }
   console.log(quizQuestions);
 
-  //   4. Save all generated questions to the database
+  // 4. Shuffle and save all generated questions to the database
   if (quizQuestions.length > 0) {
+    const shuffledQuestions = shuffleArray(quizQuestions);
     try {
       // We cannot use createMany with relations, so we create them one by one.
       // A transaction ensures that if one fails, none are created.
       await prisma.$transaction(
-        quizQuestions.map((q) => {
+        shuffledQuestions.map((q) => {
           const { wordIds, ...questionData } = q;
           return prisma.quizQuestion.create({
             data: {
@@ -222,25 +220,6 @@ export async function createQuizSession(
   }
 
   return { success: true, quizLogId: quizzesLog.id };
-}
-
-export async function getQuizQuestions(quizLogId: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Authentication required.");
-  }
-
-  const questions = await prisma.quizQuestion.findMany({
-    where: {
-      quizzesLogId: quizLogId,
-      userId: session.user.id, // Ensure user can only access their own quizzes
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-  });
-
-  return questions;
 }
 
 export const getWordsToQuiz = async ({
@@ -345,3 +324,73 @@ export async function cleanupAbandonedQuizzes() {
     return { success: false, message: "Failed to clean up abandoned quizzes." };
   }
 }
+
+type QuizAnswer = {
+  questionId: string;
+  userAnswer: string;
+  isCorrect: boolean;
+};
+
+export async function logQuizResult(
+  quizLogId: string,
+  durationSeconds: number,
+  answers: QuizAnswer[]
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Authentication required.");
+  }
+
+  const correctAnswersCount = answers.filter((a) => a.isCorrect).length;
+
+  try {
+    await prisma.$transaction([
+      // 1. Update all the questions with the user's answers
+      ...answers.map((answer) =>
+        prisma.quizQuestion.update({
+          where: { id: answer.questionId },
+          data: { userAnswer: answer.userAnswer, isCorrect: answer.isCorrect },
+        })
+      ),
+      // 2. Update the main quiz log
+      prisma.quizzesLog.update({
+        where: { id: quizLogId, userId: session.user.id },
+        data: {
+          completedAt: new Date(),
+          durationSeconds,
+          quizzesCompleted: correctAnswersCount,
+        },
+      }),
+    ]);
+  } catch (error) {
+    console.error("Failed to log quiz result:", error);
+  }
+}
+
+export async function getQuizLog(quizLogId: string) {
+  return await prisma.quizzesLog.findUnique({
+    where: { id: quizLogId },
+    include: {
+      questions: {
+        include: {
+          words: true,
+        },
+      },
+    },
+  });
+}
+
+export const getRecentQuizzes = async () => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return [];
+  }
+
+  const quizzes = await prisma.quizzesLog.findMany({
+    where: { userId: session.user.id },
+    orderBy: { createdAt: "desc" },
+    take: 5,
+  });
+
+  return quizzes;
+};
