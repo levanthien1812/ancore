@@ -1,5 +1,6 @@
 import { type } from "os";
 import { MasteryLevel } from "./generated/prisma/enums";
+import { QuizQuestion, Word } from "./generated/prisma/client";
 
 export type WordsCountByMasteryLevel = {
   [key in MasteryLevel]: number;
@@ -22,3 +23,7 @@ export type WordsCountByPeriod = {
 };
 
 export type { QuizQuestion, QuestionType } from "./generated/prisma/client";
+
+export type QuizQuestionWithWords = QuizQuestion & {
+  words: Word[];
+};

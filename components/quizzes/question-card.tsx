@@ -9,7 +9,17 @@ import MultipleChoiceBody from "@/components/quizzes/multiple-choice-body";
 import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
 
-const QuestionCard = ({ question }: { question: QuizQuestion }) => {
+const QuestionCard = ({
+  question,
+  onAnswered,
+  onNext,
+  isLastQuestion,
+}: {
+  question: QuizQuestion;
+  onAnswered: (userAnswer: string, isCorrect: boolean) => void;
+  onNext: () => void;
+  isLastQuestion: boolean;
+}) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
 
@@ -21,6 +31,7 @@ const QuestionCard = ({ question }: { question: QuizQuestion }) => {
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
       setIsAnswered(true);
+      onAnswered(selectedAnswer, selectedAnswer === question.answer);
     }
   };
 
@@ -93,6 +104,11 @@ const QuestionCard = ({ question }: { question: QuizQuestion }) => {
               className="w-full"
             >
               Check Answer
+            </Button>
+          )}
+          {isAnswered && (
+            <Button onClick={onNext} className="w-full mt-2">
+              {isLastQuestion ? "Finish Quiz" : "Next"}
             </Button>
           )}
         </div>

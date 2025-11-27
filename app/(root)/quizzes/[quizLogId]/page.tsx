@@ -1,7 +1,8 @@
-import { getQuizQuestions } from "@/lib/actions/quiz.actions";
+import { getQuizLog } from "@/lib/actions/quiz.actions";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import QuizCarousel from "@/components/quizzes/quiz-carousel";
+import QuizSummary from "@/components/quizzes/quiz-summary";
 
 type Props = {
   params: Promise<{ quizLogId: string }>;
@@ -16,15 +17,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const QuizSessionPage = async (props: Props) => {
   const params = await props.params;
-  const questions = await getQuizQuestions(params.quizLogId);
 
-  if (!questions || questions.length === 0) {
+  const quizLog = await getQuizLog(params.quizLogId);
+
+  if (!quizLog || !quizLog.questions || quizLog.questions.length === 0) {
     notFound();
   }
 
   return (
-    <div className="w-[440px] mx-auto h-full py-2">
-      <QuizCarousel questions={questions} />
+    <div className={`w-[440px] mx-auto h-full py-2`}>
+      {quizLog.completedAt ? (
+        <QuizSummary questions={quizLog.questions} />
+      ) : (
+        <QuizCarousel questions={quizLog.questions} />
+      )}
     </div>
   );
 };

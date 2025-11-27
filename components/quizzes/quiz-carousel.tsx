@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import {
   Carousel,
   CarouselApi,
@@ -7,30 +7,38 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import QuestionCard from "./question-card";
-import { QuizQuestion } from "@/lib/type";
+import { QuizQuestionWithWords } from "@/lib/type";
 import { cn } from "@/lib/utils";
+import { logQuizResult } from "@/lib/actions/quiz.actions";
+import QuizSummary from "./quiz-summary";
+import { toast } from "sonner";
 
-const QuizCarousel = ({ questions }: { questions: QuizQuestion[] }) => {
+const QuizCarousel = ({
+  questions,
+}: {
+  questions: QuizQuestionWithWords[];
+}) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [startTime] = useState(new Date());
+  const [isPending, startTransition] = useTransition();
+
+  // State to hold the questions with user answers
+  const [answeredQuestions, setAnsweredQuestions] =
+    useState<QuizQuestionWithWords[]>(questions);
+  const [sessionFinished, setSessionFinished] = useState(false);
 
   useEffect(() => {
     if (!api) {
       return;
     }
 
-    // Set initial value
-    const updateCurrent = () => {
-      setCurrent(api.selectedScrollSnap());
-    };
-
-    updateCurrent();
-
     // Listen for slide changes
     const onSelect = () => {
       setCurrent(api.selectedScrollSnap());
     };
 
+    onSelect(); // Call once to set the initial value
     api.on("select", onSelect);
 
     // Cleanup listener on component unmount
@@ -39,6 +47,48 @@ const QuizCarousel = ({ questions }: { questions: QuizQuestion[] }) => {
     };
   }, [api]);
 
+  const handleAnswered = (
+    questionId: string,
+    userAnswer: string,
+    isCorrect: boolean
+  ) => {
+    setAnsweredQuestions((prevQuestions) =>
+      prevQuestions.map((q) =>
+        q.id === questionId ? { ...q, userAnswer, isCorrect } : q
+      )
+    );
+  };
+
+  const handleNext = () => {
+    if (api?.canScrollNext()) {
+      api.scrollNext();
+    } else {
+      // This is the last question, finish the session.
+      const durationSeconds = Math.floor(
+        (new Date().getTime() - startTime.getTime()) / 1000
+      );
+      const quizLogId = questions[0]?.quizzesLogId;
+      const answersToLog = answeredQuestions.map((q) => ({
+        questionId: q.id,
+        userAnswer: q.userAnswer || "",
+        isCorrect: q.isCorrect || false,
+      }));
+
+      if (quizLogId) {
+        startTransition(async () => {
+          await logQuizResult(quizLogId, durationSeconds, answersToLog);
+          setSessionFinished(true);
+        });
+      } else {
+        toast.error("Could not save quiz results. Quiz Log ID is missing.");
+      }
+    }
+  };
+
+  if (sessionFinished) {
+    // Pass the final list of questions with answers to the summary
+    return <QuizSummary questions={answeredQuestions} />;
+  }
   if (questions.length === 0) return null;
   return (
     <div>
@@ -53,11 +103,16 @@ const QuizCarousel = ({ questions }: { questions: QuizQuestion[] }) => {
           ></div>
         ))}
       </div>
-      <Carousel className="mt-1" setApi={setApi}>
+      <Carousel className="mt-1" setApi={setApi} opts={{ watchDrag: false }}>
         <CarouselContent>
-          {questions.map((question) => (
+          {questions.map((question, index) => (
             <CarouselItem key={question.id}>
-              <QuestionCard question={question} />
+              <QuestionCard
+                question={question}
+                onAnswered={handleAnswered.bind(null, question.id)}
+                onNext={handleNext}
+                isLastQuestion={index === questions.length - 1}
+              />
             </CarouselItem>
           ))}
         </CarouselContent>

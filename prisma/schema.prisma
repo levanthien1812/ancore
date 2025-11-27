@@ -144,6 +144,8 @@ model QuizQuestion {
   rightItems String[]     @default([])
   answer     String
   createdAt  DateTime     @default(now())
+  userAnswer String?
+  isCorrect  Boolean?
 
   quizzesLogId String
   quizzesLog   QuizzesLog @relation(fields: [quizzesLogId], references: [id])
@@ -153,15 +155,16 @@ model QuizQuestion {
 }
 
 model QuizzesLog {
-  id               String    @id @default(cuid())
-  userId           String
-  user             User      @relation(fields: [userId], references: [id])
-  durationSeconds  Int
-  quizzesCompleted Int
-  createdAt        DateTime  @default(now())
-  completedAt      DateTime?
+  id                 String    @id @default(cuid())
+  userId             String
+  user               User      @relation(fields: [userId], references: [id])
+  durationSeconds    Int
+  quizzesCompleted   Int
+  createdAt          DateTime  @default(now())
+  completedAt        DateTime?
+  performanceSummary Json?
 
-  quizzes QuizQuestion[]
+  questions QuizQuestion[]
 }
 
 enum QuestionType {
