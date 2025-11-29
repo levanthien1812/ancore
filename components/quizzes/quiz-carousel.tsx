@@ -9,9 +9,10 @@ import {
 import QuestionCard from "./question-card";
 import { QuizQuestionWithWords } from "@/lib/type";
 import { cn } from "@/lib/utils";
-import { logQuizResult } from "@/lib/actions/quiz.actions";
+import { logQuizResult, updateQuizQuestion } from "@/lib/actions/quiz.actions";
 import QuizSummary from "./quiz-summary";
 import { toast } from "sonner";
+import { useBeforeUnload } from "@/lib/hooks/use-before-unload";
 
 const QuizCarousel = ({
   questions,
@@ -27,6 +28,9 @@ const QuizCarousel = ({
   const [answeredQuestions, setAnsweredQuestions] =
     useState<QuizQuestionWithWords[]>(questions);
   const [sessionFinished, setSessionFinished] = useState(false);
+
+  // Hook to prevent accidental navigation away from the quiz
+  useBeforeUnload(!sessionFinished);
 
   useEffect(() => {
     if (!api) {
@@ -52,10 +56,16 @@ const QuizCarousel = ({
     userAnswer: string,
     isCorrect: boolean
   ) => {
+    // Update the local state for immediate UI feedback
     setAnsweredQuestions((prevQuestions) =>
       prevQuestions.map((q) =>
         q.id === questionId ? { ...q, userAnswer, isCorrect } : q
       )
+    );
+
+    // Call the server action to update the database in the background
+    startTransition(() =>
+      updateQuizQuestion(questionId, userAnswer, isCorrect)
     );
   };
 
@@ -68,15 +78,10 @@ const QuizCarousel = ({
         (new Date().getTime() - startTime.getTime()) / 1000
       );
       const quizLogId = questions[0]?.quizzesLogId;
-      const answersToLog = answeredQuestions.map((q) => ({
-        questionId: q.id,
-        userAnswer: q.userAnswer || "",
-        isCorrect: q.isCorrect || false,
-      }));
 
       if (quizLogId) {
         startTransition(async () => {
-          await logQuizResult(quizLogId, durationSeconds, answersToLog);
+          await logQuizResult(quizLogId, durationSeconds);
           setSessionFinished(true);
         });
       } else {
@@ -92,6 +97,7 @@ const QuizCarousel = ({
   if (questions.length === 0) return null;
   return (
     <div>
+      {/* The AlertDialog is not needed as useBeforeUnload handles browser-native prompts */}
       <div className="flex gap-1">
         {questions.map(({ id }, index) => (
           <div

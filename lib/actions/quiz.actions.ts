@@ -1,8 +1,12 @@
 "use server";
+import { generateObject } from "ai";
 import { prisma } from "@/db/prisma";
 import { quizQuestionSchema } from "../validators";
 import { auth } from "@/auth";
-import { buildDistractorGenerationPrompt } from "../ai-prompts/distractor-generation";
+import {
+  buildDistractorGenerationPrompt,
+  distractorSchema,
+} from "../ai-prompts/distractor-generation";
 import { MasteryLevel, QuestionType } from "../generated/prisma/enums";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
@@ -54,11 +58,11 @@ export async function createQuizSession(
           word.word,
           distractorPool
         );
-        // const { object } = await generateObject({
-        //   model: "openai/gpt-4-turbo",
-        //   prompt,
-        //   schema: distractorSchema,
-        // });
+        const { object } = await generateObject({
+          model: "openai/gpt-4-turbo",
+          prompt,
+          schema: distractorSchema,
+        });
 
         quizQuestions.push(
           quizQuestionSchema.parse({
@@ -66,8 +70,8 @@ export async function createQuizSession(
             direction: "Choose the correct word for the following definition:",
             question: mainMeaning.definition,
             type: QuestionType.MultipleChoice_DefinitionToWord,
-            // options: [...object.distractors, word.word], // Combine and shuffle on client
-            options: [word.word, "heelo", "hi", "goodbye"],
+            options: [...object.distractors, word.word], // Combine and shuffle on client
+            // options: [word.word, "heelo", "hi", "goodbye"],
             answer: word.word,
           })
         );
@@ -115,11 +119,11 @@ export async function createQuizSession(
           correctAnswer,
           distractorPool
         );
-        // const { object } = await generateObject({
-        //   model: "openai/gpt-4-turbo",
-        //   prompt,
-        //   schema: distractorSchema,
-        // });
+        const { object } = await generateObject({
+          model: "openai/gpt-4-turbo",
+          prompt,
+          schema: distractorSchema,
+        });
 
         quizQuestions.push(
           quizQuestionSchema.parse({
@@ -127,8 +131,8 @@ export async function createQuizSession(
             direction: directionText,
             question: word.word,
             type: QuestionType.MultipleChoice_WordToSynonym, // You might want a new QuestionType for antonyms
-            // options: [...object.distractors, correctAnswer],
-            options: ["hello", "hi", "goodbye", correctAnswer],
+            options: [...object.distractors, correctAnswer],
+            // options: ["hello", "hi", "goodbye", correctAnswer],
             answer: correctAnswer,
           })
         );
@@ -142,7 +146,7 @@ export async function createQuizSession(
 
     // --- Question Type 2: Fill in the Blank ---
     // const example = mainMeaning.exampleSentences?.split("|")[0];
-    const example = mainMeaning.exampleSentences?.split("|")[0] + word.word;
+    const example = mainMeaning.exampleSentences?.split("|")[0];
     if (example) {
       const questionText = example.replace(
         new RegExp(`\\b${word.word}\\b`, "gi"),
@@ -192,16 +196,15 @@ export async function createQuizSession(
       }
     }
   }
-  console.log(quizQuestions);
+  // console.log(quizQuestions);
 
-  // 4. Shuffle and save all generated questions to the database
+  // 4. Save all generated questions to the database
   if (quizQuestions.length > 0) {
-    const shuffledQuestions = shuffleArray(quizQuestions);
     try {
       // We cannot use createMany with relations, so we create them one by one.
       // A transaction ensures that if one fails, none are created.
       await prisma.$transaction(
-        shuffledQuestions.map((q) => {
+        quizQuestions.map((q) => {
           const { wordIds, ...questionData } = q;
           return prisma.quizQuestion.create({
             data: {
@@ -325,59 +328,119 @@ export async function cleanupAbandonedQuizzes() {
   }
 }
 
-type QuizAnswer = {
-  questionId: string;
-  userAnswer: string;
-  isCorrect: boolean;
-};
-
-export async function logQuizResult(
-  quizLogId: string,
-  durationSeconds: number,
-  answers: QuizAnswer[]
+export async function updateQuizQuestion(
+  questionId: string,
+  userAnswer: string,
+  isCorrect: boolean
 ) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Authentication required.");
   }
 
-  const correctAnswersCount = answers.filter((a) => a.isCorrect).length;
+  try {
+    const question = await prisma.quizQuestion.update({
+      where: {
+        id: questionId,
+        userId: session.user.id, // Ensure user can only update their own questions
+      },
+      data: { userAnswer, isCorrect },
+      include: {
+        words: true, // Fetch the related words
+      },
+    });
+
+    // --- Mastery Level Update Algorithm ---
+    if (question && question.words.length > 0) {
+      for (const word of question.words) {
+        let newMasteryLevel = word.masteryLevel;
+
+        if (isCorrect) {
+          // Promote the word
+          if (word.masteryLevel === MasteryLevel.New) {
+            newMasteryLevel = MasteryLevel.Learning;
+          } else if (word.masteryLevel === MasteryLevel.Learning) {
+            newMasteryLevel = MasteryLevel.Familiar;
+          } else if (word.masteryLevel === MasteryLevel.Familiar) {
+            newMasteryLevel = MasteryLevel.Mastered;
+          }
+        } else {
+          // Demote the word
+          if (word.masteryLevel === MasteryLevel.Mastered) {
+            newMasteryLevel = MasteryLevel.Familiar;
+          } else if (word.masteryLevel === MasteryLevel.Familiar) {
+            newMasteryLevel = MasteryLevel.Learning;
+          }
+        }
+
+        if (newMasteryLevel !== word.masteryLevel) {
+          await prisma.word.update({
+            where: { id: word.id },
+            data: { masteryLevel: newMasteryLevel },
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Failed to update quiz question:", error);
+    // Optionally return a value to indicate failure
+  }
+}
+
+export async function logQuizResult(
+  quizLogId: string,
+  durationSeconds: number
+) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Authentication required.");
+  }
 
   try {
-    await prisma.$transaction([
-      // 1. Update all the questions with the user's answers
-      ...answers.map((answer) =>
-        prisma.quizQuestion.update({
-          where: { id: answer.questionId },
-          data: { userAnswer: answer.userAnswer, isCorrect: answer.isCorrect },
-        })
-      ),
-      // 2. Update the main quiz log
-      prisma.quizzesLog.update({
-        where: { id: quizLogId, userId: session.user.id },
-        data: {
-          completedAt: new Date(),
-          durationSeconds,
-          quizzesCompleted: correctAnswersCount,
-        },
-      }),
-    ]);
+    // Fetch the questions from the log to calculate the final score
+    const questionsInLog = await prisma.quizQuestion.findMany({
+      where: { quizzesLogId: quizLogId, userId: session.user.id },
+      select: { isCorrect: true },
+    });
+
+    const correctAnswersCount = questionsInLog.filter(
+      (q) => q.isCorrect
+    ).length;
+
+    // Update the main quiz log with the final details
+    await prisma.quizzesLog.update({
+      where: { id: quizLogId, userId: session.user.id },
+      data: {
+        completedAt: new Date(),
+        durationSeconds,
+        quizzesCompleted: correctAnswersCount,
+      },
+    });
   } catch (error) {
     console.error("Failed to log quiz result:", error);
   }
 }
 
 export async function getQuizLog(quizLogId: string) {
-  return await prisma.quizzesLog.findUnique({
+  const quizLog = await prisma.quizzesLog.findUnique({
     where: { id: quizLogId },
     include: {
       questions: {
         include: {
           words: true,
         },
+        orderBy: {
+          createdAt: "asc", // Keep a consistent order from DB
+        },
       },
     },
   });
+
+  if (quizLog?.questions) {
+    quizLog.questions = shuffleArray(quizLog.questions);
+  }
+
+  return quizLog;
 }
 
 export const getRecentQuizzes = async () => {

@@ -41,19 +41,19 @@ const WordMeaning = ({
       {meaning.synonyms && meaning.synonyms.length > 0 && (
         <div className="mt-2">
           <p className="text-lg">Synonyms:</p>
-          <p>{meaning.synonyms}</p>
+          <p>👉 {meaning.synonyms}</p>
         </div>
       )}
       {meaning.antonyms && meaning.antonyms.length > 0 && (
         <div className="mt-2">
           <p className="text-lg">Antonyms:</p>
-          <p>{meaning.antonyms}</p>
+          <p>👉 {meaning.antonyms}</p>
         </div>
       )}
       {meaning.usageNotes && meaning.usageNotes.length > 0 && (
         <div className="mt-2">
           <p className="text-lg">Usage notes:</p>
-          <p>{meaning.usageNotes}</p>
+          <p>📝 {meaning.usageNotes}</p>
         </div>
       )}
     </div>

@@ -1,9 +1,7 @@
 "use server";
-
 import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
-import { revalidatePath } from "next/cache";
-import { ReviewPerformance } from "../constants/enums";
+import { MasteryLevel, ReviewPerformance } from "../constants/enums";
 import { dateFilter } from "../utils/date-filter";
 
 /**
@@ -18,12 +16,20 @@ export async function updateReviewSession(
     throw new Error("Authentication required.");
   }
 
-  const reviewSession = await prisma.reviewSession.findFirst({
-    where: { wordId, userId: session.user.id },
-  });
+  const [reviewSession, word] = await Promise.all([
+    prisma.reviewSession.findFirst({
+      where: { wordId, userId: session.user.id },
+    }),
+    prisma.word.findUnique({
+      where: { id: wordId },
+    }),
+  ]);
 
   if (!reviewSession) {
     throw new Error("Review session not found for this word.");
+  }
+  if (!word) {
+    throw new Error("Word not found for this review session.");
   }
 
   // --- Spaced Repetition Algorithm (Simplified) ---
@@ -55,14 +61,48 @@ export async function updateReviewSession(
   const newScheduledAt = new Date(now.getTime());
   newScheduledAt.setDate(newScheduledAt.getDate() + newInterval);
 
-  await prisma.reviewSession.update({
-    where: { id: reviewSession.id },
-    data: {
-      completedAt: now,
-      intervalDays: newInterval,
-      scheduledAt: newScheduledAt,
-    },
-  });
+  // --- Mastery Level Update Algorithm ---
+  let newMasteryLevel = word.masteryLevel;
+  switch (word.masteryLevel) {
+    case MasteryLevel.New:
+      if (performance >= ReviewPerformance.MEDIUM) {
+        newMasteryLevel = MasteryLevel.Learning;
+      }
+      break;
+    case MasteryLevel.Learning:
+      if (performance >= ReviewPerformance.GOOD) {
+        newMasteryLevel = MasteryLevel.Familiar;
+      }
+      break;
+    case MasteryLevel.Familiar:
+      if (performance === ReviewPerformance.FORGOT) {
+        newMasteryLevel = MasteryLevel.Learning; // Demote
+      } else if (performance >= ReviewPerformance.GOOD) {
+        newMasteryLevel = MasteryLevel.Mastered;
+      }
+      break;
+    case MasteryLevel.Mastered:
+      if (performance <= ReviewPerformance.HARD) {
+        newMasteryLevel = MasteryLevel.Familiar; // Demote if user struggles
+      }
+      break;
+  }
+
+  // --- Database Update ---
+  await prisma.$transaction([
+    prisma.reviewSession.update({
+      where: { id: reviewSession.id },
+      data: {
+        completedAt: now,
+        intervalDays: newInterval,
+        scheduledAt: newScheduledAt,
+      },
+    }),
+    prisma.word.update({
+      where: { id: wordId },
+      data: { masteryLevel: newMasteryLevel },
+    }),
+  ]);
 }
 
 /**
