@@ -74,10 +74,10 @@ const WordOfTheDay = () => {
                 {wordOfTheDay?.word}
               </p>
               <p className="text-gray-600 text-nowrap text-sm">
-                /{wordOfTheDay?.pronunciation}/
+                {wordOfTheDay?.pronunciation}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 justify-between">
               <div>
                 <p className="font-bold">
                   ({wordOfTheDay?.meanings[0]?.partOfSpeech}) -{" "}
@@ -86,13 +86,13 @@ const WordOfTheDay = () => {
                 <p className="text-gray-600 italic text-sm mt-1">Example:</p>
                 <ul className="list-disc ms-4 text-gray-600 italic text-sm">
                   {wordOfTheDay?.meanings[0]?.exampleSentences
-                    .split("\n")
+                    .split("|")
                     .map((example, index) => (
                       <li key={index}>{example}</li>
                     ))}
                 </ul>
               </div>
-              <div className="flex items-center justify-center">
+              <div className="flex items-end justify-center">
                 <AddWord
                   triggerButton={
                     <button className="p-2 rounded-lg bg-blue-100 cursor-pointer hover:bg-blue-200">

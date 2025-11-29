@@ -24,13 +24,18 @@ const QuizSessionPage = async (props: Props) => {
     notFound();
   }
 
+  // Determine if the quiz has been started (at least one question answered)
+  const isQuizStarted = quizLog.questions.some((q) => q.userAnswer !== null);
+
   return (
     <div className={`w-[440px] mx-auto h-full py-2`}>
-      {quizLog.completedAt ? (
+      {/* {quizLog.completedAt || isQuizStarted ? (
         <QuizSummary questions={quizLog.questions} />
-      ) : (
+          ) :
+              (
         <QuizCarousel questions={quizLog.questions} />
-      )}
+        )} */}
+      <QuizCarousel questions={quizLog.questions} />
     </div>
   );
 };

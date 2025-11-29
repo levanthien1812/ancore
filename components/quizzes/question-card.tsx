@@ -1,6 +1,6 @@
 "use client";
 import { QuizQuestion } from "@/lib/type";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { QuizQuestionType } from "@/lib/constants/enums";
 import MultipleChoiceBody from "@/components/quizzes/multiple-choice-body";
 import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
+import { Separator } from "../ui/separator";
 
 const QuestionCard = ({
   question,
@@ -23,15 +24,22 @@ const QuestionCard = ({
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
 
-  const isCorrect = useMemo(() => {
-    if (!isAnswered) return null;
+  const isCorrect = useCallback(() => {
+    if (!selectedAnswer) return false;
+    if (question.type === QuizQuestionType.Matching) {
+      const selectedMatchs = JSON.parse(selectedAnswer);
+      const correctAnswerMap = JSON.parse(question.answer);
+      return Object.entries(selectedMatchs).every(([leftId, rightId]) => {
+        return correctAnswerMap[leftId] === rightId;
+      });
+    }
     return selectedAnswer === question.answer;
-  }, [isAnswered, selectedAnswer, question.answer]);
+  }, [selectedAnswer, question.answer, question.type]);
 
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
       setIsAnswered(true);
-      onAnswered(selectedAnswer, selectedAnswer === question.answer);
+      onAnswered(selectedAnswer, isCorrect());
     }
   };
 
@@ -66,6 +74,47 @@ const QuestionCard = ({
     }
   };
 
+  const correctAnswer = () => {
+    switch (question.type) {
+      case QuizQuestionType.MultipleChoice_DefinitionToWord:
+      case QuizQuestionType.MultipleChoice_WordToSynonym:
+      case QuizQuestionType.FillInTheBlank:
+        return <p className="text-center">{question.answer}</p>;
+      case QuizQuestionType.Matching:
+        const correctAnswerMap = JSON.parse(question.answer) as Record<
+          string,
+          string
+        >;
+        const correctAnswers = Object.entries(correctAnswerMap).map(
+          ([leftId, rightId], index) => {
+            return (
+              <div key={leftId} className="grid grid-cols-3 gap-x-4">
+                <div className="space-y-3 col-span-1 text-green-600">
+                  {leftId}
+                </div>
+                <div className="space-y-3 col-span-2 text-green-600">
+                  {rightId}
+                </div>
+                {index !== Object.entries(correctAnswerMap).length - 1 && (
+                  <Separator
+                    decorative
+                    className="col-span-3 my-2 bg-green-500"
+                  />
+                )}
+              </div>
+            );
+          }
+        );
+        return (
+          <div className="border border-green-600 rounded-md p-4">
+            {correctAnswers}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card className="h-[760px] flex flex-col">
       <CardHeader>
@@ -78,7 +127,7 @@ const QuestionCard = ({
           </CardTitle>
         )}
       </CardHeader>
-      <CardContent className="grow flex flex-col justify-between">
+      <CardContent className="grow flex flex-col justify-between custom-scrollbar-y">
         <div className="grow flex flex-col justify-center">
           {renderQuestionBody()}
         </div>
@@ -86,15 +135,17 @@ const QuestionCard = ({
           {isAnswered && (
             <div
               className={cn(
-                "p-4 rounded-md text-center font-bold",
-                isCorrect
+                "p-4 rounded-md font-bold",
+                isCorrect()
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800"
               )}
             >
-              {isCorrect
-                ? "Correct!"
-                : `Incorrect. The answer is: ${question.answer}`}
+              {isCorrect() ? (
+                <div className="text-center">Correct!</div>
+              ) : (
+                <div>Incorrect. The correct answer is: {correctAnswer()}</div>
+              )}
             </div>
           )}
           {!isAnswered && (

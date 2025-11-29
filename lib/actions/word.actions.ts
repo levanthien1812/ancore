@@ -1,13 +1,14 @@
 "use server";
 import { prisma } from "@/db/prisma";
-import { MasteryLevel, Word, WordMeaning } from "../generated/prisma/client";
+import { Word, WordMeaning } from "../generated/prisma/client";
 import { saveWordSchema } from "../validators";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
-import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
+import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
 import { dateFilter } from "../utils/date-filter";
+import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
 
 export async function getWordListByFilter(
   wordFilter: WordFitler
@@ -36,7 +37,7 @@ export async function getRecentWords() {
   const data = await prisma.word.findMany({
     take: 10,
     orderBy: {
-      createdAt: "desc",
+      updatedAt: "desc",
     },
     include: {
       meanings: true,

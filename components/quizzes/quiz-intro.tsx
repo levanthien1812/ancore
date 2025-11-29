@@ -61,7 +61,7 @@ const QuizIntro = ({
       </div>
       <Button onClick={handleStartQuiz} disabled={isPending} size="lg">
         {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Start Quiz
+        {isPending ? "Preparing quiz..." : "Start Quiz"}
       </Button>
     </div>
   );
