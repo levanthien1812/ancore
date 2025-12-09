@@ -84,7 +84,7 @@ export async function saveWord(prevState: unknown, formData: FormData) {
   const wordId = formData.get("id") as string | null;
 
   const validatedFields = saveWordSchema.safeParse({
-    word: formData.get("word")?.toString().toLowerCase(),
+    word: formData.get("word"),
     pronunciation: formData.get("pronunciation"),
     cefrLevel: formData.get("cefrLevel"),
     masteryLevel: formData.get("masteryLevel"),
@@ -255,7 +255,7 @@ export async function getLearnStreak() {
   const userId = session.user.id;
 
   const uniqueDays: { day: Date }[] = await prisma.$queryRaw`
-    SELECT DISTINCT DATE_TRUNC('day', "updatedAt") as day
+    SELECT DISTINCT DATE_TRUNC('day', "createdAt") as day
     FROM "Word"
     WHERE "userId" = ${userId}
     ORDER BY day DESC
@@ -355,7 +355,7 @@ export const getWordCountLearned = async () => {
   return wordsCount;
 };
 
-export const getWordsToReview = async (limit: number = 10) => {
+export const getWordsToReview = async (limit: number = 20) => {
   const session = await auth();
   if (!session?.user?.id) {
     return []; // Return empty array if not logged in
@@ -364,9 +364,7 @@ export const getWordsToReview = async (limit: number = 10) => {
   const dueReviews = await prisma.reviewSession.findMany({
     where: {
       userId: session.user.id,
-      scheduledAt: {
-        lte: new Date(), // Get all words due today or in the past
-      },
+      scheduledAt: dateFilter(new Date()),
     },
     take: limit, // Limit the number of words per session
     include: {
@@ -395,9 +393,7 @@ export const getWordsToReviewCount = async () => {
   const count = await prisma.reviewSession.count({
     where: {
       userId: session.user.id,
-      scheduledAt: {
-        lte: new Date(), // Count all words due today or in the past
-      },
+      scheduledAt: dateFilter(new Date()),
     },
   });
 

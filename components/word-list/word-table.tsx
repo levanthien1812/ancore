@@ -93,7 +93,6 @@ const WordTable = ({
           />
         ),
         enableSorting: true,
-        enableGlobalFilter: true,
         minSize: 200,
       },
       {
@@ -108,9 +107,7 @@ const WordTable = ({
         enableSorting: false,
       },
       {
-        accessorFn: (row) =>
-          row.meanings.map((meaning) => meaning.definition).join(" "),
-        id: "meanings",
+        accessorKey: "meanings",
         header: "Definition",
         cell: ({ row }) => (
           <WordDefinition
@@ -119,7 +116,6 @@ const WordTable = ({
             )}
           />
         ),
-        enableGlobalFilter: true,
         enableSorting: false,
       },
       {
@@ -182,35 +178,21 @@ const WordTable = ({
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const handleResetFilter = () => {
-    table.resetGlobalFilter();
-    table.getColumn("masteryLevel")?.setFilterValue("");
-  };
-
-  const areFiltersSet = React.useMemo(() => {
-    const globalFilter = table.getState().globalFilter;
-    const masteryLevelFilter = table
-      .getColumn("masteryLevel")
-      ?.getFilterValue();
-    return !!globalFilter || !!masteryLevelFilter;
-  }, [table]);
-
   return (
     <div>
-      <div className="flex items-center gap-2 py-2">
+      <div className="flex items-center gap-2 py-4">
         <Input
           placeholder="Filter words..."
-          value={(table.getState().globalFilter as string) ?? ""}
-          onChange={(event) => {
-            table.setGlobalFilter(event.target.value);
-          }}
+          value={(table.getColumn("word")?.getFilterValue() as string) ?? ""}
+          onChange={(event) =>
+            table.getColumn("word")?.setFilterValue(event.target.value)
+          }
           className="w-52"
         />
         <Select
           onValueChange={(value) =>
             table.getColumn("masteryLevel")?.setFilterValue(value)
           }
-          value={table.getColumn("masteryLevel")?.getFilterValue() as string}
         >
           <SelectTrigger className="">
             <SelectValue placeholder="Select CEFR level" />
@@ -225,11 +207,6 @@ const WordTable = ({
             </SelectGroup>
           </SelectContent>
         </Select>
-        {areFiltersSet && (
-          <Button variant={"default"} onClick={handleResetFilter}>
-            Reset filter
-          </Button>
-        )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="ml-auto">

@@ -12,15 +12,14 @@ const BackFace = ({ word }: { word: WordWithMeanings }) => {
     <div className="h-full flex flex-col justify-center">
       <WordDetail word={word} />
       <div className="absolute bottom-4 right-4">
-        {canScrollNext && (
-          <Button
-            onClick={() => scrollNext()}
-            className="border-2 border-white bg-transparent ms-auto"
-          >
-            Next Word{" "}
-            <ChevronsRight width={14} height={14} className="text-primary-2" />
-          </Button>
-        )}
+        <Button
+          onClick={() => scrollNext()}
+          disabled={!canScrollNext}
+          className="border-2 border-white bg-transparent ms-auto"
+        >
+          Next Word{" "}
+          <ChevronsRight width={14} height={14} className="text-primary-2" />
+        </Button>
       </div>
     </div>
   );
