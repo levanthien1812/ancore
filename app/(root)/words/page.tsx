@@ -12,6 +12,12 @@ const WordsPage = async () => {
   return (
     <div className="container mx-auto space-y-2">
       <h2 className="text-3xl">Word list</h2>
+      <p>
+        Total words:{" "}
+        <span className="text-primary-2 font-bold text-xl">
+          {wordList.length}
+        </span>
+      </p>
       <WordList words={wordList} />
       {/* Pagination */}
     </div>

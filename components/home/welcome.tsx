@@ -50,13 +50,11 @@ const Welcome = () => {
     );
   }
 
-  if (status === "unauthenticated" || !session?.user) return null;
+  const userName = session?.user?.name?.split(" ")[0] || "You";
 
   return (
     <div className=" flex flex-col bg-background-2 p-8 rounded-2xl h-full">
-      <p className="text-[40px] font-bold text-primary">
-        👋Hi {session.user.name?.split(" ")[0] || "You"}!
-      </p>
+      <p className="text-[40px] font-bold text-primary">👋Hi {userName}!</p>
       <div className="text-xl mt-2">
         You&apos;ve learned{" "}
         {isFetchingWordsLearned ? (

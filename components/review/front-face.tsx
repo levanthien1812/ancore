@@ -58,9 +58,8 @@ const FrontFace = ({
     if (word.meanings[0]?.whenToUse)
       availableHints.whenToUse = word.meanings[0]?.whenToUse;
     if (word.meanings[0]?.exampleSentences)
-      availableHints.exampleSentences = word.meanings[0]?.exampleSentences
-        .split("|")[0]
-        .replace(word.word, "_____");
+      availableHints.exampleSentences =
+        word.meanings[0]?.exampleSentences.split("|")[0];
     if (word.meanings[0]?.synonyms)
       availableHints.synonyms = word.meanings[0]?.synonyms;
     return availableHints;
@@ -232,15 +231,6 @@ const FrontFace = ({
                 Still need more hints?
               </Button>
             )}
-            <Button
-              onClick={handleForgotWord}
-              variant={"link"}
-              size={"sm"}
-              className="ms-auto text-white bg-transparent"
-              disabled={isUpdatingReviewSession}
-            >
-              I forgot this word.
-            </Button>
           </div>
         </div>
       )}
@@ -249,6 +239,15 @@ const FrontFace = ({
           <p className="text-sm text-center text-white">Getting hints...</p>
         </div>
       )}
+      <Button
+        onClick={handleForgotWord}
+        variant={"link"}
+        size={"sm"}
+        className="mx-auto text-white bg-transparent mt-2"
+        disabled={isUpdatingReviewSession}
+      >
+        I forgot this word.
+      </Button>
     </div>
   );
 };
