@@ -84,7 +84,9 @@ const FillInTheBlankBody = ({
         return (
           <Input
             key={index}
-            ref={(el) => (inputRefs.current[index] = el)}
+            ref={(el) => {
+              inputRefs.current[index] = el;
+            }}
             type="text"
             maxLength={1}
             value={isHint ? char : userInput[index]}
