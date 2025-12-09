@@ -65,9 +65,7 @@ export async function updateReviewSession(
   let newMasteryLevel = word.masteryLevel;
   switch (word.masteryLevel) {
     case MasteryLevel.New:
-      if (performance >= ReviewPerformance.MEDIUM) {
-        newMasteryLevel = MasteryLevel.Learning;
-      }
+      newMasteryLevel = MasteryLevel.Learning;
       break;
     case MasteryLevel.Learning:
       if (performance >= ReviewPerformance.GOOD) {
@@ -100,7 +98,7 @@ export async function updateReviewSession(
     }),
     prisma.word.update({
       where: { id: wordId },
-      data: { masteryLevel: newMasteryLevel },
+      data: { masteryLevel: newMasteryLevel, updatedAt: now },
     }),
   ]);
 }

@@ -76,7 +76,7 @@ const RecentWords = () => {
                       />
                     </TableCell>
                     <TableCell>
-                      {format(word.createdAt, "dd/MM/yyyy")}
+                      {format(word.updatedAt, "dd/MM/yyyy")}
                     </TableCell>
                     <TableCell>
                       <Button

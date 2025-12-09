@@ -91,7 +91,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
       const data = await response.json();
       const result = JSON.parse(data.result);
 
-      setValue("word", result.word);
+      setValue("word", result.word.toLowerCase());
       setValue("pronunciation", result.pronunciation);
       setValue("cefrLevel", result.cefrLevel);
       setValue("meanings", result.meanings);
