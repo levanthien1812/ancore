@@ -7,7 +7,7 @@ import {
   buildDistractorGenerationPrompt,
   distractorSchema,
 } from "../ai-prompts/distractor-generation";
-import { MasteryLevel, QuestionType } from "../generated/prisma/enums";
+import { MasteryLevel, QuestionType } from "@/lib/generated/prisma/enums";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 

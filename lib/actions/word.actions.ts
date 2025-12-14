@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/db/prisma";
-import { Word, WordMeaning } from "../generated/prisma/client";
+import { Word, WordMeaning } from "@/lib/generated/prisma/client";
 import { saveWordSchema } from "../validators";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
