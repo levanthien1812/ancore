@@ -12,7 +12,7 @@ const FillInTheBlankBody = ({
   question: QuizQuestion;
   setSelectedAnswer: (answer: string) => void;
 }) => {
-  const answer = question.answer;
+  const answer = question.answer as string;
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Determine which letters to show as hints. Use useState's lazy initializer to run only once.
