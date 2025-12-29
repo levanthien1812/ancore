@@ -1,9 +1,9 @@
 "use client";
 
-import { QuizQuestion } from "@/lib/type";
 import { Input } from "../ui/input";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { QuizQuestion } from "@prisma/client";
 
 const FillInTheBlankBody = ({
   setSelectedAnswer,
