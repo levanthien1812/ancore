@@ -1,4 +1,4 @@
-import type { WordMeaning } from "@/lib/generated/prisma/client";
+import type { WordMeaning } from "@prisma/client";
 import React from "react";
 
 const WordMeaning = ({

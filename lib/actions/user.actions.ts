@@ -11,7 +11,7 @@ import { prisma } from "@/db/prisma";
 import { hashSync } from "bcrypt-ts-edge";
 import z from "zod";
 import { revalidatePath } from "next/cache";
-import { UserLevel } from "@/lib/generated/prisma/client";
+import { UserLevel } from "@prisma/client";
 
 export async function signInWithCredentials(
   prevState: unknown,

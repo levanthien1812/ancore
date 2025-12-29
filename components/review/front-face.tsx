@@ -7,7 +7,7 @@ import { CircleCheckBig, Lightbulb, Sun } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
 import { useSession } from "next-auth/react";
-import { User, Word, WordMeaning } from "@/lib/generated/prisma/client";
+import { User, Word, WordMeaning } from "@prisma/client";
 import { updateReviewSession } from "@/lib/actions/review.actions";
 import { ReviewPerformance } from "@/lib/constants/enums";
 import { useCarousel } from "../ui/carousel";

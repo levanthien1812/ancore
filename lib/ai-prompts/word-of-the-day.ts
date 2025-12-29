@@ -1,4 +1,4 @@
-import { User } from "@/lib/generated/prisma/client";
+import { User } from "@prisma/client";
 
 export function buildWordOfTheDayPrompt(user: User): string {
   let userInfo;

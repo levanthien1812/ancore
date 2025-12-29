@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { prisma } from "@/db/prisma";
-import { DifficultyLevel, MasteryLevel } from "@/lib/generated/prisma/client";
+import { DifficultyLevel, MasteryLevel } from "@prisma/client";
 import { faker } from "@faker-js/faker";
 
 async function main() {
