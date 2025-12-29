@@ -1,14 +1,13 @@
 "use server";
 import { prisma } from "@/db/prisma";
-import { Word, WordMeaning } from "@/lib/generated/prisma/client";
 import { saveWordSchema } from "../validators";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
-import { dateFilter } from "../utils/date-filter";
 import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
+import { Word, WordMeaning } from "../generated/prisma/client";
 
 export async function getWordListByFilter(
   wordFilter: WordFitler

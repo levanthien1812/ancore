@@ -10,8 +10,8 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/db/prisma";
 import { hashSync } from "bcrypt-ts-edge";
 import z from "zod";
-import { UserLevel } from "@/lib/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
+import { UserLevel } from "../generated/prisma/client";
 
 export async function signInWithCredentials(
   prevState: unknown,
