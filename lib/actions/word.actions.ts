@@ -7,7 +7,7 @@ import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
 import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
-import { Word, WordMeaning } from "../generated/prisma/client";
+import { Word, WordMeaning } from "@/lib/generated/prisma/client";
 
 export async function getWordListByFilter(
   wordFilter: WordFitler

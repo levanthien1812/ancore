@@ -9,7 +9,7 @@ import {
 } from "../ai-prompts/distractor-generation";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
-import { MasteryLevel, QuestionType } from "../generated/prisma/client";
+import { MasteryLevel, QuestionType } from "@/lib/generated/prisma/client";
 
 export async function createQuizSession(
   wordCount: number = 5
