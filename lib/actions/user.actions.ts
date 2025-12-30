@@ -23,7 +23,7 @@ export async function signInWithCredentials(
       password: formData.get("password"),
     });
 
-    // await signIn("credentials", { ...user, redirectTo: "/" });
+    await signIn("credentials", { ...user, redirectTo: "/" });
 
     return {
       success: true,
