@@ -3,7 +3,7 @@ import { startTransition, useActionState, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import type { User, Word, WordMeaning } from "@/lib/generated/prisma/client";
+import type { User, Word, WordMeaning } from "@prisma/client";
 import { buildWordAutofillPrompt } from "@/lib/ai-prompts/word-autofill";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";

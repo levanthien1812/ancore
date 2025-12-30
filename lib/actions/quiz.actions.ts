@@ -7,9 +7,9 @@ import {
   buildDistractorGenerationPrompt,
   distractorSchema,
 } from "../ai-prompts/distractor-generation";
-import { MasteryLevel, QuestionType } from "../generated/prisma/enums";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
+import { MasteryLevel, QuestionType } from "@prisma/client";
 
 export async function createQuizSession(
   wordCount: number = 5

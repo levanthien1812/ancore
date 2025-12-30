@@ -1,6 +1,6 @@
 import { WordsCountByMasteryLevel } from "../type";
 import { CEFRLevel, MasteryLevel } from "./enums";
-import { Word, WordMeaning } from "../generated/prisma/client";
+import { Word, WordMeaning } from "@prisma/client";
 
 export const INITIAL_MEANING: WordMeaning = {
   id: "",

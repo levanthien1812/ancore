@@ -1,8 +1,8 @@
-import { QuizQuestion } from "@/lib/type";
 import { shuffleArray } from "@/lib/utils/shuffle-array";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { QuizQuestion } from "@prisma/client";
 
 const MultipleChoiceBody = ({
   question,

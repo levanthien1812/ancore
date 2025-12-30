@@ -10,8 +10,8 @@ import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/db/prisma";
 import { hashSync } from "bcrypt-ts-edge";
 import z from "zod";
-import { UserLevel } from "../generated/prisma/enums";
 import { revalidatePath } from "next/cache";
+import { UserLevel } from "@prisma/client";
 
 export async function signInWithCredentials(
   prevState: unknown,
@@ -35,7 +35,7 @@ export async function signInWithCredentials(
     }
     return {
       success: false,
-      message: "Invalid credentials",
+      message: "Invalid hehehehe credentials",
     };
   }
 }

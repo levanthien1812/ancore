@@ -1,4 +1,4 @@
-import type { User } from "@/lib/generated/prisma/client";
+import type { User } from "@prisma/client";
 
 export function buildReviewHintsPrompt(word: string, user: User): string {
   const userInfo = `The user is a ${user.level} learner.`;

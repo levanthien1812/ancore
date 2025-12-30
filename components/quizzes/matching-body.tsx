@@ -1,12 +1,12 @@
 "use client";
 
-import { QuizQuestion } from "@/lib/type";
 import { cn } from "@/lib/utils";
 import { shuffleArray } from "@/lib/utils/shuffle-array";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
+import { QuizQuestion } from "@prisma/client";
 
 type MatchItem = {
   id: string;

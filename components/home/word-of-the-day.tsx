@@ -1,6 +1,6 @@
 "use client";
 import { buildWordOfTheDayPrompt } from "@/lib/ai-prompts/word-of-the-day";
-import { User } from "@/lib/generated/prisma/client";
+import { User } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { BookmarkPlus } from "lucide-react";

@@ -1,4 +1,4 @@
-import type { User } from "@/lib/generated/prisma/client";
+import type { User } from "@prisma/client";
 
 export function buildWordAutofillPrompt(word: string, user: User): string {
   let userInfo;

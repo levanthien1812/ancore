@@ -1,9 +1,9 @@
 "use client";
 
-import { QuizQuestion } from "@/lib/type";
 import { Input } from "../ui/input";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { QuizQuestion } from "@prisma/client";
 
 const FillInTheBlankBody = ({
   setSelectedAnswer,
@@ -12,7 +12,7 @@ const FillInTheBlankBody = ({
   question: QuizQuestion;
   setSelectedAnswer: (answer: string) => void;
 }) => {
-  const answer = question.answer;
+  const answer = question.answer as string;
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Determine which letters to show as hints. Use useState's lazy initializer to run only once.

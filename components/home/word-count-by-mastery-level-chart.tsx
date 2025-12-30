@@ -1,5 +1,5 @@
 "use client";
-import { MasteryLevel } from "@/lib/generated/prisma/enums";
+import { MasteryLevel } from "@prisma/client";
 import { BarChart, Bar, XAxis, LabelList } from "recharts";
 import {
   ChartContainer,

@@ -1,5 +1,4 @@
 "use client";
-import { QuizQuestion } from "@/lib/type";
 import { useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import MultipleChoiceBody from "@/components/quizzes/multiple-choice-body";
 import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
 import { Separator } from "../ui/separator";
+import { QuizQuestion } from "@prisma/client";
 
 const QuestionCard = ({
   question,
