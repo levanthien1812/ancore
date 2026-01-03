@@ -1,5 +1,13 @@
 "use client";
-import { startTransition, useActionState, useEffect, useState } from "react";
+import {
+  startTransition,
+  useActionState,
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  FormEvent,
+} from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -15,20 +23,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { INITIAL_MEANING, INITIAL_WORD } from "@/lib/constants/initial-values";
+import {
+  INITIAL_MEANING,
+  INITIAL_WORD,
+  initialActionState,
+} from "@/lib/constants/initial-values";
 import Meaning from "./meaning";
 import WordSuggest from "./word-suggest";
-import { saveWord } from "@/lib/actions/word.actions";
+import { checkWordExists, saveWord } from "@/lib/actions/word.actions";
+import { debounce } from "@/lib/utils/debounce";
 import { CEFR_LEVELS, MASTERY_LEVELS } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { Volume2Icon } from "lucide-react";
 import { WordOfTheDay } from "../home/word-of-the-day";
-
-const initialState = {
-  success: false,
-  message: "",
-  errors: {},
-};
+import { useQueryClient } from "@tanstack/react-query";
+import { Checkbox } from "../ui/checkbox";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -44,13 +53,22 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   const [enteredWord, setEnteredWord] = useState(
     word?.word || wordOfTheDay?.word || ""
   );
+  const queryClient = useQueryClient();
+  const [wordExistsError, setWordExistsError] = useState<string | null>(null);
+  const session = useSession();
+  const [generated, setGenerated] = useState(false);
+  const [state, formAction, isLoading] = useActionState(
+    saveWord,
+    initialActionState
+  );
+
   const defaultValues = (): WordWithMeanings => {
-    if (word) return word;
-    if (wordOfTheDay) {
+    const existingWord = word || wordOfTheDay;
+    if (existingWord) {
       return {
         ...INITIAL_WORD,
-        ...wordOfTheDay,
-        meanings: wordOfTheDay.meanings.map((meaning) => ({
+        ...existingWord,
+        meanings: existingWord.meanings.map((meaning) => ({
           ...INITIAL_MEANING,
           ...meaning,
         })),
@@ -59,7 +77,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     return { ...INITIAL_WORD, meanings: [INITIAL_MEANING] };
   };
 
-  const { register, setValue, handleSubmit, reset, control } =
+  const { register, setValue, handleSubmit, reset, control, watch } =
     useForm<WordWithMeanings>({
       defaultValues: defaultValues(),
     });
@@ -67,9 +85,32 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     control,
     name: "meanings",
   });
-  const session = useSession();
-  const [generated, setGenerated] = useState(false);
-  const [state, formAction, isLoading] = useActionState(saveWord, initialState);
+
+  const highlighted = watch("highlighted");
+
+  const checkWord = useCallback(
+    async (wordToCheck: string) => {
+      // Don't check if we are editing the same word
+      if (word && word.word.toLowerCase() === wordToCheck.toLowerCase()) {
+        setWordExistsError(null);
+        return;
+      }
+      const exists = await checkWordExists(wordToCheck);
+      if (exists) {
+        setWordExistsError(
+          `The word "${wordToCheck}" already exists in your vocabulary.`
+        );
+      } else {
+        setWordExistsError(null);
+      }
+    },
+    [word]
+  );
+
+  const debouncedCheckWord = useMemo(
+    () => debounce(checkWord, 500),
+    [checkWord]
+  );
 
   const handleClickFillWithAi = async () => {
     if (enteredWord.trim().length === 0 || !session.data) return;
@@ -108,21 +149,20 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   };
 
   const handleWordChange = (value: string) => {
+    const trimmedValue = value.trim();
     setEnteredWord(value);
     setValue("word", value);
-    if (value.trim().length === 0) {
+    if (trimmedValue.length > 0) {
+      debouncedCheckWord(trimmedValue);
+    } else {
       reset({ ...INITIAL_WORD, meanings: [INITIAL_MEANING] });
       setGenerated(false);
+      setWordExistsError(null);
     }
   };
 
-  // if (state.success) {
-  //   reset();
-  //   setMeanings([INITIAL_MEANING]);
-  //   setGenerated(false);
-  // }
-
   const onSubmit = (data: WordWithMeanings) => {
+    console.log(String(false), "false", !!String(false));
     const formData = new FormData();
 
     // Manually append all fields to FormData
@@ -156,9 +196,11 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
 
   useEffect(() => {
     if (state.success) {
+      queryClient.invalidateQueries({ queryKey: ["words"] });
+      queryClient.invalidateQueries({ queryKey: ["recentWords"] });
       onClose();
     }
-  }, [state.success, onClose]);
+  }, [state.success, onClose, queryClient]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -171,6 +213,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
           existingWord={word?.word || wordOfTheDay?.word}
         />
 
+        {wordExistsError && <FieldError error={wordExistsError} />}
         {state.success === false && !state.errors && (
           <FieldError error={state.message} />
         )}
@@ -194,6 +237,17 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
           >
             {generated ? `Regenerate` : `Fill with AI`}
           </Button>
+        </div>
+        <div className="flex items-end gap-1">
+          <Checkbox
+            id="highlighted"
+            {...register("highlighted")}
+            checked={highlighted}
+            onCheckedChange={(value) => setValue("highlighted", !!value)}
+          />
+          <Label htmlFor="highlighted" className="text-right">
+            Highlighed
+          </Label>
         </div>
         <div className="grid gap-1">
           <Label htmlFor="pronunciation" className="text-right">
@@ -299,7 +353,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         <Button variant={"outline"} type="button" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button type="submit" disabled={isLoading || !!wordExistsError}>
           {!isLoading ? "Save" : "Saving..."}
         </Button>
       </div>

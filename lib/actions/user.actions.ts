@@ -35,7 +35,7 @@ export async function signInWithCredentials(
     }
     return {
       success: false,
-      message: "Invalid hehehehe credentials",
+      message: "Invalid credentials",
     };
   }
 }

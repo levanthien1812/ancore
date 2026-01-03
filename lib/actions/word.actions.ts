@@ -8,6 +8,7 @@ import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
 import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
 import { Word, WordMeaning } from "@prisma/client";
+import { toBoolean } from "../utils/to-boolean";
 
 export async function getWordListByFilter(
   wordFilter: WordFitler
@@ -90,7 +91,10 @@ export async function saveWord(prevState: unknown, formData: FormData) {
     audioUrl: formData.get("audioUrl") || "",
     tags: formData.get("tags"),
     meanings: formData.get("meanings"),
+    highlighted: toBoolean(formData.get("highlighted") as string),
   });
+
+  console.log(validatedFields);
 
   if (!validatedFields.success) {
     return {
@@ -160,9 +164,11 @@ export async function saveWord(prevState: unknown, formData: FormData) {
       }
     }
 
-    revalidatePath("/"); // Or any other path you want to revalidate
+    revalidatePath("/words");
+
     return { success: true, message: "Word saved successfully." };
   } catch (error) {
+    console.log(error);
     return { success: false, message: "Database error: Failed to save word." };
   }
 }
@@ -401,4 +407,53 @@ export const getWordsToReviewCount = async () => {
   });
 
   return count;
+};
+
+export async function deleteWords(prevState: unknown, formData: FormData) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Authentication required." };
+  }
+
+  const userId = session.user.id;
+  const wordIds = formData.getAll("ids") as string[];
+
+  try {
+    await prisma.$transaction([
+      prisma.wordMeaning.deleteMany({
+        where: { wordId: { in: wordIds } },
+      }),
+      prisma.reviewSession.deleteMany({
+        where: { wordId: { in: wordIds } },
+      }),
+      prisma.word.deleteMany({
+        where: {
+          id: { in: wordIds },
+          userId,
+        },
+      }),
+    ]);
+
+    revalidatePath("/words");
+
+    return { success: true, message: "Words deleted successfully." };
+  } catch (error) {
+    return { success: false, message: "Failed to delete words." };
+  }
+}
+
+export const checkWordExists = async (word: string) => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return false;
+  }
+
+  const existingWord = await prisma.word.findFirst({
+    where: {
+      userId: session.user.id,
+      word: word.toLowerCase(),
+    },
+  });
+
+  return !!existingWord;
 };

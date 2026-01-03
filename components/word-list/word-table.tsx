@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import {
   Table,
@@ -24,13 +24,14 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  PaginationState,
   SortingState,
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, EqualIcon, StarIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -47,6 +48,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
+import ActionsPanel from "./actions-panel";
+import { PAGE_SIZES } from "@/lib/constants/constant";
 
 const WordTable = ({
   words,
@@ -95,6 +98,19 @@ const WordTable = ({
         enableSorting: true,
         enableGlobalFilter: true,
         minSize: 200,
+      },
+      {
+        accessorKey: "highlighted",
+        header: "Highlighted",
+        cell: ({ row }) => {
+          return row.original.highlighted ? (
+            <span className="text-center">⭐</span>
+          ) : (
+            ""
+          );
+        },
+        enableSorting: true,
+        enableGlobalFilter: true,
       },
       {
         accessorKey: "pronunciation",
@@ -162,20 +178,27 @@ const WordTable = ({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const table = useReactTable({
     data: words,
     columns,
+    getRowId: (row) => row.id,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      pagination,
     },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -213,7 +236,7 @@ const WordTable = ({
           value={table.getColumn("masteryLevel")?.getFilterValue() as string}
         >
           <SelectTrigger className="">
-            <SelectValue placeholder="Select CEFR level" />
+            <SelectValue placeholder="Select Mastery level" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -315,11 +338,39 @@ const WordTable = ({
         </TableBody>
       </Table>
       <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="text-muted-foreground flex-1 text-sm">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+        <div className="flex gap-2 items-center justify-start flex-1">
+          <div className="text-muted-foreground text-sm">
+            {table.getFilteredSelectedRowModel().rows.length} of{" "}
+            {table.getFilteredRowModel().rows.length} row(s) selected.
+          </div>
+          {table.getFilteredSelectedRowModel().rows.length > 0 && (
+            <ActionsPanel
+              selectedRows={table.getFilteredSelectedRowModel().rows}
+            />
+          )}
         </div>
-        <div className="space-x-2">
+
+        <div className="space-x-2 flex gap-2">
+          <div className="flex gap-2 items-center">
+            <span className="text-sm">Rows per page: </span>
+            <Select
+              onValueChange={(value) => table.setPageSize(Number(value))}
+              value={String(table.getState().pagination.pageSize)}
+            >
+              <SelectTrigger className="text-sm" size="sm">
+                <SelectValue defaultValue={PAGE_SIZES[0]} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {PAGE_SIZES.map((count) => (
+                    <SelectItem key={count} value={`${count}`}>
+                      {count}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             variant="outline"
             size="sm"
