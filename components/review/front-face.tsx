@@ -103,7 +103,6 @@ const FrontFace = ({
     useMutation({
       mutationFn: async (performance: ReviewPerformance) => {
         const response = await updateReviewSession(word.id, performance);
-        console.log(response);
       },
       mutationKey: ["updateReviewSession"],
     });

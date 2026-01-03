@@ -98,6 +98,15 @@ const Meaning = ({
                 </div>
               </div>
               <div className="grid gap-1">
+                <Label htmlFor="whenToUse" className="text-right">
+                  When to use
+                </Label>
+                <Input
+                  id="whenToUse"
+                  {...register(`meanings.${index}.whenToUse`)}
+                />
+              </div>
+              <div className="grid gap-1">
                 <Label htmlFor="synonyms" className="text-right">
                   Synonyms
                 </Label>
@@ -118,11 +127,11 @@ const Meaning = ({
                 />
               </div>
               <div className="grid gap-1">
-                <Label htmlFor="user-notes" className="text-right">
-                  User Notes
+                <Label htmlFor="usage-notes" className="text-right">
+                  Usage Notes
                 </Label>
                 <Textarea
-                  id="user-notes"
+                  id="usage-notes"
                   {...register(`meanings.${index}.usageNotes`)}
                 />
               </div>

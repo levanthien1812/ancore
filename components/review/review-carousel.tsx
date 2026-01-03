@@ -68,6 +68,10 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
       ...prev,
       [performance]: [...prev[performance], currentWord.word],
     }));
+
+    if (words.indexOf(currentWord) === words.length - 1) {
+      handleFinishSession();
+    }
   };
 
   const handleFinishSession = () => {

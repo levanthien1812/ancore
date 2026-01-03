@@ -7,6 +7,7 @@ export const saveWordMeaningSchema = z.object({
   exampleSentences: z.string().trim().optional(),
   synonyms: z.string().trim().optional(),
   antonyms: z.string().trim().optional(),
+  whenToUse: z.string().trim().optional(),
   usageNotes: z.string().trim().optional(),
 });
 
@@ -25,6 +26,7 @@ export const saveWordSchema = z.object({
     .optional()
     .or(z.literal("")),
   tags: z.string().optional(),
+  highlighted: z.boolean().optional(),
   meanings: z.preprocess((value) => {
     if (typeof value === "string") {
       try {

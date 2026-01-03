@@ -1,4 +1,4 @@
-import { WordsCountByMasteryLevel } from "../type";
+import { ActionState, WordsCountByMasteryLevel } from "../type";
 import { CEFRLevel, MasteryLevel } from "./enums";
 import { Word, WordMeaning } from "@prisma/client";
 
@@ -25,6 +25,7 @@ export const INITIAL_WORD: Word = {
   tags: "",
   userId: "",
   audioUrl: "",
+  highlighted: false,
 };
 
 export const defaultWordsCountByMasteryLevel: WordsCountByMasteryLevel = {
@@ -32,4 +33,10 @@ export const defaultWordsCountByMasteryLevel: WordsCountByMasteryLevel = {
   Learning: 0,
   Familiar: 0,
   Mastered: 0,
+};
+
+export const initialActionState: ActionState = {
+  success: false,
+  message: "",
+  errors: {},
 };

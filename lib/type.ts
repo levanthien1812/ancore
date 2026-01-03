@@ -23,3 +23,9 @@ export type WordsCountByPeriod = {
 export type QuizQuestionWithWords = QuizQuestion & {
   words: Word[];
 };
+
+export type ActionState = {
+  success: boolean;
+  message: string;
+  errors?: Record<string, string[]>;
+};
