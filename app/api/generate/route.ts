@@ -1,3 +1,4 @@
+import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
 import openai from "@/lib/openai";
 import { NextResponse } from "next/server";
 
@@ -12,15 +13,9 @@ export async function POST(request: Request) {
       );
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-      max_tokens: 1000,
-    });
+    const data = await fillWordWithAi(prompt);
 
-    const result = completion.choices[0].message.content;
-
-    return NextResponse.json({ result }, { status: 200 });
+    return NextResponse.json({ result: data }, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

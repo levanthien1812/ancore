@@ -6,22 +6,24 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { useEffect, useState } from "react";
 import { getWordsCountPerMasteryLevel } from "@/lib/actions/word.actions";
 import { WordsCountByMasteryLevel } from "@/lib/type";
 import { defaultWordsCountByMasteryLevel } from "@/lib/constants/initial-values";
+import { useQuery } from "@tanstack/react-query";
 
 const WordCountByMasteryLevelChart = () => {
-  const [wordCounts, setWordCounts] = useState<WordsCountByMasteryLevel>(
-    defaultWordsCountByMasteryLevel
-  );
+  const { data: wordCounts } = useQuery<WordsCountByMasteryLevel | null>({
+    queryKey: ["getWordsCountPerMasteryLevel"],
+    queryFn: async () => {
+      const fetchedWordCounts = await getWordsCountPerMasteryLevel();
+      return fetchedWordCounts;
+    },
+    initialData: defaultWordsCountByMasteryLevel,
+  });
 
-  useEffect(() => {
-    (async () => {
-      const wordCounts = await getWordsCountPerMasteryLevel();
-      setWordCounts(wordCounts);
-    })();
-  }, []);
+  if (!wordCounts) {
+    return null;
+  }
 
   const chartData = Object.keys(wordCounts).map((level) => ({
     level: level,

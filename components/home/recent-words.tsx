@@ -18,15 +18,25 @@ import WordOfTheDay from "./word-of-the-day";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
+import { RefreshCcw } from "lucide-react";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
 
-  const { data: words, isFetching } = useQuery({
+  const {
+    data: words,
+    isFetching,
+    refetch,
+  } = useQuery({
     queryKey: ["recentWords"],
     queryFn: getRecentWords,
     initialData: [],
+    refetchOnWindowFocus: false,
   });
+
+  const handleRefresh = () => {
+    refetch();
+  };
 
   const tableSkeleton = useMemo(() => {
     return Array.from({ length: 5 }).map((_, index) => (
@@ -46,7 +56,18 @@ const RecentWords = () => {
 
   return (
     <div className=" flex flex-col bg-background-2 p-8 rounded-2xl">
-      <p className="text-[40px] font-bold text-primary">📋 Recent words!</p>
+      <div className="">
+        <span className="text-[40px] font-bold text-primary">
+          📋 Recent words!
+        </span>
+
+        <button
+          onClick={handleRefresh}
+          className="ms-2 active:rotate-180 transition-all ease-in duration-500 cursor-pointer"
+        >
+          <RefreshCcw className="text-primary" height={20} />
+        </button>
+      </div>
       <div className="border border-primary rounded-xl">
         <Table>
           <TableHeader>
