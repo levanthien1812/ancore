@@ -6,13 +6,11 @@ import {
   useState,
   useCallback,
   useMemo,
-  FormEvent,
 } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import type { User, Word, WordMeaning } from "@prisma/client";
-import { buildWordAutofillPrompt } from "@/lib/ai-prompts/word-autofill";
+import type { Word, WordMeaning } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -30,13 +28,17 @@ import {
 } from "@/lib/constants/initial-values";
 import Meaning from "./meaning";
 import WordSuggest from "./word-suggest";
-import { checkWordExists, saveWord } from "@/lib/actions/word.actions";
+import {
+  checkWordExists,
+  fillWithAI,
+  saveWord,
+} from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
 import { CEFR_LEVELS, MASTERY_LEVELS } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { Volume2Icon } from "lucide-react";
 import { WordOfTheDay } from "../home/word-of-the-day";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 
 export type WordWithMeanings = Word & {
@@ -112,32 +114,27 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     [checkWord]
   );
 
-  const handleClickFillWithAi = async () => {
-    if (enteredWord.trim().length === 0 || !session.data) return;
-
-    const prompt = buildWordAutofillPrompt(
-      enteredWord,
-      session.data.user as User
-    );
-
-    const response = await fetch("/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ prompt }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const result = JSON.parse(data.result);
+  const { mutate: fillWithAIMutate, isPending: isFillingWithAi } = useMutation({
+    mutationKey: ["fillWithAI", enteredWord],
+    mutationFn: async () => {
+      const responseData = await fillWithAI(enteredWord);
+      return responseData;
+    },
+    onSuccess: (data) => {
+      if (!data) return;
+      const result = JSON.parse(data);
 
       setValue("word", result.word.toLowerCase());
       setValue("pronunciation", result.pronunciation);
       setValue("cefrLevel", result.cefrLevel);
       setValue("meanings", result.meanings);
       setGenerated(true);
-    }
+    },
+  });
+
+  const handleClickFillWithAi = async () => {
+    if (enteredWord.trim().length === 0 || !session.data) return;
+    fillWithAIMutate();
   };
 
   const handleClickAddMeaning = () => {
@@ -162,7 +159,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   };
 
   const onSubmit = (data: WordWithMeanings) => {
-    console.log(String(false), "false", !!String(false));
     const formData = new FormData();
 
     // Manually append all fields to FormData
@@ -195,12 +191,17 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   };
 
   useEffect(() => {
-    if (state.success) {
+    if (state && state.success) {
       queryClient.invalidateQueries({ queryKey: ["words"] });
       queryClient.invalidateQueries({ queryKey: ["recentWords"] });
+      queryClient.invalidateQueries({ queryKey: ["getWordsCountByPeriod"] });
+      queryClient.invalidateQueries({
+        queryKey: ["getWordsCountPerMasteryLevel"],
+      });
+
       onClose();
     }
-  }, [state.success, onClose, queryClient]);
+  }, [state, onClose, queryClient]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -214,10 +215,10 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         />
 
         {wordExistsError && <FieldError error={wordExistsError} />}
-        {state.success === false && !state.errors && (
+        {state && !state.success && !state.errors && (
           <FieldError error={state.message} />
         )}
-        <FieldError error={state.errors?.word?.join(", ")} />
+        <FieldError error={state?.errors?.word?.join(", ")} />
         <Input id="word" name="word" type="hidden" value={enteredWord} />
         <div className="flex justify-end items-center">
           {enteredWord.trim().length > 0 && (
@@ -235,7 +236,11 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             onClick={handleClickFillWithAi}
             disabled={enteredWord.trim().length === 0}
           >
-            {generated ? `Regenerate` : `Fill with AI`}
+            {isFillingWithAi
+              ? "Generating..."
+              : generated
+              ? `Regenerate`
+              : `Fill with AI`}
           </Button>
         </div>
         <div className="flex items-end gap-1">
@@ -264,7 +269,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
               <Volume2Icon />
             </Button>
           </div>
-          <FieldError error={state.errors?.pronunciation?.join(", ")} />
+          <FieldError error={state?.errors?.pronunciation?.join(", ")} />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="masteryLevel" className="text-right">
@@ -290,7 +295,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
               </Select>
             )}
           />
-          <FieldError error={state.errors?.masteryLevel?.join(", ")} />
+          <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
         </div>
         {fields.map((field, index) => (
           <Meaning
@@ -299,7 +304,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             onRemove={handleRemoveMeaning}
             register={register}
             setValue={setValue}
-            errors={state.errors?.meanings}
+            errors={state?.errors?.meanings}
           />
         ))}
         <div className="flex justify-end">
@@ -335,7 +340,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
               </Select>
             )}
           />
-          <FieldError error={state.errors?.cefrLevel?.join(", ")} />
+          <FieldError error={state?.errors?.cefrLevel?.join(", ")} />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="tags" className="text-right">
@@ -346,7 +351,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             placeholder="tag 1, tag 2, tag 3, ..."
             {...register("tags")}
           />
-          <FieldError error={state.errors?.tags?.join(", ")} />
+          <FieldError error={state?.errors?.tags?.join(", ")} />
         </div>
       </div>
       <div className="flex gap-2 justify-end mt-2">

@@ -72,7 +72,11 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
         </div>
       </div>
 
-      <WordPronunciation word={word.word} pronunciation={word.pronunciation} />
+      <WordPronunciation
+        word={word.word}
+        pronunciation={word.pronunciation}
+        light={true}
+      />
 
       <Carousel setApi={setApi} className="w-full mt-2">
         <CarouselContent>

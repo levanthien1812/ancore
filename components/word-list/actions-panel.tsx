@@ -36,7 +36,7 @@ const ActionsPanel = ({ selectedRows }: Props) => {
       showDialog={showDeleteDialog}
       setShowDialog={setShowDeleteDialog}
       handleDelete={handleDelete}
-      message={state.message}
+      message={state?.message || ""}
       isLoading={isLoading}
       title="Delete word"
       triggerButton={

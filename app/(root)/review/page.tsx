@@ -8,6 +8,8 @@ import ReviewHistory from "@/components/review/review-history";
 const ReviewPage = async () => {
   const wordsToReview = await getWordsToReview();
 
+  if (!wordsToReview) return null;
+
   return (
     <div className="w-[440px] mx-auto h-full py-2">
       <Tabs defaultValue="review" className="h-full">

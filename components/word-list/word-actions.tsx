@@ -29,10 +29,10 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
   });
 
   useEffect(() => {
-    if (state.success) {
+    if (state && state.success) {
       onDeleteSuccess();
     }
-  }, [state.success]);
+  }, [state]);
 
   const handleDelete = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -62,7 +62,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
         showDialog={showDeleteDialog}
         setShowDialog={setShowDeleteDialog}
         handleDelete={handleDelete}
-        message={state.message}
+        message={state?.message || ""}
         isLoading={isLoading}
         title="Delete word"
         triggerButton={

@@ -19,8 +19,9 @@ import {
   SelectValue,
 } from "../ui/select";
 import { format } from "date-fns";
-import { Period, WordsCountByPeriod } from "@/lib/type";
+import { Period } from "@/lib/type";
 import { Label } from "../ui/label";
+import { useQuery } from "@tanstack/react-query";
 
 const periodQuantitiesMap: Record<
   Period,
@@ -34,19 +35,19 @@ const periodQuantitiesMap: Record<
 const PERIOD_OPTIONS: Period[] = ["day", "week", "month"];
 
 const WordCountByPeriodChart = () => {
-  const [wordCounts, setWordCounts] = useState<WordsCountByPeriod[]>();
   const [period, setPeriod] = useState<Period>("day");
   const [quantity, setQuantity] = useState<number>(7);
   const [quantitySet, setQuantitySet] = useState<number[]>(
     periodQuantitiesMap[period].values
   );
 
-  useEffect(() => {
-    (async () => {
+  const { data: wordCounts } = useQuery({
+    queryKey: ["getWordsCountByPeriod", period, quantity],
+    queryFn: async () => {
       const fetchedWordCounts = await getWordsCountByPeriod(period, quantity);
-      setWordCounts(fetchedWordCounts);
-    })();
-  }, [period, quantity]);
+      return fetchedWordCounts;
+    },
+  });
 
   useEffect(() => {
     setQuantitySet(periodQuantitiesMap[period].values);

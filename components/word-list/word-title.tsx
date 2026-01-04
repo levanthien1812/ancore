@@ -12,12 +12,12 @@ const WordTitle = ({ word, onClick }: WordTitleProps) => {
   const [hover, setHover] = useState(false);
   return (
     <div
-      className="font-bold text-xl text-primary flex gap-1 items-center cursor-pointer"
+      className="flex gap-1 items-center cursor-pointer text-primary"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={onClick}
     >
-      {word.word}{" "}
+      <span className="font-bold text-xl leading-0">{word.word}</span>
       {hover && <SquareArrowOutUpRightIcon width={14} height={14} />}
     </div>
   );

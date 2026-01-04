@@ -7,8 +7,11 @@ import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
 import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
-import { Word, WordMeaning } from "@prisma/client";
+import { User, Word, WordMeaning } from "@prisma/client";
 import { toBoolean } from "../utils/to-boolean";
+import { buildWordAutofillPrompt } from "../ai-prompts/word-autofill";
+import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
+import { authenticationAction } from "./_helpers";
 
 export async function getWordListByFilter(
   wordFilter: WordFitler
@@ -70,108 +73,102 @@ export async function updateWord(id: string, data: Partial<Word>) {
   return updatedData;
 }
 
-export async function saveWord(prevState: unknown, formData: FormData) {
-  const session = await auth();
+export const saveWord = async (prevState: unknown, formData: FormData) =>
+  authenticationAction(async (userId) => {
+    const wordId = formData.get("id") as string | null;
 
-  if (!session?.user?.id) {
-    return {
-      success: false,
-      message: "Authentication required.",
-    };
-  }
-  const userId = session.user.id;
+    const validatedFields = saveWordSchema.safeParse({
+      word: formData.get("word")?.toString().toLowerCase(),
+      pronunciation: formData.get("pronunciation"),
+      cefrLevel: formData.get("cefrLevel"),
+      masteryLevel: formData.get("masteryLevel"),
+      audioUrl: formData.get("audioUrl") || "",
+      tags: formData.get("tags"),
+      meanings: formData.get("meanings"),
+      highlighted: toBoolean(formData.get("highlighted") as string),
+    });
 
-  const wordId = formData.get("id") as string | null;
-
-  const validatedFields = saveWordSchema.safeParse({
-    word: formData.get("word")?.toString().toLowerCase(),
-    pronunciation: formData.get("pronunciation"),
-    cefrLevel: formData.get("cefrLevel"),
-    masteryLevel: formData.get("masteryLevel"),
-    audioUrl: formData.get("audioUrl") || "",
-    tags: formData.get("tags"),
-    meanings: formData.get("meanings"),
-    highlighted: toBoolean(formData.get("highlighted") as string),
-  });
-
-  console.log(validatedFields);
-
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      message: "Validation failed.",
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  const { meanings: meaningData, ...wordData } = validatedFields.data;
-
-  try {
-    if (wordId) {
-      // --- UPDATE LOGIC ---
-      // Ensure the user owns the word they are trying to update
-      const existingWord = await prisma.word.findFirst({
-        where: { id: wordId, userId },
-      });
-
-      if (!existingWord) {
-        return {
-          success: false,
-          message: "Word not found or permission denied.",
-        };
-      }
-
-      // Transaction to update word, delete old meanings, and create new ones
-      await prisma.$transaction([
-        prisma.word.update({
-          where: { id: wordId },
-          data: { ...wordData },
-        }),
-        prisma.wordMeaning.deleteMany({ where: { wordId } }),
-        prisma.wordMeaning.createMany({
-          data: meaningData.map((meaning) => ({
-            ...meaning,
-            wordId: wordId,
-          })),
-        }),
-      ]);
-    } else {
-      // --- CREATE LOGIC ---
-      const word = await prisma.word.create({
-        data: {
-          ...wordData,
-          userId,
-        },
-      });
-
-      await prisma.wordMeaning.createMany({
-        data: meaningData.map((meaning) => ({ ...meaning, wordId: word.id })),
-      });
-
-      if (word) {
-        const now = new Date();
-        const initialInterval = 1; // Review again in 1 day
-
-        await prisma.reviewSession.create({
-          data: {
-            userId: word.userId,
-            wordId: word.id,
-            completedAt: now,
-            intervalDays: initialInterval,
-            scheduledAt: new Date(now.setDate(now.getDate() + initialInterval)),
-          },
-        });
-      }
+    if (!validatedFields.success) {
+      return {
+        success: false,
+        message: "Validation failed.",
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
     }
 
-    revalidatePath("/words");
+    const { meanings: meaningData, ...wordData } = validatedFields.data;
 
-    return { success: true, message: "Word saved successfully." };
-  } catch (error) {
-    console.log(error);
-    return { success: false, message: "Database error: Failed to save word." };
-  }
-}
+    try {
+      if (wordId) {
+        // --- UPDATE LOGIC ---
+        // Ensure the user owns the word they are trying to update
+        const existingWord = await prisma.word.findFirst({
+          where: { id: wordId, userId },
+        });
+
+        if (!existingWord) {
+          return {
+            success: false,
+            message: "Word not found or permission denied.",
+          };
+        }
+
+        // Transaction to update word, delete old meanings, and create new ones
+        await prisma.$transaction([
+          prisma.word.update({
+            where: { id: wordId },
+            data: { ...wordData },
+          }),
+          prisma.wordMeaning.deleteMany({ where: { wordId } }),
+          prisma.wordMeaning.createMany({
+            data: meaningData.map((meaning) => ({
+              ...meaning,
+              wordId: wordId,
+            })),
+          }),
+        ]);
+      } else {
+        // --- CREATE LOGIC ---
+        const word = await prisma.word.create({
+          data: {
+            ...wordData,
+            userId,
+          },
+        });
+
+        await prisma.wordMeaning.createMany({
+          data: meaningData.map((meaning) => ({ ...meaning, wordId: word.id })),
+        });
+
+        if (word) {
+          const now = new Date();
+          const initialInterval = 1; // Review again in 1 day
+
+          await prisma.reviewSession.create({
+            data: {
+              userId: word.userId,
+              wordId: word.id,
+              completedAt: now,
+              intervalDays: initialInterval,
+              scheduledAt: new Date(
+                now.setDate(now.getDate() + initialInterval)
+              ),
+            },
+          });
+        }
+      }
+
+      revalidatePath("/words");
+
+      return { success: true, message: "Word saved successfully." };
+    } catch (error) {
+      console.log(error);
+      return {
+        success: false,
+        message: "Database error: Failed to save word.",
+      };
+    }
+  });
 
 export async function saveMeaning(meaning: WordMeaning) {
   const data = await prisma.wordMeaning.create({
@@ -225,30 +222,26 @@ function calculateStreak(uniqueDays: { day: Date }[]): number {
   return streak;
 }
 
-export async function getWordsCountPerMasteryLevel() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return defaultWordsCountByMasteryLevel;
-  }
+export const getWordsCountPerMasteryLevel = async () =>
+  authenticationAction(async (userId) => {
+    const wordsCount = await prisma.word.groupBy({
+      by: ["masteryLevel"],
+      where: {
+        userId,
+      },
+      _count: {
+        masteryLevel: true,
+      },
+    });
 
-  const wordsCount = await prisma.word.groupBy({
-    by: ["masteryLevel"],
-    where: {
-      userId: session?.user?.id,
-    },
-    _count: {
-      masteryLevel: true,
-    },
+    return wordsCount.reduce(
+      (acc, cur) => {
+        acc[cur.masteryLevel] = cur._count.masteryLevel;
+        return acc;
+      },
+      { ...defaultWordsCountByMasteryLevel }
+    );
   });
-
-  return wordsCount.reduce(
-    (acc, cur) => {
-      acc[cur.masteryLevel] = cur._count.masteryLevel;
-      return acc;
-    },
-    { ...defaultWordsCountByMasteryLevel }
-  );
-}
 
 export async function getLearnStreak() {
   const session = await auth();
@@ -268,32 +261,26 @@ export async function getLearnStreak() {
   return calculateStreak(uniqueDays);
 }
 
-export async function getWordsCountByPeriod(
+export const getWordsCountByPeriod: (
   period: Period,
   periodCount: number
-): Promise<WordsCountByPeriod[]> {
-  const session = await auth();
+) => Promise<WordsCountByPeriod[] | null> = async (period, periodCount) =>
+  authenticationAction(async (userId) => {
+    const startDate = new Date();
+    startDate.setUTCHours(0, 0, 0, 0); // Normalize to start of the day
+    if (period === "day") {
+      startDate.setUTCDate(startDate.getUTCDate() - (periodCount - 1));
+    } else if (period === "week") {
+      startDate.setUTCDate(startDate.getUTCDate() - (periodCount - 1) * 7);
+    } else if (period === "month") {
+      startDate.setUTCMonth(startDate.getUTCMonth() - (periodCount - 1));
+    }
 
-  if (!session?.user?.id) {
-    return [];
-  }
-  const userId = session.user.id;
-
-  const startDate = new Date();
-  startDate.setUTCHours(0, 0, 0, 0); // Normalize to start of the day
-  if (period === "day") {
-    startDate.setUTCDate(startDate.getUTCDate() - (periodCount - 1));
-  } else if (period === "week") {
-    startDate.setUTCDate(startDate.getUTCDate() - (periodCount - 1) * 7);
-  } else if (period === "month") {
-    startDate.setUTCMonth(startDate.getUTCMonth() - (periodCount - 1));
-  }
-
-  const wordsCount: {
-    period_start: Date;
-    masteryLevel: MasteryLevel;
-    count: bigint;
-  }[] = await prisma.$queryRaw`
+    const wordsCount: {
+      period_start: Date;
+      masteryLevel: MasteryLevel;
+      count: bigint;
+    }[] = await prisma.$queryRaw`
     SELECT DATE_TRUNC(${period}, "createdAt") as period_start, "masteryLevel", COUNT(*) as count
     FROM "Word"
     WHERE "userId" = ${userId} AND "createdAt" >= ${startDate}
@@ -301,159 +288,144 @@ export async function getWordsCountByPeriod(
     ORDER BY period_start ASC
   `;
 
-  // 1. Create a map of results from the database for easy lookup
-  const dbResultsMap = new Map<string, Record<string, number>>();
-  for (const item of wordsCount) {
-    const dateKey = new Date(item.period_start).toISOString().split("T")[0];
-    if (!dbResultsMap.has(dateKey)) {
-      dbResultsMap.set(dateKey, {});
+    // 1. Create a map of results from the database for easy lookup
+    const dbResultsMap = new Map<string, Record<string, number>>();
+    for (const item of wordsCount) {
+      const dateKey = new Date(item.period_start).toISOString().split("T")[0];
+      if (!dbResultsMap.has(dateKey)) {
+        dbResultsMap.set(dateKey, {});
+      }
+      dbResultsMap.get(dateKey)![item.masteryLevel] = Number(item.count);
     }
-    dbResultsMap.get(dateKey)![item.masteryLevel] = Number(item.count);
-  }
-  console.log(defaultWordsCountByMasteryLevel);
 
-  // 2. Generate the full date range and merge with DB results
-  const finalData: WordsCountByPeriod[] = [];
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+    // 2. Generate the full date range and merge with DB results
+    const finalData: WordsCountByPeriod[] = [];
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
 
-  for (let i = 0; i < periodCount; i++) {
-    const currentDate = new Date(today);
-    if (period === "day") {
-      currentDate.setUTCDate(today.getUTCDate() - i);
-    } else if (period === "week") {
-      currentDate.setUTCDate(today.getUTCDate() - i * 7);
-    } else if (period === "month") {
-      currentDate.setUTCMonth(today.getUTCMonth() - i);
+    for (let i = 0; i < periodCount; i++) {
+      const currentDate = new Date(today);
+      if (period === "day") {
+        currentDate.setUTCDate(today.getUTCDate() - i);
+      } else if (period === "week") {
+        currentDate.setUTCDate(today.getUTCDate() - i * 7);
+      } else if (period === "month") {
+        currentDate.setUTCMonth(today.getUTCMonth() - i);
+      }
+      const dateKey = currentDate.toISOString().split("T")[0];
+      const countsForDate = dbResultsMap.get(dateKey) || {};
+
+      finalData.push({
+        periodStart: currentDate,
+        ...defaultWordsCountByMasteryLevel,
+        ...countsForDate,
+      });
     }
-    const dateKey = currentDate.toISOString().split("T")[0];
-    const countsForDate = dbResultsMap.get(dateKey) || {};
 
-    finalData.push({
-      periodStart: currentDate,
-      ...defaultWordsCountByMasteryLevel,
-      ...countsForDate,
+    return finalData.reverse(); // Return in chronological order
+  });
+
+export const getWordCountLearned = async () =>
+  authenticationAction(async (userId) => {
+    const wordsCount = await prisma.word.count({
+      where: {
+        userId,
+        masteryLevel: {
+          in: [MasteryLevel.Familiar, MasteryLevel.Mastered],
+        },
+      },
     });
-  }
 
-  return finalData.reverse(); // Return in chronological order
-}
-
-export const getWordCountLearned = async () => {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return 0;
-  }
-
-  const userId = session.user.id;
-
-  const wordsCount = await prisma.word.count({
-    where: {
-      userId,
-      masteryLevel: {
-        in: [MasteryLevel.Familiar, MasteryLevel.Mastered],
-      },
-    },
+    return wordsCount;
   });
 
-  return wordsCount;
-};
-
-export const getWordsToReview = async (limit: number = 10) => {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return []; // Return empty array if not logged in
-  }
-
-  const dueReviews = await prisma.reviewSession.findMany({
-    where: {
-      userId: session.user.id,
-      scheduledAt: {
-        lte: new Date(), // Get all words due today or in the past
-      },
-    },
-    take: limit, // Limit the number of words per session
-    include: {
-      word: {
-        // Include the full word details
-        include: {
-          meanings: true, // And its meanings
+export const getWordsToReview = async (limit: number = 10) =>
+  authenticationAction(async (userId) => {
+    const dueReviews = await prisma.reviewSession.findMany({
+      where: {
+        userId,
+        scheduledAt: {
+          lte: new Date(), // Get all words due today or in the past
         },
       },
-    },
-    orderBy: {
-      scheduledAt: "asc", // Show the most overdue words first
-    },
-  });
-
-  // Extract the word data from the review session objects
-  return dueReviews.map((review) => review.word);
-};
-
-export const getWordsToReviewCount = async () => {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return 0;
-  }
-
-  const count = await prisma.reviewSession.count({
-    where: {
-      userId: session.user.id,
-      scheduledAt: {
-        lte: new Date(), // Count all words due today or in the past
-      },
-    },
-  });
-
-  return count;
-};
-
-export async function deleteWords(prevState: unknown, formData: FormData) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, message: "Authentication required." };
-  }
-
-  const userId = session.user.id;
-  const wordIds = formData.getAll("ids") as string[];
-
-  try {
-    await prisma.$transaction([
-      prisma.wordMeaning.deleteMany({
-        where: { wordId: { in: wordIds } },
-      }),
-      prisma.reviewSession.deleteMany({
-        where: { wordId: { in: wordIds } },
-      }),
-      prisma.word.deleteMany({
-        where: {
-          id: { in: wordIds },
-          userId,
+      take: limit, // Limit the number of words per session
+      include: {
+        word: {
+          // Include the full word details
+          include: {
+            meanings: true, // And its meanings
+          },
         },
-      }),
-    ]);
+      },
+      orderBy: {
+        scheduledAt: "asc", // Show the most overdue words first
+      },
+    });
 
-    revalidatePath("/words");
-
-    return { success: true, message: "Words deleted successfully." };
-  } catch (error) {
-    return { success: false, message: "Failed to delete words." };
-  }
-}
-
-export const checkWordExists = async (word: string) => {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return false;
-  }
-
-  const existingWord = await prisma.word.findFirst({
-    where: {
-      userId: session.user.id,
-      word: word.toLowerCase(),
-    },
+    // Extract the word data from the review session objects
+    return dueReviews.map((review) => review.word);
   });
 
-  return !!existingWord;
-};
+export const getWordsToReviewCount = async () =>
+  authenticationAction(async (userId) => {
+    const count = await prisma.reviewSession.count({
+      where: {
+        userId,
+        scheduledAt: {
+          lte: new Date(), // Count all words due today or in the past
+        },
+      },
+    });
+
+    return count;
+  });
+
+export const deleteWords = async (prevState: unknown, formData: FormData) =>
+  authenticationAction(async (userId) => {
+    const wordIds = formData.getAll("ids") as string[];
+
+    try {
+      await prisma.$transaction([
+        prisma.wordMeaning.deleteMany({
+          where: { wordId: { in: wordIds } },
+        }),
+        prisma.reviewSession.deleteMany({
+          where: { wordId: { in: wordIds } },
+        }),
+        prisma.word.deleteMany({
+          where: {
+            id: { in: wordIds },
+            userId,
+          },
+        }),
+      ]);
+
+      revalidatePath("/words");
+
+      return { success: true, message: "Words deleted successfully." };
+    } catch (error) {
+      return { success: false, message: "Failed to delete words." };
+    }
+  });
+
+export const checkWordExists = async (word: string) =>
+  authenticationAction(async (userId) => {
+    const existingWord = await prisma.word.findFirst({
+      where: {
+        userId,
+        word: word.toLowerCase(),
+      },
+    });
+
+    return !!existingWord;
+  });
+
+export const fillWithAI = async (word: string) =>
+  authenticationAction(async (userId) => {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    const prompt = buildWordAutofillPrompt(word, user as User);
+
+    const data = await fillWordWithAi(prompt);
+    return data;
+  });
