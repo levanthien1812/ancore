@@ -12,6 +12,7 @@ import { deleteWords } from "@/lib/actions/word.actions";
 import { initialActionState } from "@/lib/constants/initial-values";
 import { useQueryClient } from "@tanstack/react-query";
 import ConfirmActionDialog from "../shared/confirm-action-dialog";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const WordActions = ({ word }: { word: WordWithMeanings }) => {
   const [isEditing, setIsEditing] = React.useState(false);
@@ -25,7 +26,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
 
   const onDeleteSuccess = useEffectEvent(() => {
     setShowDeleteDialog(false);
-    queryClient.invalidateQueries({ queryKey: ["words"] });
+    queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
   });
 
   useEffect(() => {

@@ -19,6 +19,7 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
 import { RefreshCcw } from "lucide-react";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
@@ -28,7 +29,7 @@ const RecentWords = () => {
     isFetching,
     refetch,
   } = useQuery({
-    queryKey: ["recentWords"],
+    queryKey: [QUERY_KEY.GET_RECENT_WORDS],
     queryFn: getRecentWords,
     initialData: [],
     refetchOnWindowFocus: false,

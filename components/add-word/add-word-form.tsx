@@ -40,6 +40,7 @@ import { Volume2Icon } from "lucide-react";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -192,11 +193,13 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
 
   useEffect(() => {
     if (state && state.success) {
-      queryClient.invalidateQueries({ queryKey: ["words"] });
-      queryClient.invalidateQueries({ queryKey: ["recentWords"] });
-      queryClient.invalidateQueries({ queryKey: ["getWordsCountByPeriod"] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });
       queryClient.invalidateQueries({
-        queryKey: ["getWordsCountPerMasteryLevel"],
+        queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_PERIOD],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_MASTERY_LEVEL],
       });
 
       onClose();

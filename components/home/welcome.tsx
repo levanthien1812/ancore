@@ -12,16 +12,17 @@ import AddWord from "../add-word/add-word";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const Welcome = () => {
   const { data: streak, isFetching: isFetchingStreak } = useQuery({
-    queryKey: ["learnStreak"],
+    queryKey: [QUERY_KEY.GET_LEARN_STREAK],
     queryFn: getLearnStreak,
     initialData: 0,
   });
 
   const { data: wordsLearned, isFetching: isFetchingWordsLearned } = useQuery({
-    queryKey: ["wordsLearned"],
+    queryKey: [QUERY_KEY.GET_WORDS_LEARNED],
     queryFn: getWordCountLearned,
     initialData: 0,
   });
