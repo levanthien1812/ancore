@@ -22,6 +22,7 @@ import { format } from "date-fns";
 import { Period } from "@/lib/type";
 import { Label } from "../ui/label";
 import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const periodQuantitiesMap: Record<
   Period,
@@ -42,7 +43,7 @@ const WordCountByPeriodChart = () => {
   );
 
   const { data: wordCounts } = useQuery({
-    queryKey: ["getWordsCountByPeriod", period, quantity],
+    queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_PERIOD, period, quantity],
     queryFn: async () => {
       const fetchedWordCounts = await getWordsCountByPeriod(period, quantity);
       return fetchedWordCounts;

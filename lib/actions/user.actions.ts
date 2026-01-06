@@ -1,6 +1,7 @@
 "use server";
 
 import { auth, signIn, signOut } from "@/auth";
+import { AuthError } from "next-auth";
 import {
   onboardingFormSchema,
   signInFormSchema,
@@ -33,6 +34,23 @@ export async function signInWithCredentials(
     if (isRedirectError(error)) {
       throw error;
     }
+
+    if (error instanceof AuthError) {
+      console.log(error.type);
+      switch (error.type) {
+        case "CredentialsSignin":
+          return {
+            success: false,
+            message: "Invalid credentials",
+          };
+        default:
+          return {
+            success: false,
+            message: error.cause?.err?.message,
+          };
+      }
+    }
+
     return {
       success: false,
       message: "Invalid credentials",

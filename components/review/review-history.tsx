@@ -14,6 +14,7 @@ import ReviewSummaryDetail from "./review-summary-detail";
 import { PerformanceSummary } from "./review-carousel";
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const ReviewHistory = () => {
   const [open, setOpen] = React.useState(false);
@@ -25,7 +26,7 @@ const ReviewHistory = () => {
       const response = await getReviewLogs(date);
       return response;
     },
-    queryKey: ["reviewLogs", date],
+    queryKey: [QUERY_KEY.GET_REVIEW_LOGS, date],
     enabled: !!date,
   });
 

@@ -12,11 +12,13 @@ import {
 import { UserIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { User } from "next-auth";
 
-const UserButton = () => {
-  const session = useSession();
+const UserButton = ({ user }: { user?: User }) => {
+  const { data: session } = useSession();
+  const currentUser = user || session?.user;
 
-  if (!session || !session.data?.user) {
+  if (!currentUser) {
     return (
       <Button asChild>
         <Link href={"/sign-in"}>
@@ -27,9 +29,7 @@ const UserButton = () => {
     );
   }
 
-  const user = session.data.user;
-
-  const firstName = user.name?.split(" ")[0] || "You";
+  const firstName = currentUser.name?.split(" ")[0] || "You";
 
   return (
     <div className="flex gap-2 items-center">
@@ -51,10 +51,10 @@ const UserButton = () => {
               <DropdownMenuItem>
                 <div className="flex flex-col spacy-y-1">
                   <div className="text-sm font-medium leading-none">
-                    {user.name}
+                    {currentUser.name}
                   </div>
                   <div className="text-sm leading-none text-muted-foreground mt-1">
-                    {user.email}
+                    {currentUser.email}
                   </div>
                 </div>
               </DropdownMenuItem>

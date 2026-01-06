@@ -10,10 +10,11 @@ import { getWordsCountPerMasteryLevel } from "@/lib/actions/word.actions";
 import { WordsCountByMasteryLevel } from "@/lib/type";
 import { defaultWordsCountByMasteryLevel } from "@/lib/constants/initial-values";
 import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const WordCountByMasteryLevelChart = () => {
   const { data: wordCounts } = useQuery<WordsCountByMasteryLevel | null>({
-    queryKey: ["getWordsCountPerMasteryLevel"],
+    queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_MASTERY_LEVEL],
     queryFn: async () => {
       const fetchedWordCounts = await getWordsCountPerMasteryLevel();
       return fetchedWordCounts;

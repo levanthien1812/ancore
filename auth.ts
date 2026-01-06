@@ -25,12 +25,12 @@ export const config = {
         });
 
         if (user === null) {
-          return null;
+          throw new Error("Email does not exist");
         }
 
         if (user.password) {
           if (!compareSync(credentials.password as string, user.password)) {
-            return null;
+            throw new Error("Incorrect password");
           }
         }
 

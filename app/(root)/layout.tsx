@@ -1,4 +1,5 @@
 import Header from "@/components/shared/header";
+import Sidebar from "@/components/shared/sidebar";
 import { Toaster } from "sonner";
 
 export default function RootLayout({
@@ -9,7 +10,10 @@ export default function RootLayout({
   return (
     <div className="flex h-screen flex-col">
       <Header />
-      <main className="pt-4 grow">{children}</main>
+      <div className="flex w-full grow overflow-hidden">
+        <Sidebar />
+        <main className="pt-4 grow overflow-y-auto">{children}</main>
+      </div>
       <Toaster />
     </div>
   );
