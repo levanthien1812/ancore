@@ -17,6 +17,7 @@ export const INITIAL_MEANING: WordMeaning = {
 export const INITIAL_WORD: Word = {
   id: "",
   word: "",
+  type: "Word",
   pronunciation: "",
   cefrLevel: CEFRLevel.A1,
   createdAt: new Date(),
