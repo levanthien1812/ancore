@@ -11,7 +11,8 @@ export function buildWordAutofillPrompt(word: string, user: User): string {
   return `
     You are an English learning assistant.
     ${userInfo}
-    Given the word "${word}", return complete learning information in JSON format.
+    Given the word or phrase "${word}", return complete learning information in JSON format.
+    (If the word or phrase is invalid or does not exist, return null instead)
 
     Respond ONLY with valid JSON that matches this structure:
     {
@@ -31,8 +32,11 @@ export function buildWordAutofillPrompt(word: string, user: User): string {
     }
 
     Rules:
-    - "pronunciation" should be in International Phonetic Alphabet (IPA) format, enclosed in slashes (e.g., /prəˌnʌnsiˈeɪʃn/).
-    - "cefrLevel" must be one of: A1, A2, B1, B2, C1, C2
+    - If the input is a phrase (multiple words):
+        - "pronunciation", "cefrLevel", and "partOfSpeech" should be empty strings.
+    - If the input is a single word:
+        - "pronunciation" should be in International Phonetic Alphabet (IPA) format, enclosed in slashes (e.g., /prəˌnʌnsiˈeɪʃn/).
+        - "cefrLevel" must be one of: A1, A2, B1, B2, C1, C2
     - "exampleSentences" should be a single string with multiple examples separated by a pipe character (|).
     - Keep definitions and examples suitable for the user’s level.
     - No explanations outside JSON.

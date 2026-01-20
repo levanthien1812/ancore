@@ -14,17 +14,22 @@ interface WordSuggestProps {
   enteredWord: string;
   setEnteredWord: (value: string) => void;
   existingWord?: string;
+  entryType?: "word" | "phrase";
 }
 
 const WordSuggest = ({
   enteredWord,
   setEnteredWord,
   existingWord,
+  entryType = "word",
 }: WordSuggestProps) => {
   const [suggestedWordList, setSuggestedWordList] = useState<string[]>([]);
   const [isChosen, setIsChosen] = useState(existingWord ? true : false);
 
   const handleSuggest = async (value: string) => {
+    if (entryType === "phrase") {
+      return;
+    }
     const response = await fetch(`/api/datamuse?w=${value}`);
     if (response.ok) {
       const data = await response.json();
@@ -55,17 +60,17 @@ const WordSuggest = ({
   return (
     <Command className="w-full">
       <CommandInput
-        placeholder="Type a word"
+        placeholder={entryType === "phrase" ? "Type a phrase" : "Type a word"}
         value={enteredWord}
         onValueChange={handleWordChange}
       />
-      {enteredWord.trim().length > 0 && (
+      {enteredWord.trim().length > 0 && entryType === "word" && (
         <CommandList>
           {!isChosen && <CommandEmpty>No word found</CommandEmpty>}
           <CommandGroup heading="Suggestions">
             {suggestedWordList
               .filter((item) =>
-                item.toLowerCase().includes(enteredWord.toLowerCase())
+                item.toLowerCase().includes(enteredWord.toLowerCase()),
               )
               .map((word) => (
                 <CommandItem
