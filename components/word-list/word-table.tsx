@@ -131,7 +131,7 @@ const WordTable = ({
         cell: ({ row }) => (
           <WordDefinition
             meanings={row.original.meanings.map(
-              (meaning) => meaning.definition
+              (meaning) => meaning.definition,
             )}
           />
         ),
@@ -169,11 +169,11 @@ const WordTable = ({
         enableSorting: false,
       },
     ],
-    [onClickTitle]
+    [onClickTitle],
   );
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
+    [],
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -301,14 +301,14 @@ const WordTable = ({
                           ? header.column.getNextSortingOrder() === "asc"
                             ? "Sort ascending"
                             : header.column.getNextSortingOrder() === "desc"
-                            ? "Sort descending"
-                            : "Clear sort"
+                              ? "Sort descending"
+                              : "Clear sort"
                           : undefined
                       }
                     >
                       {flexRender(
                         header.column.columnDef.header,
-                        header.getContext()
+                        header.getContext(),
                       )}
                       {{
                         asc: " 🔼",

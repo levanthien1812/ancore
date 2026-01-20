@@ -14,7 +14,7 @@ import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
 import { authenticationAction } from "./_helpers";
 
 export async function getWordListByFilter(
-  wordFilter: WordFitler
+  wordFilter: WordFitler,
 ): Promise<WordWithMeanings[]> {
   const data = await prisma.word.findMany({
     where: {
@@ -79,10 +79,11 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
 
     const validatedFields = saveWordSchema.safeParse({
       word: formData.get("word")?.toString().toLowerCase(),
+      type: formData.get("type"),
       pronunciation: formData.get("pronunciation"),
       cefrLevel: formData.get("cefrLevel"),
       masteryLevel: formData.get("masteryLevel"),
-      audioUrl: formData.get("audioUrl") || "",
+      audioUrl: formData.get("audioUrl"),
       tags: formData.get("tags"),
       meanings: formData.get("meanings"),
       highlighted: toBoolean(formData.get("highlighted") as string),
@@ -151,7 +152,7 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
               completedAt: now,
               intervalDays: initialInterval,
               scheduledAt: new Date(
-                now.setDate(now.getDate() + initialInterval)
+                now.setDate(now.getDate() + initialInterval),
               ),
             },
           });
@@ -239,7 +240,7 @@ export const getWordsCountPerMasteryLevel = async () =>
         acc[cur.masteryLevel] = cur._count.masteryLevel;
         return acc;
       },
-      { ...defaultWordsCountByMasteryLevel }
+      { ...defaultWordsCountByMasteryLevel },
     );
   });
 
@@ -263,7 +264,7 @@ export async function getLearnStreak() {
 
 export const getWordsCountByPeriod: (
   period: Period,
-  periodCount: number
+  periodCount: number,
 ) => Promise<WordsCountByPeriod[] | null> = async (period, periodCount) =>
   authenticationAction(async (userId) => {
     const startDate = new Date();
@@ -427,5 +428,17 @@ export const fillWithAI = async (word: string) =>
     const prompt = buildWordAutofillPrompt(word, user as User);
 
     const data = await fillWordWithAi(prompt);
+    console.log(data);
+
+    if (data) {
+      try {
+        const parsed = JSON.parse(data);
+        if (!parsed || !parsed.meanings || parsed.meanings.length === 0) {
+          return null;
+        }
+      } catch (error) {
+        return null;
+      }
+    }
     return data;
   });

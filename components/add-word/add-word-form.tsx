@@ -10,7 +10,7 @@ import {
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import type { Word, WordMeaning } from "@prisma/client";
+import type { DifficultyLevel, Word, WordMeaning } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -54,15 +54,18 @@ interface AddWordFormProps {
 
 const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   const [enteredWord, setEnteredWord] = useState(
-    word?.word || wordOfTheDay?.word || ""
+    word?.word || wordOfTheDay?.word || "",
   );
   const queryClient = useQueryClient();
+  const [entryType, setEntryType] = useState<"word" | "phrase">(
+    word?.type === "Phrase" || (word && !word.cefrLevel) ? "phrase" : "word",
+  );
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
   const [generated, setGenerated] = useState(false);
   const [state, formAction, isLoading] = useActionState(
     saveWord,
-    initialActionState
+    initialActionState,
   );
 
   const defaultValues = (): WordWithMeanings => {
@@ -101,18 +104,18 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
       const exists = await checkWordExists(wordToCheck);
       if (exists) {
         setWordExistsError(
-          `The word "${wordToCheck}" already exists in your vocabulary.`
+          `The word "${wordToCheck}" already exists in your vocabulary.`,
         );
       } else {
         setWordExistsError(null);
       }
     },
-    [word]
+    [word],
   );
 
   const debouncedCheckWord = useMemo(
     () => debounce(checkWord, 500),
-    [checkWord]
+    [checkWord],
   );
 
   const { mutate: fillWithAIMutate, isPending: isFillingWithAi } = useMutation({
@@ -122,7 +125,10 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
       return responseData;
     },
     onSuccess: (data) => {
-      if (!data) return;
+      if (!data) {
+        setWordExistsError(`Could not find information for "${enteredWord}".`);
+        return;
+      }
       const result = JSON.parse(data);
 
       setValue("word", result.word.toLowerCase());
@@ -162,12 +168,21 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   const onSubmit = (data: WordWithMeanings) => {
     const formData = new FormData();
 
+    formData.append("type", entryType === "word" ? "Word" : "Phrase");
+
     // Manually append all fields to FormData
     Object.entries(data).forEach(([key, value]) => {
+      if (
+        entryType === "phrase" &&
+        (key === "cefrLevel" || key === "pronunciation")
+      ) {
+        return;
+      }
+
       if (key === "meanings") {
         // The 'id' field from prisma is not needed for create/update of meanings
         const meaningsWithoutId = (value as WordMeaning[]).map(
-          ({ id, ...rest }) => rest
+          ({ id, ...rest }) => rest,
         );
         formData.append(key, JSON.stringify(meaningsWithoutId));
       } else if (key === "id" && value) {
@@ -211,10 +226,29 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
       {/* Add a hidden input for the word ID if it exists */}
       {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
       <div className="grid gap-3 py-4 max-h-[600px] custom-scrollbar-y">
+        <div className="flex bg-muted p-1 rounded-lg">
+          <Button
+            type="button"
+            variant={entryType === "word" ? "default" : "ghost"}
+            className="flex-1 h-8 rounded-md"
+            onClick={() => setEntryType("word")}
+          >
+            Word
+          </Button>
+          <Button
+            type="button"
+            variant={entryType === "phrase" ? "default" : "ghost"}
+            className="flex-1 h-8 rounded-md"
+            onClick={() => setEntryType("phrase")}
+          >
+            Phrase
+          </Button>
+        </div>
         <WordSuggest
           enteredWord={enteredWord}
           setEnteredWord={handleWordChange}
           existingWord={word?.word || wordOfTheDay?.word}
+          entryType={entryType}
         />
 
         {wordExistsError && <FieldError error={wordExistsError} />}
@@ -242,8 +276,8 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             {isFillingWithAi
               ? "Generating..."
               : generated
-              ? `Regenerate`
-              : `Fill with AI`}
+                ? `Regenerate`
+                : `Fill with AI`}
           </Button>
         </div>
         <div className="flex items-end gap-1">
@@ -257,23 +291,25 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             Highlighed
           </Label>
         </div>
-        <div className="grid gap-1">
-          <Label htmlFor="pronunciation" className="text-right">
-            Pronunciation
-          </Label>
-          <div className="flex gap-1">
-            <Input id="pronunciation" {...register("pronunciation")} />
-            <Button
-              variant={"outline"}
-              type="button"
-              onClick={handlePlayAudio}
-              disabled={enteredWord.trim().length === 0}
-            >
-              <Volume2Icon />
-            </Button>
+        {entryType === "word" && (
+          <div className="grid gap-1">
+            <Label htmlFor="pronunciation" className="text-right">
+              Pronunciation
+            </Label>
+            <div className="flex gap-1">
+              <Input id="pronunciation" {...register("pronunciation")} />
+              <Button
+                variant={"outline"}
+                type="button"
+                onClick={handlePlayAudio}
+                disabled={enteredWord.trim().length === 0}
+              >
+                <Volume2Icon />
+              </Button>
+            </div>
+            <FieldError error={state?.errors?.pronunciation?.join(", ")} />
           </div>
-          <FieldError error={state?.errors?.pronunciation?.join(", ")} />
-        </div>
+        )}
         <div className="grid gap-1">
           <Label htmlFor="masteryLevel" className="text-right">
             Mastery Level
@@ -308,6 +344,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             register={register}
             setValue={setValue}
             errors={state?.errors?.meanings}
+            entryType={entryType}
           />
         ))}
         <div className="flex justify-end">
@@ -319,32 +356,37 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             Add meaning
           </Button>
         </div>
-        <div className="grid gap-1">
-          <Label htmlFor="cefrLevel" className="text-right">
-            CEFR Level
-          </Label>
-          <Controller
-            control={control}
-            name="cefrLevel"
-            render={({ field }) => (
-              <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select CEFR level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {CEFR_LEVELS.map((level) => (
-                      <SelectItem key={level} value={level}>
-                        {level}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            )}
-          />
-          <FieldError error={state?.errors?.cefrLevel?.join(", ")} />
-        </div>
+        {entryType === "word" && (
+          <div className="grid gap-1">
+            <Label htmlFor="cefrLevel" className="text-right">
+              CEFR Level
+            </Label>
+            <Controller
+              control={control}
+              name="cefrLevel"
+              render={({ field }) => (
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value as DifficultyLevel}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select CEFR level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {CEFR_LEVELS.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            <FieldError error={state?.errors?.cefrLevel?.join(", ")} />
+          </div>
+        )}
         <div className="grid gap-1">
           <Label htmlFor="tags" className="text-right">
             Tags

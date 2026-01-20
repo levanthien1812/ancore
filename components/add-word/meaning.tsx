@@ -14,12 +14,14 @@ import FieldError from "../shared/field-error";
 import { PARTS_OF_SPEECH } from "@/lib/constants/enums";
 import { Badge } from "../ui/badge";
 import { WordWithMeanings } from "./add-word-form";
+import { ClipboardEventHandler } from "react";
 interface MeaningProps {
   index: number;
   onRemove: (index: number) => void;
   register: UseFormRegister<WordWithMeanings>;
   setValue: UseFormSetValue<WordWithMeanings>;
   errors: string[] | undefined;
+  entryType: "word" | "phrase";
 }
 
 const Meaning = ({
@@ -28,9 +30,24 @@ const Meaning = ({
   register,
   setValue,
   errors,
+  entryType,
 }: MeaningProps) => {
   const handleRemove = () => {
     onRemove(index);
+  };
+
+  const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
+    event.preventDefault();
+
+    const clipboardData = event.clipboardData;
+    const pastedText = clipboardData?.getData("text/plain");
+
+    if (pastedText) {
+      setValue(
+        `meanings.${index}.exampleSentences`,
+        pastedText.replace(/\n/g, "|"),
+      );
+    }
   };
 
   return (
@@ -65,6 +82,7 @@ const Meaning = ({
           id="example"
           placeholder="e.g. An apple a day keeps the doctor away."
           {...register(`meanings.${index}.exampleSentences`)}
+          onPaste={handlePaste}
         />
       </div>
       <Accordion type="single" collapsible className="w-full">
@@ -74,29 +92,31 @@ const Meaning = ({
           </AccordionTrigger>
           <AccordionContent className="mt-2">
             <div className="grid gap-3">
-              <div className="grid gap-1">
-                <Label htmlFor="part-of-speech" className="text-right">
-                  Part of Speech
-                </Label>
-                <Input
-                  id="part-of-speech"
-                  {...register(`meanings.${index}.partOfSpeech`)}
-                />
-                <div className="flex gap-1">
-                  {PARTS_OF_SPEECH.map((part) => (
-                    <Badge
-                      key={part}
-                      variant={"secondary"}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        setValue(`meanings.${index}.partOfSpeech`, part)
-                      }
-                    >
-                      {part}
-                    </Badge>
-                  ))}
+              {entryType === "word" && (
+                <div className="grid gap-1">
+                  <Label htmlFor="part-of-speech" className="text-right">
+                    Part of Speech
+                  </Label>
+                  <Input
+                    id="part-of-speech"
+                    {...register(`meanings.${index}.partOfSpeech`)}
+                  />
+                  <div className="flex gap-1">
+                    {PARTS_OF_SPEECH.map((part) => (
+                      <Badge
+                        key={part}
+                        variant={"secondary"}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          setValue(`meanings.${index}.partOfSpeech`, part)
+                        }
+                      >
+                        {part}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="grid gap-1">
                 <Label htmlFor="whenToUse" className="text-right">
                   When to use
