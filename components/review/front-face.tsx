@@ -77,7 +77,7 @@ const FrontFace = ({
           body: JSON.stringify({
             prompt: buildReviewHintsPrompt(
               word.word,
-              session.data.user as User
+              session.data.user as User,
             ),
           }),
         });
@@ -94,7 +94,7 @@ const FrontFace = ({
             field: key as HintLevel,
             value: data[key as HintLevel],
             label: FieldLabelMap[key as HintLevel],
-          }))
+          })),
         );
       },
     });
@@ -126,10 +126,10 @@ const FrontFace = ({
     if (!hintLevel) return;
 
     const currentHintIndex = hintList.findIndex(
-      (hint) => hint.field === hintLevel
+      (hint) => hint.field === hintLevel,
     );
     const nextHintIndex = hintList.findIndex(
-      (hint, index) => index > currentHintIndex && hint.value
+      (hint, index) => index > currentHintIndex && hint.value,
     );
     if (nextHintIndex === -1) return;
     setHintLevel(hintList[nextHintIndex].field);
@@ -147,10 +147,10 @@ const FrontFace = ({
     if (!hintLevel) return false;
     if (Object.keys(availableHints).length === 0) return false;
     const currentHintIndex = hintList.findIndex(
-      (hint) => hint.field === hintLevel
+      (hint) => hint.field === hintLevel,
     );
     return hintList.some(
-      (hint, index) => index > currentHintIndex && hint.value
+      (hint, index) => index > currentHintIndex && hint.value,
     );
   }, [hintList, hintLevel, availableHints]);
 
@@ -187,7 +187,9 @@ const FrontFace = ({
   return (
     <div className="flex flex-col px-8 py-4 bg-primary h-full">
       <div className="grow flex flex-col justify-center">
-        <Badge className="bg-primary-2 text-white">{word.cefrLevel}</Badge>
+        <Badge className="bg-primary-2 text-white">
+          {word.meanings[0]?.cefrLevel}
+        </Badge>
         <div className="text-[40px] font-bold mt-2 text-white">{word.word}</div>
       </div>
       <div className="flex justify-between">

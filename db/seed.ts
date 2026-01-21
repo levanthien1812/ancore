@@ -34,8 +34,6 @@ async function main() {
         data: {
           word: `${randomWord}`,
           userId: user.id,
-          cefrLevel: faker.helpers.arrayElement(cefrLevels),
-          pronunciation: `/${randomWord}/`,
           masteryLevel: faker.helpers.arrayElement(masteryLevels),
           tags: faker.lorem
             .words(faker.number.int({ min: 0, max: 3 }))
@@ -45,10 +43,12 @@ async function main() {
             create: Array.from({
               length: faker.number.int({ min: 1, max: 2 }),
             }).map(() => ({
+              pronunciation: `/${randomWord}/`,
+              cefrLevel: faker.helpers.arrayElement(cefrLevels),
               definition: faker.lorem.sentence(),
               partOfSpeech: faker.helpers.arrayElement(partsOfSpeech),
               exampleSentences: faker.lorem.sentences(
-                faker.number.int({ min: 1, max: 3 })
+                faker.number.int({ min: 1, max: 3 }),
               ),
               synonyms: faker.lorem
                 .words(faker.number.int({ min: 0, max: 5 }))
@@ -71,7 +71,7 @@ async function main() {
           completedAt: new Date(),
           intervalDays: intervalDays,
           scheduledAt: new Date(
-            new Date().getTime() + (intervalDays - 1) * 24 * 60 * 60 * 1000
+            new Date().getTime() + (intervalDays - 1) * 24 * 60 * 60 * 1000,
           ),
           userId: user.id,
           wordId: newWord.id,

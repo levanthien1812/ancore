@@ -17,10 +17,10 @@ export function buildWordAutofillPrompt(word: string, user: User): string {
     Respond ONLY with valid JSON that matches this structure:
     {
     "word": "",
-    "pronunciation": "",
-    "cefrLevel": "",
     "meanings": [
         {
+        "pronunciation": "",
+        "cefrLevel": "",
         "definition": "",
         "partOfSpeech": "",
         "exampleSentences": "<example_1|example_2|example_3>",
@@ -33,7 +33,7 @@ export function buildWordAutofillPrompt(word: string, user: User): string {
 
     Rules:
     - If the input is a phrase (multiple words):
-        - "pronunciation", "cefrLevel", and "partOfSpeech" should be empty strings.
+        - "pronunciation", "cefrLevel", and "partOfSpeech" should be empty strings (inside meanings).
     - If the input is a single word:
         - "pronunciation" should be in International Phonetic Alphabet (IPA) format, enclosed in slashes (e.g., /prəˌnʌnsiˈeɪʃn/).
         - "cefrLevel" must be one of: A1, A2, B1, B2, C1, C2

@@ -86,19 +86,17 @@ enum UserLevel {
 }
 
 model Word {
-  id            String           @id @default(cuid())
-  word          String           @unique
-  type          WordType         @default(Word)
-  userId        String
-  user          User             @relation(fields: [userId], references: [id])
-  cefrLevel     DifficultyLevel?
-  pronunciation String?
-  masteryLevel  MasteryLevel
-  audioUrl      String?
-  tags          String?
-  highlighted   Boolean          @default(false)
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  id           String       @id @default(cuid())
+  word         String       @unique
+  type         WordType     @default(Word)
+  userId       String
+  user         User         @relation(fields: [userId], references: [id])
+  masteryLevel MasteryLevel
+  audioUrl     String?
+  tags         String?
+  highlighted  Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   meanings WordMeaning[]
   reviews  ReviewSession[]
@@ -118,10 +116,12 @@ enum MasteryLevel {
 }
 
 model WordMeaning {
-  id               String  @id @default(cuid())
+  id               String           @id @default(cuid())
   wordId           String
-  word             Word    @relation(fields: [wordId], references: [id])
+  word             Word             @relation(fields: [wordId], references: [id])
   definition       String
+  pronunciation    String?
+  cefrLevel        DifficultyLevel?
   partOfSpeech     String?
   exampleSentences String?
   synonyms         String?

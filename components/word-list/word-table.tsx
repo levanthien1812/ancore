@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "../ui/table";
 import WordMasteryLevel from "./word-mastery-level";
-import { MASTERY_LEVELS, MasteryLevel } from "@/lib/constants/enums";
+import { MasteryLevel } from "@/lib/constants/enums";
 import WordPronunciation from "./word-pronunciation";
 import WordDefinition from "./word-definition";
 import WordTitle from "./word-title";
@@ -31,14 +31,6 @@ import {
 } from "@tanstack/react-table";
 import { Checkbox } from "../ui/checkbox";
 import { Button } from "../ui/button";
-import { ChevronDown, EqualIcon, StarIcon } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Input } from "../ui/input";
 import { format } from "date-fns";
 import {
   Select,
@@ -50,6 +42,7 @@ import {
 } from "../ui/select";
 import ActionsPanel from "./actions-panel";
 import { PAGE_SIZES } from "@/lib/constants/constant";
+import WordFilter from "./word-filter";
 
 const WordTable = ({
   words,
@@ -100,6 +93,12 @@ const WordTable = ({
         minSize: 200,
       },
       {
+        accessorKey: "type",
+        header: "Type",
+        enableSorting: true,
+        enableGlobalFilter: true,
+      },
+      {
         accessorKey: "highlighted",
         header: "Highlighted",
         cell: ({ row }) => {
@@ -116,10 +115,15 @@ const WordTable = ({
         accessorKey: "pronunciation",
         header: "Pronunciation",
         cell: ({ row }) => (
-          <WordPronunciation
-            word={row.original.word}
-            pronunciation={row.original.pronunciation}
-          />
+          <>
+            {row.original.meanings.map((meaning) => (
+              <WordPronunciation
+                word={row.original.word}
+                pronunciation={meaning.pronunciation}
+                key={meaning.id}
+              />
+            ))}
+          </>
         ),
         enableSorting: false,
       },
@@ -153,6 +157,13 @@ const WordTable = ({
         accessorKey: "cefrLevel",
         header: "CEFR level",
         enableSorting: true,
+        cell: ({ row }) => (
+          <>
+            {row.original.meanings.map((meaning) => (
+              <p key={meaning.id}>{meaning.cefrLevel}</p>
+            ))}
+          </>
+        ),
       },
       {
         accessorKey: "createdAt",
@@ -205,82 +216,9 @@ const WordTable = ({
     getFilteredRowModel: getFilteredRowModel(),
   });
 
-  const handleResetFilter = () => {
-    table.resetGlobalFilter();
-    table.getColumn("masteryLevel")?.setFilterValue("");
-  };
-
-  const areFiltersSet = React.useMemo(() => {
-    const globalFilter = table.getState().globalFilter;
-    const masteryLevelFilter = table
-      .getColumn("masteryLevel")
-      ?.getFilterValue();
-    return !!globalFilter || !!masteryLevelFilter;
-  }, [table]);
-
   return (
     <div>
-      <div className="flex items-center gap-2 py-2">
-        <Input
-          placeholder="Filter words..."
-          value={(table.getState().globalFilter as string) ?? ""}
-          onChange={(event) => {
-            table.setGlobalFilter(event.target.value);
-          }}
-          className="w-52"
-        />
-        <Select
-          onValueChange={(value) =>
-            table.getColumn("masteryLevel")?.setFilterValue(value)
-          }
-          value={table.getColumn("masteryLevel")?.getFilterValue() as string}
-        >
-          <SelectTrigger className="">
-            <SelectValue placeholder="Select Mastery level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {MASTERY_LEVELS.map((level) => (
-                <SelectItem key={level} value={level}>
-                  {level}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        {areFiltersSet && (
-          <Button variant={"default"} onClick={handleResetFilter}>
-            Reset filter
-          </Button>
-        )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
+      <WordFilter table={table} />
       <Table>
         <TableCaption>Word list</TableCaption>
         <TableHeader>

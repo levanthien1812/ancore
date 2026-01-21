@@ -9,19 +9,36 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../ui/accordion";
-import { UseFormRegister, UseFormSetValue } from "react-hook-form";
+import {
+  Control,
+  Controller,
+  UseFormRegister,
+  UseFormSetValue,
+} from "react-hook-form";
 import FieldError from "../shared/field-error";
-import { PARTS_OF_SPEECH } from "@/lib/constants/enums";
+import { CEFR_LEVELS, PARTS_OF_SPEECH } from "@/lib/constants/enums";
 import { Badge } from "../ui/badge";
 import { WordWithMeanings } from "./add-word-form";
 import { ClipboardEventHandler } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { DifficultyLevel } from "@prisma/client";
+
 interface MeaningProps {
   index: number;
   onRemove: (index: number) => void;
   register: UseFormRegister<WordWithMeanings>;
   setValue: UseFormSetValue<WordWithMeanings>;
+  control: Control<WordWithMeanings>;
   errors: string[] | undefined;
   entryType: "word" | "phrase";
+  count: number;
 }
 
 const Meaning = ({
@@ -29,8 +46,10 @@ const Meaning = ({
   onRemove,
   register,
   setValue,
+  control,
   errors,
   entryType,
+  count,
 }: MeaningProps) => {
   const handleRemove = () => {
     onRemove(index);
@@ -52,17 +71,19 @@ const Meaning = ({
 
   return (
     <div className="border border-border-2 border-dashed rounded-lg p-4 grid gap-3">
-      <div className="flex justify-between items-center">
-        <p className="text-lg">Meaning {index + 1}:</p>
-        <Button
-          variant={"link"}
-          type="button"
-          onClick={handleRemove}
-          className="text-sm text-gray-600"
-        >
-          Remove
-        </Button>
-      </div>
+      {count > 1 && (
+        <div className="flex justify-between items-center">
+          <p className="text-lg">Meaning {index + 1}:</p>
+          <Button
+            variant={"link"}
+            type="button"
+            onClick={handleRemove}
+            className="text-sm text-gray-600"
+          >
+            Remove
+          </Button>
+        </div>
+      )}
       {errors && <FieldError error={errors.join("\n")} />}
       <div className="grid gap-1">
         <Label htmlFor="definition" className="text-right">
@@ -74,6 +95,47 @@ const Meaning = ({
           {...register(`meanings.${index}.definition`)}
         />
       </div>
+      {entryType === "word" && (
+        <div className="grid grid-cols-2 gap-2">
+          <div className="grid gap-1">
+            <Label htmlFor="pronunciation" className="text-right">
+              Pronunciation
+            </Label>
+            <Input
+              id="pronunciation"
+              {...register(`meanings.${index}.pronunciation`)}
+            />
+          </div>
+          <div className="grid gap-1">
+            <Label htmlFor="cefrLevel" className="text-right">
+              CEFR Level
+            </Label>
+            <Controller
+              control={control}
+              name={`meanings.${index}.cefrLevel`}
+              render={({ field }) => (
+                <Select
+                  onValueChange={field.onChange}
+                  value={field.value as DifficultyLevel}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select CEFR level" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {CEFR_LEVELS.map((level) => (
+                        <SelectItem key={level} value={level}>
+                          {level}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+        </div>
+      )}
       <div className="grid gap-1">
         <Label htmlFor="example" className="text-right">
           Example
