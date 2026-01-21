@@ -20,6 +20,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
+  const [current, setCurrent] = useState(0);
 
   // Sync button disabled state when carousel initializes or changes
   useEffect(() => {
@@ -28,6 +29,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
     const updateButtons = () => {
       setCanPrev(api.canScrollPrev());
       setCanNext(api.canScrollNext());
+      setCurrent(api.selectedScrollSnap());
     };
 
     updateButtons();
@@ -40,11 +42,15 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
     };
   }, [api]);
 
+  const currentMeaning = word.meanings[current];
+
   return (
     <div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Badge className="bg-primary-2 text-white">{word.cefrLevel}</Badge>
+          <Badge className="bg-primary-2 text-white">
+            {currentMeaning?.cefrLevel}
+          </Badge>
           <div className="text-4xl font-bold mt-2 text-white">{word.word}</div>
         </div>
         <div className="flex gap-1 justify-end">
@@ -74,7 +80,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
 
       <WordPronunciation
         word={word.word}
-        pronunciation={word.pronunciation}
+        pronunciation={currentMeaning?.pronunciation}
         light={true}
       />
 
