@@ -80,8 +80,6 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
     const validatedFields = saveWordSchema.safeParse({
       word: formData.get("word")?.toString().toLowerCase(),
       type: formData.get("type"),
-      pronunciation: formData.get("pronunciation"),
-      cefrLevel: formData.get("cefrLevel"),
       masteryLevel: formData.get("masteryLevel"),
       audioUrl: formData.get("audioUrl"),
       tags: formData.get("tags"),

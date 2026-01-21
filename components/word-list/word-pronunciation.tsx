@@ -25,6 +25,8 @@ const WordPronunciation = ({
     speechSynthesis.speak(utterance);
   };
 
+  if (!pronunciation) return null;
+
   return (
     <div className="flex items-center gap-1">
       {pronunciation && (

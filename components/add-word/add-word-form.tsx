@@ -10,7 +10,7 @@ import {
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import type { DifficultyLevel, Word, WordMeaning } from "@prisma/client";
+import type { Word, WordMeaning } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -34,7 +34,7 @@ import {
   saveWord,
 } from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
-import { CEFR_LEVELS, MASTERY_LEVELS } from "@/lib/constants/enums";
+import { MASTERY_LEVELS } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { Volume2Icon } from "lucide-react";
 import { WordOfTheDay } from "../home/word-of-the-day";
@@ -58,7 +58,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   );
   const queryClient = useQueryClient();
   const [entryType, setEntryType] = useState<"word" | "phrase">(
-    word?.type === "Phrase" || (word && !word.cefrLevel) ? "phrase" : "word",
+    word?.type === "Phrase" ? "phrase" : "word",
   );
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
@@ -132,8 +132,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
       const result = JSON.parse(data);
 
       setValue("word", result.word.toLowerCase());
-      setValue("pronunciation", result.pronunciation);
-      setValue("cefrLevel", result.cefrLevel);
       setValue("meanings", result.meanings);
       setGenerated(true);
     },
@@ -172,13 +170,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
 
     // Manually append all fields to FormData
     Object.entries(data).forEach(([key, value]) => {
-      if (
-        entryType === "phrase" &&
-        (key === "cefrLevel" || key === "pronunciation")
-      ) {
-        return;
-      }
-
       if (key === "meanings") {
         // The 'id' field from prisma is not needed for create/update of meanings
         const meaningsWithoutId = (value as WordMeaning[]).map(
@@ -291,25 +282,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             Highlighed
           </Label>
         </div>
-        {entryType === "word" && (
-          <div className="grid gap-1">
-            <Label htmlFor="pronunciation" className="text-right">
-              Pronunciation
-            </Label>
-            <div className="flex gap-1">
-              <Input id="pronunciation" {...register("pronunciation")} />
-              <Button
-                variant={"outline"}
-                type="button"
-                onClick={handlePlayAudio}
-                disabled={enteredWord.trim().length === 0}
-              >
-                <Volume2Icon />
-              </Button>
-            </div>
-            <FieldError error={state?.errors?.pronunciation?.join(", ")} />
-          </div>
-        )}
         <div className="grid gap-1">
           <Label htmlFor="masteryLevel" className="text-right">
             Mastery Level
@@ -343,8 +315,10 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             onRemove={handleRemoveMeaning}
             register={register}
             setValue={setValue}
+            control={control}
             errors={state?.errors?.meanings}
             entryType={entryType}
+            count={fields.length}
           />
         ))}
         <div className="flex justify-end">
@@ -356,37 +330,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             Add meaning
           </Button>
         </div>
-        {entryType === "word" && (
-          <div className="grid gap-1">
-            <Label htmlFor="cefrLevel" className="text-right">
-              CEFR Level
-            </Label>
-            <Controller
-              control={control}
-              name="cefrLevel"
-              render={({ field }) => (
-                <Select
-                  onValueChange={field.onChange}
-                  value={field.value as DifficultyLevel}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select CEFR level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      {CEFR_LEVELS.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              )}
-            />
-            <FieldError error={state?.errors?.cefrLevel?.join(", ")} />
-          </div>
-        )}
         <div className="grid gap-1">
           <Label htmlFor="tags" className="text-right">
             Tags
