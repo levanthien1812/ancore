@@ -287,7 +287,6 @@ const WordTable = ({
             />
           )}
         </div>
-
         <div className="space-x-2 flex gap-2">
           <div className="flex gap-2 items-center">
             <span className="text-sm">Rows per page: </span>
