@@ -42,14 +42,14 @@ const WordFilter = ({ table }: Props) => {
   }, [table]);
 
   return (
-    <div className="flex items-center gap-2 py-2">
+    <div className="flex flex-col md:flex-row items-start md:items-center gap-2 py-2">
       <Input
         placeholder="Filter words..."
         value={(table.getState().globalFilter as string) ?? ""}
         onChange={(event) => {
           table.setGlobalFilter(event.target.value);
         }}
-        className="w-52"
+        className="w-full md:w-52"
       />
       <Select
         onValueChange={(value) =>
@@ -57,7 +57,7 @@ const WordFilter = ({ table }: Props) => {
         }
         value={table.getColumn("masteryLevel")?.getFilterValue() as string}
       >
-        <SelectTrigger className="">
+        <SelectTrigger className="w-full md:w-[180px]">
           <SelectValue placeholder="Select Mastery level" />
         </SelectTrigger>
         <SelectContent>
@@ -76,7 +76,7 @@ const WordFilter = ({ table }: Props) => {
         }
         value={table.getColumn("type")?.getFilterValue() as string}
       >
-        <SelectTrigger className="w-32">
+        <SelectTrigger className="w-full md:w-32">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -87,13 +87,17 @@ const WordFilter = ({ table }: Props) => {
         </SelectContent>
       </Select>
       {areFiltersSet && (
-        <Button variant={"default"} onClick={handleResetFilter}>
+        <Button
+          variant={"default"}
+          onClick={handleResetFilter}
+          className="w-full md:w-auto"
+        >
           Reset filter
         </Button>
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="ml-auto">
+          <Button variant="outline" className="ml-auto w-full md:w-auto">
             Columns <ChevronDown />
           </Button>
         </DropdownMenuTrigger>

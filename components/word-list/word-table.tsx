@@ -275,8 +275,8 @@ const WordTable = ({
             ))}
         </TableBody>
       </Table>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex gap-2 items-center justify-start flex-1">
+      <div className="flex flex-col md:flex-row items-center justify-end gap-4 md:gap-2 py-4">
+        <div className="flex gap-2 items-center justify-start w-full md:w-auto flex-1">
           <div className="text-muted-foreground text-sm">
             {table.getFilteredSelectedRowModel().rows.length} of{" "}
             {table.getFilteredRowModel().rows.length} row(s) selected.
@@ -287,7 +287,7 @@ const WordTable = ({
             />
           )}
         </div>
-        <div className="space-x-2 flex gap-2">
+        <div className="flex gap-2 w-full md:w-auto justify-between md:justify-end">
           <div className="flex gap-2 items-center">
             <span className="text-sm">Rows per page: </span>
             <Select

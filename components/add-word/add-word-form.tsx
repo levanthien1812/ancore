@@ -70,6 +70,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
 
   const defaultValues = (): WordWithMeanings => {
     const existingWord = word || wordOfTheDay;
+    console.log(existingWord);
     if (existingWord) {
       return {
         ...INITIAL_WORD,
@@ -216,7 +217,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     <form onSubmit={handleSubmit(onSubmit)}>
       {/* Add a hidden input for the word ID if it exists */}
       {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
-      <div className="grid gap-3 py-4 max-h-[600px] custom-scrollbar-y">
+      <div className="grid gap-3 py-4 max-h-[70vh] md:max-h-[600px] custom-scrollbar-y overflow-y-auto">
         <div className="flex bg-muted p-1 rounded-lg">
           <Button
             type="button"

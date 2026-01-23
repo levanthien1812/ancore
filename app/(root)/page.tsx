@@ -7,21 +7,21 @@ import { OnboardingDialog } from "@/components/home/onboarding-dialog";
 
 export default async function Home() {
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto p-4 md:p-0">
       <Suspense>
         <OnboardingDialog />
       </Suspense>
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-3">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div className="col-span-1 md:col-span-3">
           <Welcome />
         </div>
-        <div className="col-span-4">
+        <div className="col-span-1 md:col-span-4">
           <WordCountByMasteryLevelChart />
         </div>
-        <div className="col-span-5 row-span-3">
+        <div className="col-span-1 md:col-span-5 md:row-span-3">
           <RecentWords />
         </div>
-        <div className="col-span-7">
+        <div className="col-span-1 md:col-span-7">
           <WordCountByPeriodChart />
         </div>
       </div>

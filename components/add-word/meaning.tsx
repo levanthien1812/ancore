@@ -96,7 +96,7 @@ const Meaning = ({
         />
       </div>
       {entryType === "word" && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <div className="grid gap-1">
             <Label htmlFor="pronunciation" className="text-right">
               Pronunciation

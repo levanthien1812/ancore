@@ -39,8 +39,8 @@ const WordCountByMasteryLevelChart = () => {
   };
 
   return (
-    <div className="bg-background-2 p-8 rounded-2xl">
-      <p className="text-[28px] font-bold text-primary">
+    <div className="bg-background-2 p-4 md:p-8 rounded-2xl">
+      <p className="text-2xl md:text-[28px] font-bold text-primary">
         📊 Word counts by mastery level
       </p>
       <ChartContainer config={chartConfig} className="min-h-40 w-full">

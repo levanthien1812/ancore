@@ -31,7 +31,7 @@ const Welcome = () => {
 
   if (status === "loading") {
     return (
-      <div className=" flex flex-col bg-background-2 p-6 rounded-2xl h-full">
+      <div className=" flex flex-col bg-background-2 p-4 md:p-6 rounded-2xl h-full">
         <Skeleton className="h-12 w-3/4" />
         <div className="mt-2">
           <Skeleton className="h-5 w-full" />
@@ -54,8 +54,10 @@ const Welcome = () => {
   const userName = session?.user?.name?.split(" ")[0] || "You";
 
   return (
-    <div className=" flex flex-col bg-background-2 p-8 rounded-2xl h-full">
-      <p className="text-[40px] font-bold text-primary">👋Hi {userName}!</p>
+    <div className=" flex flex-col bg-background-2 p-4 md:p-8 rounded-2xl h-full">
+      <p className="text-3xl md:text-[40px] font-bold text-primary">
+        👋Hi {userName}!
+      </p>
       <div className="text-xl mt-2">
         You&apos;ve learned{" "}
         {isFetchingWordsLearned ? (
