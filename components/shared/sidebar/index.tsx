@@ -30,16 +30,18 @@ const SidebarItem = ({
   isActive: boolean;
 }) => {
   return (
-    <li>
+    <li className="flex-1 md:flex-none">
       <Link
         href={item.path}
         className={cn(
-          "flex items-center gap-2 py-2 px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150",
-          isActive && "bg-primary-2 text-white"
+          "flex items-center justify-center md:justify-start gap-2 py-2 px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-lg md:rounded-none",
+          isActive && "bg-primary-2 text-white",
         )}
       >
         {item.icon}
-        {open && <span className="w-[100px]">{item.title}</span>}
+        {open && (
+          <span className="hidden md:block w-[100px]">{item.title}</span>
+        )}
       </Link>
     </li>
   );
@@ -74,13 +76,13 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="w-fit bg-white h-full shadow-md pt-8 pb-2 flex flex-col gap-2 group">
-      <div className="flex justify-end px-2">
+    <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md md:pt-8 p-2 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
+      <div className="hidden md:flex justify-end px-2">
         <button
           onClick={() => setOpen((prev) => !prev)}
           className={cn(
             "w-fit p-2 rounded-md bg-gray-200 flex justify-center items-center hover:bg-gray-300 text-gray-500 transition-opacity duration-300",
-            !open && "opacity-0 group-hover:opacity-100"
+            !open && "opacity-0 group-hover:opacity-100",
           )}
         >
           {open ? (
@@ -90,7 +92,7 @@ const Sidebar = () => {
           )}
         </button>
       </div>
-      <ul>
+      <ul className="flex flex-row md:flex-col flex-1 md:flex-none w-full md:w-auto justify-around md:justify-start gap-1">
         {sidebarItems.map((item) => (
           <SidebarItem
             key={item.title}
@@ -104,7 +106,7 @@ const Sidebar = () => {
           />
         ))}
       </ul>
-      <div className="mt-auto flex justify-center">
+      <div className="flex md:mt-auto justify-center items-center px-2 md:px-0">
         <form action={signOutUser}>
           <button
             type="submit"
@@ -115,7 +117,7 @@ const Sidebar = () => {
               height={16}
               className="group-hover:stroke-primary stroke-gray-500"
             />{" "}
-            {open && <span>Sign out</span>}
+            {open && <span className="hidden md:block">Sign out</span>}
           </button>
         </form>
       </div>

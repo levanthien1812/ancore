@@ -10,7 +10,7 @@ export default function RootLayout({
   return (
     <div className="flex h-screen flex-col">
       <Header />
-      <div className="flex w-full grow overflow-hidden">
+      <div className="flex w-full grow overflow-hidden flex-col-reverse md:flex-row">
         <Sidebar />
         <main className="pt-4 grow overflow-y-auto">{children}</main>
       </div>

@@ -16,7 +16,7 @@ const WordsPage = async () => {
   };
 
   return (
-    <div className="container mx-auto space-y-2">
+    <div className="container mx-auto space-y-2 p-4 md:p-0">
       <h2 className="text-3xl">Word list</h2>
       <WordList words={wordList} onLoadMore={handleLoadMore} />
     </div>

@@ -5,12 +5,12 @@ export const saveWordMeaningSchema = z.object({
   definition: z.string().trim().min(1, "Definition is required."),
   pronunciation: z.string().trim().optional().nullable(),
   cefrLevel: z.nativeEnum(CEFRLevel).optional().nullable(),
-  partOfSpeech: z.string().trim().optional(),
-  exampleSentences: z.string().trim().optional(),
-  synonyms: z.string().trim().optional(),
-  antonyms: z.string().trim().optional(),
-  whenToUse: z.string().trim().optional(),
-  usageNotes: z.string().trim().optional(),
+  partOfSpeech: z.string().trim().optional().nullable(),
+  exampleSentences: z.string().trim().optional().nullable(),
+  synonyms: z.string().trim().optional().nullable(),
+  antonyms: z.string().trim().optional().nullable(),
+  whenToUse: z.string().trim().optional().nullable(),
+  usageNotes: z.string().trim().optional().nullable(),
 });
 
 export type SaveWordMeaningFormData = z.infer<typeof saveWordMeaningSchema>;

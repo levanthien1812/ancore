@@ -9,7 +9,7 @@ const QuizzesPage = async () => {
   });
 
   return (
-    <div className="w-[440px] mx-auto h-full py-2">
+    <div className="w-full max-w-[440px] mx-auto h-full py-2 px-4 md:px-0">
       <Tabs defaultValue="start" className="h-full">
         <TabsList className="mx-auto">
           <TabsTrigger value="start">Start Quiz</TabsTrigger>

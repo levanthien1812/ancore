@@ -39,7 +39,7 @@ const WordCountByPeriodChart = () => {
   const [period, setPeriod] = useState<Period>("day");
   const [quantity, setQuantity] = useState<number>(7);
   const [quantitySet, setQuantitySet] = useState<number[]>(
-    periodQuantitiesMap[period].values
+    periodQuantitiesMap[period].values,
   );
 
   const { data: wordCounts } = useQuery({
@@ -73,8 +73,8 @@ const WordCountByPeriodChart = () => {
   } as ChartConfig;
 
   return (
-    <div className="bg-background-2 p-8 rounded-2xl">
-      <p className="text-[28px] font-bold text-primary">
+    <div className="bg-background-2 p-4 md:p-8 rounded-2xl">
+      <p className="text-2xl md:text-[28px] font-bold text-primary">
         📊 Word counts by periods
       </p>
       <div className="flex justify-end items-center gap-2 mt-2">
