@@ -7,6 +7,7 @@ import {
   ArrowLeftToLine,
   ArrowRightToLine,
   LogOut,
+  NotebookPen,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo } from "react";
@@ -71,6 +72,11 @@ const Sidebar = () => {
         title: "Quizzes",
         icon: <CircleQuestionMark />,
         path: "/quizzes",
+      },
+      {
+        title: "Notes",
+        icon: <NotebookPen />,
+        path: "/notes",
       },
     ];
   }, []);

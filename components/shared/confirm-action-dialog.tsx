@@ -16,7 +16,7 @@ type Props = {
   setShowDialog: React.Dispatch<React.SetStateAction<boolean>>;
   handleDelete: (event: React.FormEvent<HTMLFormElement>) => void;
   message: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   isLoading?: boolean;
   title: string;
   triggerButton: React.ReactNode;
