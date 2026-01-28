@@ -6,4 +6,6 @@ export const QUERY_KEY = {
   GET_WORDS_COUNT_BY_MASTERY_LEVEL: "getWordsCountByMasteryLevel",
   GET_WORDS_COUNT_BY_PERIOD: "getWordsCountByPeriod",
   GET_REVIEW_LOGS: "getReviewLogs",
+  GET_NOTES: "getNotes",
+  GET_QUIZ_LOGS: "getQuizLogs",
 };

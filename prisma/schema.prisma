@@ -5,9 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
@@ -38,6 +37,7 @@ model User {
   accounts   Account[]
   sessions   Session[]
   quizzesLog QuizzesLog[]
+  notes      Note[]
 }
 
 model Account {
@@ -203,6 +203,20 @@ model ReviewLog {
   durationSeconds    Int
   wordsReviewedCount Int
   performanceSummary Json
+
+  @@index([userId])
+}
+
+model Note {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  content     String
+  tags        String?
+  highlighted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
 }

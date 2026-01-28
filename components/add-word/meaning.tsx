@@ -12,8 +12,10 @@ import {
 import {
   Control,
   Controller,
+  UseFormGetValues,
   UseFormRegister,
   UseFormSetValue,
+  useWatch,
 } from "react-hook-form";
 import FieldError from "../shared/field-error";
 import { CEFR_LEVELS, PARTS_OF_SPEECH } from "@/lib/constants/enums";
@@ -29,12 +31,14 @@ import {
   SelectValue,
 } from "../ui/select";
 import { DifficultyLevel } from "@prisma/client";
+import TagList from "../shared/tag-list";
 
 interface MeaningProps {
   index: number;
   onRemove: (index: number) => void;
   register: UseFormRegister<WordWithMeanings>;
   setValue: UseFormSetValue<WordWithMeanings>;
+  getValues: UseFormGetValues<WordWithMeanings>;
   control: Control<WordWithMeanings>;
   errors: string[] | undefined;
   entryType: "word" | "phrase";
@@ -46,11 +50,17 @@ const Meaning = ({
   onRemove,
   register,
   setValue,
+  getValues,
   control,
   errors,
   entryType,
   count,
 }: MeaningProps) => {
+  const watchedPartOfSpeech = useWatch({
+    control,
+    name: `meanings.${index}.partOfSpeech`,
+  });
+
   const handleRemove = () => {
     onRemove(index);
   };
@@ -163,20 +173,13 @@ const Meaning = ({
                     id="part-of-speech"
                     {...register(`meanings.${index}.partOfSpeech`)}
                   />
-                  <div className="flex gap-1">
-                    {PARTS_OF_SPEECH.map((part) => (
-                      <Badge
-                        key={part}
-                        variant={"secondary"}
-                        className="cursor-pointer"
-                        onClick={() =>
-                          setValue(`meanings.${index}.partOfSpeech`, part)
-                        }
-                      >
-                        {part}
-                      </Badge>
-                    ))}
-                  </div>
+                  <TagList
+                    items={PARTS_OF_SPEECH}
+                    selected={watchedPartOfSpeech ? [watchedPartOfSpeech] : []}
+                    onTagClick={(tag) =>
+                      setValue(`meanings.${index}.partOfSpeech`, tag)
+                    }
+                  />
                 </div>
               )}
               <div className="grid gap-1">

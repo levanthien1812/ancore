@@ -81,3 +81,17 @@ export enum QuizQuestionType {
   Matching = "Matching",
   FillInTheBlank = "FillInTheBlank",
 }
+
+export enum NoteTags {
+  PRONUNICATION = "pronunciation",
+  GRAMMAR = "grammar",
+  VOCABULARY = "vocabulary",
+  EXPRESSION = "expression",
+}
+
+export const NOTE_TAGS: NoteTags[] = [
+  NoteTags.PRONUNICATION,
+  NoteTags.GRAMMAR,
+  NoteTags.VOCABULARY,
+  NoteTags.EXPRESSION,
+];

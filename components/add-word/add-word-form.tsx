@@ -84,7 +84,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     return { ...INITIAL_WORD, meanings: [INITIAL_MEANING] };
   };
 
-  const { register, setValue, handleSubmit, reset, control, watch } =
+  const { register, getValues, setValue, handleSubmit, reset, control, watch } =
     useForm<WordWithMeanings>({
       defaultValues: defaultValues(),
     });
@@ -316,6 +316,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             onRemove={handleRemoveMeaning}
             register={register}
             setValue={setValue}
+            getValues={getValues}
             control={control}
             errors={state?.errors?.meanings}
             entryType={entryType}
