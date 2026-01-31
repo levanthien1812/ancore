@@ -6,6 +6,8 @@ import {
   onboardingFormSchema,
   signInFormSchema,
   signUpFormSchema,
+  forgotPasswordFormSchema,
+  resetPasswordFormSchema,
 } from "../validators/user.validators";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/db/prisma";
@@ -16,7 +18,7 @@ import { UserLevel } from "@prisma/client";
 
 export async function signInWithCredentials(
   prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   try {
     const user = signInFormSchema.parse({
@@ -64,7 +66,7 @@ export async function signOutUser() {
 
 export async function signUpWithCredentials(
   prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   try {
     const user = signUpFormSchema.parse({
@@ -117,7 +119,7 @@ export async function signUpWithCredentials(
 
 export async function updateUserOnboarding(
   prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -153,5 +155,113 @@ export async function updateUserOnboarding(
     return { success: true, message: "Welcome!", errors: {} };
   } catch (error) {
     return { success: false, message: "Database error.", errors: {} };
+  }
+}
+
+export async function forgotPassword(prevState: unknown, formData: FormData) {
+  try {
+    const user = forgotPasswordFormSchema.parse({
+      email: formData.get("email"),
+    });
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email: user.email },
+    });
+
+    if (!existingUser) {
+      // Don't reveal if email exists or not for security
+      return {
+        success: true,
+        message:
+          "If an account with that email exists, we've sent you a password reset link.",
+      };
+    }
+
+    // Generate a reset token (you might want to use a more secure method)
+    const resetToken = crypto.randomUUID();
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        resetToken,
+        resetTokenExpiry,
+      },
+    });
+
+    // Here you would typically send an email with the reset link
+    // For now, we'll just return success
+    console.log(`Reset link: /reset-password?token=${resetToken}`);
+
+    return {
+      success: true,
+      message:
+        "If an account with that email exists, we've sent you a password reset link.",
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        message: error.issues[0].message,
+      };
+    }
+
+    return {
+      success: false,
+      message: "Something went wrong",
+    };
+  }
+}
+
+export async function resetPassword(prevState: unknown, formData: FormData) {
+  try {
+    const user = resetPasswordFormSchema.parse({
+      password: formData.get("password"),
+      confirmPassword: formData.get("confirmPassword"),
+      token: formData.get("token"),
+    });
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        resetToken: user.token,
+        resetTokenExpiry: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!existingUser) {
+      return {
+        success: false,
+        message: "Invalid or expired reset token",
+      };
+    }
+
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        password: hashSync(user.password),
+        resetToken: null,
+        resetTokenExpiry: null,
+      },
+    });
+
+    return {
+      success: true,
+      message:
+        "Password reset successfully. You can now sign in with your new password.",
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        message: error.issues[0].message,
+      };
+    }
+
+    return {
+      success: false,
+      message: "Something went wrong",
+    };
   }
 }

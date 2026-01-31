@@ -9,7 +9,7 @@ import { dateFilter } from "../utils/date-filter";
  */
 export async function updateReviewSession(
   wordId: string,
-  performance: ReviewPerformance
+  performance: ReviewPerformance,
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -117,7 +117,7 @@ export async function logReviewSession(summary: {
 
   const wordsReviewedCount = Object.values(summary.performanceSummary).reduce(
     (sum, count) => sum + count.length,
-    0
+    0,
   );
 
   await prisma.reviewLog.create({
@@ -135,10 +135,49 @@ export async function getReviewLogs(date: Date) {
     throw new Error("Authentication required.");
   }
 
-  return await prisma.reviewLog.findMany({
+  const logs = await prisma.reviewLog.findMany({
     where: {
       userId: session.user.id,
       completedAt: dateFilter(date),
     },
   });
+
+  return logs;
+}
+
+export async function getReviewLogsByMonth(year: number, month: number) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Authentication required.");
+  }
+
+  // Create date range for the entire month (start of first day to end of last day)
+  const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+
+  const logs = await prisma.reviewLog.findMany({
+    where: {
+      userId: session.user.id,
+      completedAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    select: {
+      completedAt: true,
+    },
+  });
+
+  // Extract unique dates that have logs
+  const datesWithLogs = new Set(
+    logs.map((log) => {
+      const date = new Date(log.completedAt);
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }),
+  );
+
+  return Array.from(datesWithLogs);
 }

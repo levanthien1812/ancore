@@ -9,7 +9,10 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
-import { getReviewLogs } from "@/lib/actions/review.actions";
+import {
+  getReviewLogs,
+  getReviewLogsByMonth,
+} from "@/lib/actions/review.actions";
 import ReviewSummaryDetail from "./review-summary-detail";
 import { PerformanceSummary } from "./review-carousel";
 import { format } from "date-fns";
@@ -19,6 +22,7 @@ import { QUERY_KEY } from "@/lib/constants/queryKey";
 const ReviewHistory = () => {
   const [open, setOpen] = React.useState(false);
   const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
 
   const { data: reviewLogs, isFetching: isFetchingReviewLogs } = useQuery({
     queryFn: async () => {
@@ -29,6 +33,30 @@ const ReviewHistory = () => {
     queryKey: [QUERY_KEY.GET_REVIEW_LOGS, date],
     enabled: !!date,
   });
+
+  const { data: datesWithLogs = [] } = useQuery({
+    queryFn: async () => {
+      const response = await getReviewLogsByMonth(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + 1,
+      );
+      return response;
+    },
+    queryKey: [
+      QUERY_KEY.GET_REVIEW_LOGS,
+      "month",
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+    ],
+  });
+
+  const modifiers = {
+    hasLog: datesWithLogs.map((dateStr) => new Date(dateStr + "T00:00:00Z")),
+  };
+
+  const modifiersClassNames = {
+    hasLog: "bg-blue-100 dark:bg-blue-900 font-semibold rounded-full",
+  };
 
   return (
     <div className="flex flex-col gap-3 border rounded-lg p-4 h-full">
@@ -48,10 +76,14 @@ const ReviewHistory = () => {
             mode="single"
             selected={date}
             captionLayout="dropdown"
+            month={currentMonth}
+            onMonthChange={setCurrentMonth}
             onSelect={(date) => {
               setDate(date);
               setOpen(false);
             }}
+            modifiers={modifiers}
+            modifiersClassNames={modifiersClassNames}
           />
         </PopoverContent>
       </Popover>
