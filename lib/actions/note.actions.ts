@@ -71,7 +71,7 @@ export const getNotes = async () =>
     try {
       const notes = await prisma.note.findMany({
         where: { userId },
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ highlighted: "desc" }, { createdAt: "desc" }],
       });
 
       return { success: true, data: notes };

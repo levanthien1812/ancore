@@ -18,7 +18,7 @@ type AddNoteProps = {
 };
 
 const AddNote = ({ note, triggerButton }: AddNoteProps) => {
-  const [isOpen, setIsOpen] = React.useState(note ? true : false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <div>
