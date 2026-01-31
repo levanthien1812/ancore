@@ -15,20 +15,22 @@ datasource db {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  name           String?
-  email          String    @unique
-  emailVerified  DateTime?
-  image          String?
-  password       String?
-  role           String    @default("user")
-  level          UserLevel @default(Beginner)
-  topics         String?
-  nativeLanguage String    @default("English")
-  goals          String?
-  dailyGoal      Int?      @default(15) // e.g., time in minutes
-  onboarded      Boolean   @default(false)
-  createdAt      DateTime  @default(now())
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  emailVerified    DateTime?
+  image            String?
+  password         String?
+  role             String    @default("user")
+  level            UserLevel @default(Beginner)
+  topics           String?
+  nativeLanguage   String    @default("English")
+  goals            String?
+  dailyGoal        Int?      @default(15) // e.g., time in minutes
+  onboarded        Boolean   @default(false)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
 
   words      Word[]
   reviews    ReviewSession[]

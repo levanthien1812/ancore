@@ -199,6 +199,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   };
 
   useEffect(() => {
+    console.log(state);
     if (state && state.success) {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });

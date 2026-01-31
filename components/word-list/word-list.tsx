@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import WordTable from "./word-table";
 import WordDialog from "../word-card/word-dialog";
@@ -20,6 +20,12 @@ const WordList = ({
   const [hasMore, setHasMore] = useState(initialWords.length >= PAGE_SIZE);
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const word = selectedIndex !== null ? words[selectedIndex] : undefined;
+
+  useEffect(() => {
+    setWords(initialWords);
+    setPage(1);
+    setHasMore(initialWords.length >= PAGE_SIZE);
+  }, [initialWords]);
 
   const handleTitleClick = React.useCallback((index: number) => {
     setSelectedIndex(index);

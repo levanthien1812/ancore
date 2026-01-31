@@ -26,6 +26,27 @@ export const signUpFormSchema = z
     path: ["confirmPassword"],
   });
 
+export const forgotPasswordFormSchema = z.object({
+  email: z.string().email("Invalid email address"),
+});
+
+export const resetPasswordFormSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters long")
+      .max(100),
+    confirmPassword: z
+      .string()
+      .min(8, "Confirm password must be at least 8 characters long")
+      .max(100),
+    token: z.string().min(1, "Reset token is required"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 export const onboardingFormSchema = z.object({
   level: z.string().min(1, "Please select your level."),
   topics: z
