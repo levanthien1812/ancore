@@ -2,22 +2,28 @@
 
 import WordList from "@/components/word-list/word-list";
 import { getWordListByFilter } from "@/lib/actions/word.actions";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
+import { Button } from "@/components/ui/button";
+
+const PAGE_SIZE = 50;
 
 const WordsPage = () => {
   const {
-    data: wordList,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading,
     error,
-  } = useQuery({
+  } = useInfiniteQuery({
     queryKey: [QUERY_KEY.GET_WORDS],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 1 }) => {
       try {
         const result = await getWordListByFilter({
-          page: 1,
-          limit: 50,
+          page: pageParam as number,
+          limit: PAGE_SIZE,
         });
         return result;
       } catch (err) {
@@ -25,14 +31,13 @@ const WordsPage = () => {
         throw err;
       }
     },
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
   });
 
-  const handleLoadMore = async (page: number) => {
-    return await getWordListByFilter({
-      page,
-      limit: 50,
-    });
-  };
+  const allWords = data?.pages.flat() || [];
 
   if (isLoading) {
     return (
@@ -62,7 +67,18 @@ const WordsPage = () => {
   return (
     <div className="container mx-auto space-y-2 p-4 md:p-0">
       <h2 className="text-3xl">Word list</h2>
-      <WordList words={wordList || []} onLoadMore={handleLoadMore} />
+      <WordList words={allWords} />
+      {hasNextPage && (
+        <div className="mt-4">
+          <Button
+            variant={"outline"}
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+          >
+            {isFetchingNextPage ? "Loading..." : "Load more words"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };

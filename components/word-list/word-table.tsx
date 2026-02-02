@@ -214,6 +214,7 @@ const WordTable = ({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    autoResetPageIndex: false,
   });
 
   return (
@@ -275,8 +276,8 @@ const WordTable = ({
             ))}
         </TableBody>
       </Table>
-      <div className="flex flex-col md:flex-row items-center justify-end gap-4 md:gap-2 py-4">
-        <div className="flex gap-2 items-center justify-start w-full md:w-auto flex-1">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2 py-4">
+        <div className="flex gap-2 items-center justify-start w-full md:w-auto">
           <div className="text-muted-foreground text-sm">
             {table.getFilteredSelectedRowModel().rows.length} of{" "}
             {table.getFilteredRowModel().rows.length} row(s) selected.
@@ -286,6 +287,11 @@ const WordTable = ({
               selectedRows={table.getFilteredSelectedRowModel().rows}
             />
           )}
+        </div>
+        <div>
+          <span className="text-sm">
+            Page {pagination.pageIndex + 1} of {table.getPageCount()}
+          </span>
         </div>
         <div className="flex gap-2 w-full md:w-auto justify-between md:justify-end">
           <div className="flex gap-2 items-center">
