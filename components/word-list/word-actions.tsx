@@ -21,7 +21,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
 
   const [state, formAction, isLoading] = useActionState(
     deleteWords,
-    initialActionState
+    initialActionState,
   );
 
   const onDeleteSuccess = useEffectEvent(() => {
