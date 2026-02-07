@@ -131,6 +131,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         return;
       }
       const result = JSON.parse(data);
+      console.log(result);
 
       setValue("word", result.word.toLowerCase());
       setValue("meanings", result.meanings);
@@ -187,15 +188,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     startTransition(() => {
       formAction(formData);
     });
-  };
-
-  const handlePlayAudio = () => {
-    const utterance = new SpeechSynthesisUtterance(enteredWord);
-    utterance.lang = "en-US";
-    utterance.volume = 1;
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    speechSynthesis.speak(utterance);
   };
 
   useEffect(() => {

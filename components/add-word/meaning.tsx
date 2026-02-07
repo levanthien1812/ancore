@@ -32,6 +32,7 @@ import {
 } from "../ui/select";
 import { DifficultyLevel } from "@prisma/client";
 import TagList from "../shared/tag-list";
+import { Volume2Icon, VolumeIcon } from "lucide-react";
 
 interface MeaningProps {
   index: number;
@@ -79,6 +80,15 @@ const Meaning = ({
     }
   };
 
+  const handlePlayAudio = () => {
+    const utterance = new SpeechSynthesisUtterance(getValues("word"));
+    utterance.lang = "en-US";
+    utterance.volume = 1;
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    speechSynthesis.speak(utterance);
+  };
+
   return (
     <div className="border border-border-2 border-dashed rounded-lg p-4 grid gap-3">
       {count > 1 && (
@@ -107,14 +117,23 @@ const Meaning = ({
       </div>
       {entryType === "word" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <div className="grid gap-1">
-            <Label htmlFor="pronunciation" className="text-right">
+          <div className="grid grid-cols-6 gap-1 ">
+            <Label htmlFor="pronunciation" className="text-right col-span-6">
               Pronunciation
             </Label>
             <Input
               id="pronunciation"
               {...register(`meanings.${index}.pronunciation`)}
+              className="col-span-5"
             />
+            <button
+              onClick={handlePlayAudio}
+              type="button"
+              className=" h-full flex items-center justify-center rounded-sm border border-secondary disabled:opacity-50 px-2 py-1"
+              disabled={!getValues("word")}
+            >
+              <Volume2Icon width={14} height={14} color={"black"} />
+            </button>
           </div>
           <div className="grid gap-1">
             <Label htmlFor="cefrLevel" className="text-right">

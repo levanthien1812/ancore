@@ -11,6 +11,7 @@ export const fillWordWithAi = async (prompt: string) => {
     });
 
     const result = completion.choices[0].message.content;
+    console.log(result);
     return result;
   } catch (error) {
     throw error;
