@@ -1,5 +1,6 @@
 "use client";
 import { Volume2Icon } from "lucide-react";
+import { useLayout } from "../layout/layout-context";
 
 const WordPronunciation = ({
   word,
@@ -10,6 +11,7 @@ const WordPronunciation = ({
   pronunciation: string | null;
   light?: boolean;
 }) => {
+  const { mode } = useLayout();
   const formattedPronunciation = pronunciation
     ? !pronunciation.includes("/")
       ? `/${pronunciation}/`
@@ -30,7 +32,9 @@ const WordPronunciation = ({
   return (
     <div className="flex items-center gap-1">
       {pronunciation && (
-        <div className={`${light ? "text-white" : "text-gray-600"}`}>
+        <div
+          className={`${light ? "text-white" : "text-gray-600"} ${mode === "list" ? "text-md" : "text-sm"}`}
+        >
           {formattedPronunciation}
         </div>
       )}

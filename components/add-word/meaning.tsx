@@ -68,6 +68,10 @@ const Meaning = ({
 
   const handlePaste: ClipboardEventHandler<HTMLTextAreaElement> = (event) => {
     event.preventDefault();
+    const existingText = getValues(`meanings.${index}.exampleSentences`) || "";
+    if (existingText) {
+      return;
+    }
 
     const clipboardData = event.clipboardData;
     const pastedText = clipboardData?.getData("text/plain");
