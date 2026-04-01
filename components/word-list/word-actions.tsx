@@ -13,11 +13,13 @@ import { initialActionState } from "@/lib/constants/initial-values";
 import { useQueryClient } from "@tanstack/react-query";
 import ConfirmActionDialog from "../shared/confirm-action-dialog";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
+import { useLayout } from "../layout/layout-context";
 
 const WordActions = ({ word }: { word: WordWithMeanings }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const queryClient = useQueryClient();
+  const { mode } = useLayout();
 
   const [state, formAction, isLoading] = useActionState(
     deleteWords,
@@ -45,7 +47,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
   };
 
   return (
-    <div className="flex gap-1">
+    <div className={`flex ${mode === "list" ? "flex-row" : "flex-col"} gap-1`}>
       <AddWord
         word={word}
         triggerButton={
@@ -53,6 +55,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
             size={"sm"}
             variant={"secondary"}
             onClick={() => setIsEditing(true)}
+            className="min-w-[80px]"
           >
             Edit
           </Button>
@@ -71,7 +74,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
             type="button"
             size={"sm"}
             variant={"secondary"}
-            className="text-destructive"
+            className="text-destructive min-w-[80px]"
           >
             Delete
           </Button>

@@ -11,6 +11,7 @@ import { PenIcon } from "lucide-react";
 import React, { startTransition, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { updateWord } from "@/lib/actions/word.actions";
+import { useLayout } from "../layout/layout-context";
 
 const WordMasteryLevel = ({
   wordId,
@@ -20,6 +21,7 @@ const WordMasteryLevel = ({
   level: MasteryLevel;
 }) => {
   const [selectedValue, setSelectedValue] = useState<MasteryLevel>(level);
+  const { mode } = useLayout();
 
   const demonstratorStyle = useMemo(() => {
     switch (selectedValue) {
@@ -51,35 +53,52 @@ const WordMasteryLevel = ({
   };
 
   return (
-    <div className="flex gap-1 items-center">
-      <div className="w-4 h-4 rounded-[3px]" style={demonstratorStyle}></div>
-      <p className="leanding-none">{selectedValue}</p>
-
-      <Popover>
-        <PopoverTrigger asChild>
-          <button className="hover:bg-gray-200 rounded-[3px] w-4 h-4 cursor-pointer p-0.5 flex justify-center items-center">
+    <Popover>
+      <PopoverTrigger asChild>
+        {/* <button className="hover:bg-gray-200 rounded-[3px] w-4 h-4 cursor-pointer p-0.5 justify-center items-center group-hover:flex hidden">
             <PenIcon stroke="#4a5566" fill="#99a1af" />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-80">
-          <Select
-            value={selectedValue}
-            onValueChange={handleChange}
-            name="masteryLevel"
+          </button> */}
+        <div
+          className="cursor-pointer flex gap-1 items-center"
+          title="Click to change"
+        >
+          <div
+            className={`${mode === "list" ? "w-4 h-4" : "min-w-8 min-h-2 px-2 py-0"} rounded-md`}
+            style={demonstratorStyle}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a fruit" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="New">New</SelectItem>
-              <SelectItem value="Learning">Learning</SelectItem>
-              <SelectItem value="Familiar">Familiar</SelectItem>
-              <SelectItem value="Mastered">Mastered</SelectItem>
-            </SelectContent>
-          </Select>
-        </PopoverContent>
-      </Popover>
-    </div>
+            {mode === "grid" && (
+              <p
+                className={`leanding-none text-md group-hover:block hidden text-sm text-white`}
+              >
+                {selectedValue}
+              </p>
+            )}
+            {mode === "list" && (
+              <p className={`leanding-none text-black text-md`}>
+                {selectedValue}
+              </p>
+            )}
+          </div>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        <Select
+          value={selectedValue}
+          onValueChange={handleChange}
+          name="masteryLevel"
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select a level" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="New">New</SelectItem>
+            <SelectItem value="Learning">Learning</SelectItem>
+            <SelectItem value="Familiar">Familiar</SelectItem>
+            <SelectItem value="Mastered">Mastered</SelectItem>
+          </SelectContent>
+        </Select>
+      </PopoverContent>
+    </Popover>
   );
 };
 
