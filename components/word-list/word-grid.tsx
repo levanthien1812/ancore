@@ -63,6 +63,13 @@ const WordGrid = ({
         header: "Mastery level",
         enableSorting: true,
       },
+      {
+        accessorKey: "highlighted",
+        header: "Highlighted",
+        enableSorting: true,
+        enableColumnFilter: true,
+        filterFn: "equals",
+      },
     ],
     [onClickTitle, words],
   );
@@ -100,9 +107,9 @@ const WordGrid = ({
   });
 
   return (
-    <div>
+    <div className="space-y-2 sm:space-y-4">
       <WordFilter table={table} />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-4">
         {table.getRowModel().rows.map((row) => (
           <React.Fragment key={row.id}>
             <WordCard
@@ -118,7 +125,7 @@ const WordGrid = ({
         ))}
       </div>
 
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2 py-4">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
         <div>
           <span className="text-sm">
             Page {pagination.pageIndex + 1} of {table.getPageCount()}

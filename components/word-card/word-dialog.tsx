@@ -38,20 +38,24 @@ const WordDialog = ({
           <WordDetailDialog word={word} />
           <DialogFooter>
             <Button onClick={handleClose}>Close</Button>
-            <Button
-              variant={"outline"}
-              onClick={handlePrevious}
-              disabled={selectedIndex === 0}
-            >
-              <ChevronLeft /> Previous
-            </Button>
-            <Button
-              variant={"outline"}
-              onClick={handleNext}
-              disabled={selectedIndex === totalWord - 1}
-            >
-              Next <ChevronRight />
-            </Button>
+            <div className="flex gap-2 items-center">
+              <Button
+                variant={"outline"}
+                onClick={handlePrevious}
+                disabled={selectedIndex === 0}
+                className="flex-1"
+              >
+                <ChevronLeft /> Previous
+              </Button>
+              <Button
+                variant={"outline"}
+                onClick={handleNext}
+                disabled={selectedIndex === totalWord - 1}
+                className="flex-1"
+              >
+                Next <ChevronRight />
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       )}

@@ -109,7 +109,7 @@ const WordTable = ({
           );
         },
         enableSorting: true,
-        enableGlobalFilter: true,
+        enableColumnFilter: true,
       },
       {
         accessorKey: "pronunciation",

@@ -35,7 +35,7 @@ const SidebarItem = ({
       <Link
         href={item.path}
         className={cn(
-          "flex items-center justify-center md:justify-start gap-2 py-2 px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-lg md:rounded-none",
+          "flex items-center justify-center md:justify-start gap-2 py-2 px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-md md:rounded-none",
           isActive && "bg-primary-2 text-white",
         )}
       >

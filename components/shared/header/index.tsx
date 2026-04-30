@@ -10,7 +10,7 @@ const Header = async () => {
   const session = await auth();
   return (
     <header className="w-full border-b sticky top-0 left-0 bg-white z-10">
-      <div className="flex justify-between items-center container mx-auto py-2">
+      <div className="flex justify-between items-center container mx-auto py-2 px-4">
         <div className="flex-start">
           <Link href={"./"} className="flex-start">
             <Image src={Logo} height={50} alt="ancore-logo" />
