@@ -9,6 +9,7 @@ import WordDefinition from "./word-definition";
 import WordPronunciation from "./word-pronunciation";
 import WordMasteryLevel from "./word-mastery-level";
 import { MasteryLevel } from "@/lib/constants/enums";
+import { shorten } from "@/lib/utils/shorten";
 
 const WordCard = ({
   word,
@@ -18,7 +19,7 @@ const WordCard = ({
   onClickTitle: () => void;
 }) => {
   return (
-    <div className="p-4 rounded-lg shadow-sm shadow-primary hover:shadow-md bg-primary group relative hover:bg-primary-2 hover:shadow-primary-2 transition-colors duration-200">
+    <div className="p-3 sm:p-4 rounded-lg shadow-sm shadow-primary hover:shadow-md bg-primary group relative hover:bg-primary-2 hover:shadow-primary-2 transition-colors duration-200">
       <Popover>
         <PopoverTrigger asChild>
           <button
@@ -34,12 +35,14 @@ const WordCard = ({
         </PopoverContent>
       </Popover>
       <div className="flex gap-2 items-start">
-        <WordTitle word={word} onClick={onClickTitle} />
-        <WordPronunciation
-          word={word.word}
-          pronunciation={word.meanings[0]?.pronunciation}
-          light={true}
-        />
+        <div className="flex flex-col flex-1 sm:flex-row">
+          <WordTitle word={word} onClick={onClickTitle} />
+          <WordPronunciation
+            word={word.word}
+            pronunciation={word.meanings[0]?.pronunciation}
+            light={true}
+          />
+        </div>
         {word.highlighted && (
           <div className="ms-auto">
             <span className="text-center">⭐</span>
@@ -48,7 +51,9 @@ const WordCard = ({
       </div>
 
       <WordDefinition
-        meanings={word.meanings.map((meaning) => meaning.definition)}
+        meanings={word.meanings.map((meaning) =>
+          shorten(meaning.definition, 50),
+        )}
       />
       <div className="absolute bottom-0 right-0 p-2">
         <WordMasteryLevel

@@ -33,7 +33,7 @@ const WordPronunciation = ({
     <div className="flex items-center gap-1">
       {pronunciation && (
         <div
-          className={`${light ? "text-white" : "text-gray-600"} ${mode === "list" ? "text-md" : "text-sm"}`}
+          className={`${light ? "text-white" : "text-gray-600"} ${mode === "list" ? "text-md" : "text-sm italic"}`}
         >
           {formattedPronunciation}
         </div>

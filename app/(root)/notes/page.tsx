@@ -4,9 +4,9 @@ import React from "react";
 
 const NotesPage = () => {
   return (
-    <div className="container mx-auto py-8 space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-4">Notes</h1>
+    <div className="container mx-auto px-3 py-8 space-y-8">
+      <div className="flex gap-2 justify-between items-center">
+        <h1 className="text-3xl font-bold">Notes</h1>
         <AddNote />
       </div>
       <div>
