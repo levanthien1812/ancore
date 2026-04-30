@@ -26,7 +26,7 @@ const AddNote = ({ note, triggerButton }: AddNoteProps) => {
         <DialogTrigger asChild>
           {triggerButton || (
             <Button
-              className="bg-primary-2 rounded-full px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
+              className="bg-primary-2 px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
               onClick={(e) => e.stopPropagation()}
             >
               {note ? "Edit note" : "Add note"}

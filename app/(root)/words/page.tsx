@@ -65,7 +65,7 @@ const WordsPage = () => {
   }
 
   return (
-    <div className="container mx-auto space-y-2 p-4 md:p-0">
+    <div className="container mx-auto space-y-2 p-4">
       <h2 className="text-3xl">Word list</h2>
       <WordList words={allWords} />
       {hasNextPage && (

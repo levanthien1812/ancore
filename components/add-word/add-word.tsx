@@ -26,7 +26,7 @@ const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
       <DialogTrigger asChild>
         {triggerButton || (
           <Button
-            className="bg-primary-2 rounded-full px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
+            className="bg-primary-2 px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
             onClick={(e) => e.stopPropagation()}
           >
             {word ? "Edit word" : "Add word"}
@@ -36,11 +36,6 @@ const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{word ? "Edit word" : "Add new word"}</DialogTitle>
-          {!word && (
-            <DialogDescription>
-              Add a new word to your vocabulary list. Fill in the details below.
-            </DialogDescription>
-          )}
         </DialogHeader>
         <AddWordForm
           onClose={() => setIsOpen(false)}
