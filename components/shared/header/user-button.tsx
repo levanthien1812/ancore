@@ -50,7 +50,7 @@ const UserButton = ({ user }: { user?: User }) => {
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <div className="flex flex-col spacy-y-1">
-                  <div className="text-sm font-medium leading-none">
+                  <div className="text-xl font-medium leading-none">
                     {currentUser.name}
                   </div>
                   <div className="text-sm leading-none text-muted-foreground mt-1">

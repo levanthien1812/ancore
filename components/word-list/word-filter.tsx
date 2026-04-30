@@ -45,12 +45,6 @@ const WordFilter = ({ table }: Props) => {
       ?.getFilterValue();
     const typeFilter = table.getColumn("type")?.getFilterValue();
     const highlightedFilter = table.getColumn("highlighted")?.getFilterValue();
-    console.log("Filters state:", {
-      globalFilter,
-      masteryLevelFilter,
-      typeFilter,
-      highlightedFilter,
-    });
     return (
       !!globalFilter ||
       !!masteryLevelFilter ||
@@ -65,7 +59,35 @@ const WordFilter = ({ table }: Props) => {
 
   return (
     <div>
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant={"link"}
+              onClick={handleToggleFilters}
+              className="p-0"
+            >
+              Sort by: {table.getState().sorting[0]?.id || "None"}{" "}
+              {table.getState().sorting[0]?.desc ? "⬇️" : "⬆️"}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {table
+              .getAllColumns()
+              .filter((column) => column.getCanSort())
+              .map((column) => (
+                <DropdownMenuCheckboxItem
+                  key={column.id}
+                  className="capitalize"
+                  checked={column.getIsSorted() === false ? false : true}
+                  onCheckedChange={(value) => column.toggleSorting(!!value)}
+                >
+                  {column.columnDef.header?.toString()}
+                </DropdownMenuCheckboxItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         <Button variant={"link"} onClick={handleToggleFilters} className="p-0">
           {showFilters ? "Hide filters" : "Show filters"}
         </Button>
