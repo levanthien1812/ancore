@@ -11,7 +11,7 @@ export default async function Home() {
       <Suspense>
         <OnboardingDialog />
       </Suspense>
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4">
         <div className="col-span-1 md:col-span-3">
           <Welcome />
         </div>

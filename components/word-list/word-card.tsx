@@ -39,8 +39,8 @@ const WordCard = ({
       } ${isSelected ? "ring-2 ring-primary-2" : ""}`}
       onClick={isSelectMode ? handleCardClick : undefined}
     >
-      <div className="flex gap-2 items-center">
-        <div className="flex flex-col flex-1 sm:flex-row gap-1 sm:gap-2 sm:items-center">
+      <div className="flex gap-2 items-start">
+        <div className="flex flex-col flex-1 sm:flex-row gap-1 sm:gap-2 sm:items-center overflow-hidden">
           <div className="flex gap-2 items-center">
             {isSelectMode && (
               <div className="flex">
@@ -66,25 +66,7 @@ const WordCard = ({
             light={true}
           />
         </div>
-        <div className="ms-auto flex gap-2 items-center">
-          {word.highlighted && <div className="">⭐</div>}
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className={`block md:hidden md:group-hover:block focus-visible:block cursor-pointer ${
-                  isSelectMode ? "hidden" : ""
-                }`}
-                title="Actions"
-              >
-                <Ellipsis color="white" width={18} height={18} />
-              </button>
-            </PopoverTrigger>
-            {/* Popover content goes here */}
-            <PopoverContent className="p-1 rounded-md bg-white z-20">
-              <WordActions word={word} />
-            </PopoverContent>
-          </Popover>
-        </div>
+        {word.highlighted && <div className="ms-auto">⭐</div>}
       </div>
 
       <div className="mt-2">
