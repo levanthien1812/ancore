@@ -15,7 +15,7 @@ const WordMeaning = ({
             dangerouslySetInnerHTML={{
               __html: example.replace(
                 word,
-                `<span class="text-primary-2">${word}</span>`
+                `<span class="text-primary-2">${word}</span>`,
               ),
             }}
           ></div>
@@ -26,7 +26,7 @@ const WordMeaning = ({
   return (
     <div
       key={meaning.id}
-      className="text-white border border-white border-dashed rounded-lg p-4"
+      className="text-white border border-white  rounded-lg p-4"
     >
       {meaning.partOfSpeech && (
         <p className="italic">({meaning.partOfSpeech})</p>
@@ -38,22 +38,23 @@ const WordMeaning = ({
           <ul className="list-disc ms-4">{examples}</ul>
         </div>
       )}
+      <hr className="my-2 border-dashed" />
       {meaning.synonyms && meaning.synonyms.length > 0 && (
         <div className="mt-2">
-          <p className="text-lg">Synonyms:</p>
-          <p>👉 {meaning.synonyms}</p>
+          <p className="text-md">Synonyms:</p>
+          <p className="text-sm italic">👉 {meaning.synonyms}</p>
         </div>
       )}
       {meaning.antonyms && meaning.antonyms.length > 0 && (
         <div className="mt-2">
-          <p className="text-lg">Antonyms:</p>
-          <p>👉 {meaning.antonyms}</p>
+          <p className="text-md">Antonyms:</p>
+          <p className="text-sm italic">👉 {meaning.antonyms}</p>
         </div>
       )}
       {meaning.usageNotes && meaning.usageNotes.length > 0 && (
         <div className="mt-2">
-          <p className="text-lg">Usage notes:</p>
-          <p>📝 {meaning.usageNotes}</p>
+          <p className="text-md">Usage notes:</p>
+          <p className="text-sm italic">📝 {meaning.usageNotes}</p>
         </div>
       )}
     </div>

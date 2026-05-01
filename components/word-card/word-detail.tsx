@@ -57,7 +57,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
           <AddWord
             word={word}
             triggerButton={
-              <Button variant={"outline"} size={"icon"}>
+              <Button size={"icon"} title="Edit word">
                 <PenIcon />
               </Button>
             }
@@ -65,7 +65,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant={"outline"} size={"icon"}>
+              <Button size={"icon"} title="More actions">
                 <EllipsisIcon />
               </Button>
             </PopoverTrigger>
