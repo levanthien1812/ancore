@@ -54,11 +54,11 @@ const Welcome = () => {
   const userName = session?.user?.name?.split(" ")[0] || "You";
 
   return (
-    <div className=" flex flex-col bg-background-2 p-4 md:p-8 rounded-2xl h-full">
+    <div className=" flex flex-col bg-background-2 p-4 md:p-8 rounded-2xl gap-2 h-full">
       <p className="text-3xl md:text-[40px] font-bold text-primary">
         👋Hi {userName}!
       </p>
-      <div className="text-xl mt-2">
+      <div className="text-lg sm:text-xl mt-2">
         You&apos;ve learned{" "}
         {isFetchingWordsLearned ? (
           <Skeleton className="h-5 w-20" />
@@ -69,7 +69,7 @@ const Welcome = () => {
         )}{" "}
         in a row
       </div>
-      <div className="text-xl mt-2">
+      <div className="text-lg sm:text-xl sm:mt-2">
         Your current streak is{" "}
         {isFetchingStreak ? (
           <Skeleton className="h-5 w-20" />
@@ -78,7 +78,7 @@ const Welcome = () => {
         )}
       </div>
       <div className="flex justify-between mt-auto items-end">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1 sm:gap-2">
           <AddWord
             triggerButton={
               <Button className="justify-start">

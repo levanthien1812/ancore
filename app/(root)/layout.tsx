@@ -12,7 +12,7 @@ export default function RootLayout({
       <Header />
       <div className="flex w-full grow overflow-hidden flex-col-reverse md:flex-row">
         <Sidebar />
-        <main className="pt-4 flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
       <Toaster />
     </div>

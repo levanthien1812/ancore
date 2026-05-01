@@ -56,7 +56,7 @@ const RecentWords = () => {
   }, []);
 
   return (
-    <div className=" flex flex-col bg-background-2 p-4 md:p-8 rounded-2xl">
+    <div className=" flex flex-col bg-background-2 p-4 md:p-8 rounded-2xl gap-2">
       <div className="">
         <span className="text-2xl md:text-[40px] font-bold text-primary">
           📋 Recent words!
@@ -85,7 +85,7 @@ const RecentWords = () => {
               : words.map((word, index) => (
                   <TableRow key={word.id} className="border-b border-primary">
                     <TableCell
-                      className={`font-bold text-xl px-4 ${
+                      className={`font-bold text-lg sm:text-xl px-2 sm:px-4 ${
                         index % 2 === 0 ? "text-primary-2" : "text-primary"
                       }`}
                     >
@@ -126,7 +126,9 @@ const RecentWords = () => {
         setSelectedIndex={setSelectedIndex}
         totalWord={words.length}
       />
-      <WordOfTheDay />
+      <div className="mt-2 sm:mt-8">
+        <WordOfTheDay />
+      </div>
     </div>
   );
 };

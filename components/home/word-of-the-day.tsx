@@ -50,7 +50,7 @@ const WordOfTheDay = () => {
       setWordOfTheDay(result);
       localStorage.setItem(
         "wordOfTheDay",
-        JSON.stringify({ word: result, date: new Date().toISOString() })
+        JSON.stringify({ word: result, date: new Date().toISOString() }),
       );
     } catch (error) {
       console.log(error);
@@ -64,7 +64,7 @@ const WordOfTheDay = () => {
   }, [fetchWordOfTheDay]);
 
   return (
-    <div className="mt-8">
+    <>
       <p className="text-xl font-bold">✨ Word of the day ✨</p>
       {wordOfTheDay && (
         <div className="border-2 border-dashed border-primary-2 p-3 rounded-2xl">
@@ -77,9 +77,9 @@ const WordOfTheDay = () => {
                 {wordOfTheDay?.pronunciation}
               </p>
             </div>
-            <div className="flex gap-2 justify-between">
+            <div className="">
               <div>
-                <p className="font-bold">
+                <p className="font-bold text-justify">
                   ({wordOfTheDay?.meanings[0]?.partOfSpeech}) -{" "}
                   {wordOfTheDay?.meanings[0]?.definition}
                 </p>
@@ -88,11 +88,13 @@ const WordOfTheDay = () => {
                   {wordOfTheDay?.meanings[0]?.exampleSentences
                     .split("|")
                     .map((example, index) => (
-                      <li key={index}>{example}</li>
+                      <li key={index} className="text-justify">
+                        {example}
+                      </li>
                     ))}
                 </ul>
               </div>
-              <div className="flex items-end justify-center">
+              <div className="flex items-end justify-center float-right">
                 <AddWord
                   triggerButton={
                     <button className="p-2 rounded-lg bg-blue-100 cursor-pointer hover:bg-blue-200">
@@ -116,7 +118,7 @@ const WordOfTheDay = () => {
           <Skeleton className="h-12 w-12 rounded-xl" />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

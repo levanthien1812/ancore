@@ -128,7 +128,7 @@ const WordFilter = ({
             onChange={(event) => {
               table.setGlobalFilter(event.target.value);
             }}
-            className="w-full md:w-52"
+            className="w-full text-sm md:w-52"
           />
           <Select
             onValueChange={(value) =>

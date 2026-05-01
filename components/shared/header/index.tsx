@@ -10,13 +10,21 @@ const Header = async () => {
   const session = await auth();
   return (
     <header className="w-full border-b sticky top-0 left-0 bg-white z-10">
-      <div className="flex justify-between items-center container mx-auto py-2 px-4">
+      <div className="flex justify-between items-center container mx-auto py-1.5 sm:py-2 px-4">
         <div className="flex-start">
-          <Link href={"./"} className="flex-start">
-            <Image src={Logo} height={50} alt="ancore-logo" />
+          <Link
+            href={"./"}
+            className="flex-start h-10 sm:h-12 md:h-14 flex items-center"
+          >
+            <Image
+              src={Logo}
+              height={50}
+              alt="ancore-logo"
+              className="h-full w-auto"
+            />
           </Link>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           <AddWord />
           <UserButton user={session?.user} />
         </div>
