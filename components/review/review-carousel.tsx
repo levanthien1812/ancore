@@ -76,7 +76,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
 
   const handleFinishSession = () => {
     const durationSeconds = Math.floor(
-      (new Date().getTime() - startTime.getTime()) / 1000
+      (new Date().getTime() - startTime.getTime()) / 1000,
     );
     startTransition(async () => {
       const performanceSummaryForLog = Object.entries(summary).reduce(
@@ -84,7 +84,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
           acc[key] = value;
           return acc;
         },
-        {} as Record<string, string[]>
+        {} as Record<string, string[]>,
       );
       await logReviewSession({
         durationSeconds,
@@ -100,7 +100,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
   if (words.length === 0) return null;
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       <div className="flex gap-1">
         {words.map((word, index) => (
           <div
@@ -112,10 +112,14 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
           ></div>
         ))}
       </div>
-      <Carousel className="mt-1" setApi={setApi} opts={{ watchDrag: false }}>
-        <CarouselContent>
+      <Carousel
+        className="mt-1 h-full"
+        setApi={setApi}
+        opts={{ watchDrag: false }}
+      >
+        <CarouselContent className="h-full">
           {words.map((word) => (
-            <CarouselItem key={word.id}>
+            <CarouselItem key={word.id} className="h-full">
               <ReviewWordCard
                 word={word}
                 onPerformanceUpdate={handlePerformanceUpdate}
