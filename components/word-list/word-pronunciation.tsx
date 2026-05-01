@@ -41,7 +41,7 @@ const WordPronunciation = ({
       <button
         type="button"
         onClick={handlePlayAudio}
-        className="cursor-pointer"
+        className="cursor-pointer active:font-bold"
       >
         <Volume2Icon width={14} height={14} color={light ? "white" : "black"} />
       </button>

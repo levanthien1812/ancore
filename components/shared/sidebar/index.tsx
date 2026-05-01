@@ -112,7 +112,7 @@ const Sidebar = () => {
           />
         ))}
       </ul>
-      <div className="flex md:mt-auto justify-center items-center px-2 md:px-0">
+      <div className="hidden sm:flex md:mt-auto justify-center items-center px-2 md:px-0">
         <form action={signOutUser}>
           <button
             type="submit"

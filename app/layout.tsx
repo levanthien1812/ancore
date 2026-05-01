@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Karma } from "next/font/google";
+import { Merriweather } from "next/font/google";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import Providers from "./providers";
 import { QueryProvider } from "@/lib/query-provider";
 
-const karmaSans = Karma({
+const merriweather = Merriweather({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
@@ -28,7 +28,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${karmaSans.className} antialiased`}>
+      <body className={`${merriweather.className} antialiased`}>
         <Providers>
           <QueryProvider>{children}</QueryProvider>
         </Providers>

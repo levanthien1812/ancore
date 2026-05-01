@@ -38,7 +38,7 @@ const UserButton = ({ user }: { user?: User }) => {
           <Button asChild>
             <div className="flex items-center gap-1">
               <UserIcon />
-              {firstName}
+              <span className="hidden sm:block">{firstName}</span>
             </div>
           </Button>
         </DropdownMenuTrigger>

@@ -24,10 +24,17 @@ import { useMemo, useState } from "react";
 
 type Props = {
   table: Table<WordWithMeanings>;
+  isSelectMode?: boolean;
+  onToggleSelectMode?: (isActive: boolean) => void;
 };
 
-const WordFilter = ({ table }: Props) => {
+const WordFilter = ({
+  table,
+  isSelectMode = false,
+  onToggleSelectMode,
+}: Props) => {
   const [showFilters, setShowFilters] = useState(false);
+
   const handleResetFilter = () => {
     table.resetGlobalFilter();
     table.getColumn("masteryLevel")?.setFilterValue("");
@@ -39,7 +46,8 @@ const WordFilter = ({ table }: Props) => {
   };
 
   const areFiltersSet = useMemo(() => {
-    const globalFilter = table.getState().globalFilter;
+    const { globalFilter } = table.getState();
+
     const masteryLevelFilter = table
       .getColumn("masteryLevel")
       ?.getFilterValue();
@@ -51,7 +59,13 @@ const WordFilter = ({ table }: Props) => {
       !!typeFilter ||
       highlightedFilter !== undefined
     );
-  }, [table]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    table.getState().globalFilter,
+    table.getColumn("masteryLevel")?.getFilterValue(),
+    table.getColumn("type")?.getFilterValue(),
+    table.getColumn("highlighted")?.getFilterValue(),
+  ]);
 
   const handleToggleFilters = () => {
     setShowFilters((prev) => !prev);
@@ -60,6 +74,13 @@ const WordFilter = ({ table }: Props) => {
   return (
     <div>
       <div className="flex justify-end gap-2">
+        <Button
+          variant={"link"}
+          onClick={() => onToggleSelectMode?.(!isSelectMode)}
+          className="p-0"
+        >
+          {isSelectMode ? "Exit Select Mode" : "Select"}
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -88,8 +109,15 @@ const WordFilter = ({ table }: Props) => {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant={"link"} onClick={handleToggleFilters} className="p-0">
+        <Button
+          variant={"link"}
+          onClick={handleToggleFilters}
+          className="p-0 gap-0.5"
+        >
           {showFilters ? "Hide filters" : "Show filters"}
+          {areFiltersSet && (
+            <div className="text-xs text-primary -translate-y-2">●</div>
+          )}
         </Button>
       </div>
       {showFilters && (
@@ -157,19 +185,19 @@ const WordFilter = ({ table }: Props) => {
               Highlighted
             </label>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full">
             {areFiltersSet && (
               <Button
                 variant={"default"}
                 onClick={handleResetFilter}
-                className="w-full md:w-auto"
+                className="flex-1 md:w-auto"
               >
                 Reset filter
               </Button>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto w-full md:w-auto">
+                <Button variant="outline" className="ml-auto flex-1 md:w-auto">
                   Columns <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>
