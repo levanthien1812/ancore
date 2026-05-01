@@ -7,8 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { PenIcon } from "lucide-react";
-import React, { startTransition, useMemo, useState } from "react";
+import { startTransition, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { updateWord } from "@/lib/actions/word.actions";
 import { useLayout } from "../layout/layout-context";

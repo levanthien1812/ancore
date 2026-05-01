@@ -30,19 +30,10 @@ import {
   VisibilityState,
 } from "@tanstack/react-table";
 import { Checkbox } from "../ui/checkbox";
-import { Button } from "../ui/button";
 import { format } from "date-fns";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 import ActionsPanel from "./actions-panel";
-import { PAGE_SIZES } from "@/lib/constants/constant";
 import WordFilter from "./word-filter";
+import Pagination from "./pagination";
 
 const WordTable = ({
   words,
@@ -189,6 +180,7 @@ const WordTable = ({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [globalFilter, setGlobalFilter] = React.useState("");
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -204,8 +196,10 @@ const WordTable = ({
       columnVisibility,
       rowSelection,
       pagination,
+      globalFilter,
     },
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
@@ -276,7 +270,7 @@ const WordTable = ({
             ))}
         </TableBody>
       </Table>
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2 py-4">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
         <div className="flex gap-2 items-center justify-start w-full md:w-auto">
           <div className="text-muted-foreground text-sm">
             {table.getFilteredSelectedRowModel().rows.length} of{" "}
@@ -284,53 +278,18 @@ const WordTable = ({
           </div>
           {table.getFilteredSelectedRowModel().rows.length > 0 && (
             <ActionsPanel
-              selectedRows={table.getFilteredSelectedRowModel().rows}
+              selectedIds={
+                new Set(
+                  table.getFilteredSelectedRowModel().rows.map((row) => row.id),
+                )
+              }
+              onUpdateSuccess={() => {
+                table.resetRowSelection();
+              }}
             />
           )}
         </div>
-        <div>
-          <span className="text-sm">
-            Page {pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-        </div>
-        <div className="flex gap-2 w-full md:w-auto justify-between md:justify-end">
-          <div className="flex gap-2 items-center">
-            <span className="text-sm">Rows per page: </span>
-            <Select
-              onValueChange={(value) => table.setPageSize(Number(value))}
-              value={String(table.getState().pagination.pageSize)}
-            >
-              <SelectTrigger className="text-sm" size="sm">
-                <SelectValue defaultValue={PAGE_SIZES[0]} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {PAGE_SIZES.map((count) => (
-                    <SelectItem key={count} value={`${count}`}>
-                      {count}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
+        <Pagination table={table} pagination={pagination} />
       </div>
     </div>
   );

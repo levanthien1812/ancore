@@ -407,6 +407,33 @@ export const deleteWords = async (prevState: unknown, formData: FormData) =>
     }
   });
 
+export const bulkUpdateMasteryLevel = async (
+  prevState: unknown,
+  formData: FormData,
+) =>
+  authenticationAction(async (userId) => {
+    const wordIds = formData.getAll("ids") as string[];
+    const masteryLevel = formData.get("masteryLevel") as MasteryLevel;
+
+    try {
+      await prisma.word.updateMany({
+        where: {
+          id: { in: wordIds },
+          userId,
+        },
+        data: {
+          masteryLevel,
+        },
+      });
+
+      revalidatePath("/words");
+
+      return { success: true, message: "Words updated successfully." };
+    } catch (error) {
+      return { success: false, message: "Failed to update words." };
+    }
+  });
+
 export const checkWordExists = async (word: string) =>
   authenticationAction(async (userId) => {
     const existingWord = await prisma.word.findFirst({

@@ -1,24 +1,30 @@
 "use client";
 import { SquareArrowOutUpRightIcon } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { useLayout } from "../layout/layout-context";
 
 interface WordTitleProps {
   word: WordWithMeanings;
   onClick: () => void;
+  disabled?: boolean;
 }
 
-const WordTitle = ({ word, onClick }: WordTitleProps) => {
+const WordTitle = ({ word, onClick, disabled }: WordTitleProps) => {
   const { mode } = useLayout();
 
   return (
-    <div
-      className={`cursor-pointer ${mode === "list" ? "text-primary" : "text-white"} group`}
+    <button
+      type="button"
+      disabled={disabled}
+      className={`cursor-pointer ${mode === "list" ? "text-primary" : "text-white"} group outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md transition text-left ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       onClick={onClick}
     >
       <div className="flex gap-1 items-center">
-        <p className={`font-bold text-2xl leading-none hover:underline`}>
+        <p
+          className={`font-bold text-2xl leading-none hover:underline`}
+          title={`${word.word} ${word.meanings[0]?.usageNotes ? `- ${word.meanings[0].usageNotes}` : ""}`}
+        >
           {word.word}
         </p>
         <SquareArrowOutUpRightIcon
@@ -28,12 +34,7 @@ const WordTitle = ({ word, onClick }: WordTitleProps) => {
           color={mode === "list" ? "#3b82f6" : "#fff"}
         />
       </div>
-      <div
-        className={`mt-1 ${mode === "list" ? "text-gray-600" : "text-gray-400"} text-sm`}
-      >
-        {word.meanings[0]?.usageNotes}
-      </div>
-    </div>
+    </button>
   );
 };
 
