@@ -38,7 +38,9 @@ const WordMeaning = ({
           <ul className="list-disc ms-4">{examples}</ul>
         </div>
       )}
-      <hr className="my-2 border-dashed" />
+      {meaning.synonyms && meaning.synonyms.length > 0 && (
+        <hr className="my-2 border-dashed" />
+      )}
       {meaning.synonyms && meaning.synonyms.length > 0 && (
         <div className="mt-2">
           <p className="text-md">Synonyms:</p>

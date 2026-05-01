@@ -16,11 +16,11 @@ const ReviewWordCard = ({
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div className="group w-full cursor-pointer perspective-[1000px] h-[760px]">
+    <div className="group w-full cursor-pointer perspective-[1000px] h-full">
       <div
         className={cn(
           "relative h-full w-full shadow-xl transition-all duration-500 transform-3d",
-          { "transform-[rotateY(180deg)]": isFlipped }
+          { "transform-[rotateY(180deg)]": isFlipped },
         )}
       >
         {/* Front Face */}

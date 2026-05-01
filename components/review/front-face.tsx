@@ -185,17 +185,17 @@ const FrontFace = ({
   }, [hintLevel, hintList]);
 
   return (
-    <div className="flex flex-col px-8 py-4 bg-primary h-full">
+    <div className="flex flex-col px-4 sm:px-8 py-4 bg-primary h-full">
       <div className="grow flex flex-col justify-center">
         <Badge className="bg-primary-2 text-white">
           {word.meanings[0]?.cefrLevel}
         </Badge>
         <div className="text-[40px] font-bold mt-2 text-white">{word.word}</div>
       </div>
-      <div className="flex justify-between">
+      <div className="flex justify-between gap-2 ">
         {Object.keys(availableHints).length > 0 && !showHint && (
           <Button
-            className="border-2 border-white bg-transparent"
+            className="border-2 border-white bg-transparent flex-1"
             onClick={handleClickShowHint}
           >
             <Lightbulb width={14} height={14} className="text-primary-2" />
@@ -203,7 +203,7 @@ const FrontFace = ({
           </Button>
         )}
         <Button
-          className="border-2 border-white bg-transparent ms-auto"
+          className="border-2 border-white bg-transparent flex-1"
           onClick={handleClickMarkAsFamiliar}
           disabled={isUpdatingReviewSession}
         >
