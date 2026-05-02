@@ -21,6 +21,7 @@ type HintLevel = keyof Hint;
 type HintList = {
   field: HintLevel;
   value: Hint[HintLevel];
+  label?: string;
 }[];
 
 const FieldLabelMap: Record<HintLevel, string> = {
@@ -88,14 +89,18 @@ const FrontFace = ({
         }
       },
       mutationKey: ["reviewHints"],
-      onSuccess: (data: Hint) => {
-        setHintList(
-          Object.keys(data).map((key) => ({
-            field: key as HintLevel,
-            value: data[key as HintLevel],
-            label: FieldLabelMap[key as HintLevel],
-          })),
-        );
+      onSuccess: (data: Hint | undefined) => {
+        if (!data) return;
+        const hints = Object.keys(data).map((key) => ({
+          field: key as HintLevel,
+          value: data[key as HintLevel],
+          label: FieldLabelMap[key as HintLevel],
+        }));
+        setHintList(hints);
+        if (hints.length > 0) {
+          setHintLevel(hints[0].field);
+          setShowHint(true);
+        }
       },
     });
 
@@ -115,6 +120,7 @@ const FrontFace = ({
       const hints = Object.keys(availableHints).map((key) => ({
         field: key as HintLevel,
         value: availableHints[key as HintLevel],
+        label: FieldLabelMap[key as HintLevel],
       }));
       setHintLevel(hints[0].field);
       setHintList(hints);
@@ -185,8 +191,8 @@ const FrontFace = ({
   }, [hintLevel, hintList]);
 
   return (
-    <div className="flex flex-col px-4 sm:px-8 py-4 bg-primary h-full">
-      <div className="grow flex flex-col justify-center">
+    <div className="flex flex-col px-4 sm:px-8 py-4 bg-primary rounded-2xl h-full">
+      <div className="grow flex flex-col justify-center items-center">
         <Badge className="bg-primary-2 text-white">
           {word.meanings[0]?.cefrLevel}
         </Badge>
@@ -195,7 +201,7 @@ const FrontFace = ({
       <div className="flex justify-between gap-2 ">
         {Object.keys(availableHints).length > 0 && !showHint && (
           <Button
-            className="border-2 border-white bg-transparent flex-1"
+            className="border border-white bg-transparent flex-1"
             onClick={handleClickShowHint}
           >
             <Lightbulb width={14} height={14} className="text-primary-2" />
@@ -203,7 +209,7 @@ const FrontFace = ({
           </Button>
         )}
         <Button
-          className="border-2 border-white bg-transparent flex-1"
+          className="border border-white bg-transparent flex-1"
           onClick={handleClickMarkAsFamiliar}
           disabled={isUpdatingReviewSession}
         >

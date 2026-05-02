@@ -130,7 +130,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
         {/* <CarouselNext />
         <CarouselPrevious /> */}
       </Carousel>
-      <div className="mt-4 px-8 flex justify-between absolute top-0 right-0 gap-2 items-center w-full">
+      <div className="mt-4 px-8 flex justify-center absolute top-0 right-0 gap-2 items-center w-full">
         <p className="text-white text-sm">
           {current + 1} of {words.length}
         </p>

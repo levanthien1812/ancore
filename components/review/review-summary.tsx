@@ -9,8 +9,8 @@ import ReviewSummaryDetail from "./review-summary-detail";
 
 const ReviewSummary = ({ summary }: { summary: PerformanceSummary }) => {
   return (
-    <div className="flex flex-col items-center justify-center h-full py-8">
-      <Card className="w-full max-w-md">
+    <div className="flex flex-col items-center justify-center h-full">
+      <Card className="w-full max-w-md h-full">
         <CardHeader>
           <CardTitle className="text-center">Session Complete!</CardTitle>
         </CardHeader>
