@@ -12,17 +12,20 @@ import { QuizQuestion } from "@prisma/client";
 
 const QuestionCard = ({
   question,
-  onAnswered,
+  onAnswer,
   onNext,
-  isLastQuestion,
+  currentIndex,
+  totalQuestions,
 }: {
   question: QuizQuestion;
-  onAnswered: (userAnswer: string, isCorrect: boolean) => void;
+  onAnswer: (userAnswer: string, isCorrect: boolean) => void;
   onNext: () => void;
-  isLastQuestion: boolean;
+  currentIndex: number;
+  totalQuestions: number;
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const isLastQuestion = currentIndex === totalQuestions - 1;
 
   const isCorrect = useCallback(() => {
     if (!selectedAnswer) return false;
@@ -39,7 +42,7 @@ const QuestionCard = ({
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
       setIsAnswered(true);
-      onAnswered(selectedAnswer, isCorrect());
+      onAnswer(selectedAnswer, isCorrect());
     }
   };
 
@@ -103,7 +106,7 @@ const QuestionCard = ({
                 )}
               </div>
             );
-          }
+          },
         );
         return (
           <div className="border border-green-600 rounded-md p-4">
@@ -116,13 +119,16 @@ const QuestionCard = ({
   };
 
   return (
-    <Card className="h-[760px] flex flex-col">
+    <Card className="h-full flex flex-col">
       <CardHeader>
         {/* Display the direction */}
+        <p className="text-xs py-1 px-2 rounded-full bg-primary text-white w-fit">
+          Question {currentIndex + 1}/{totalQuestions}
+        </p>
         <p className="text-muted-foreground">{question.direction}</p>
         {/* Display the main question content, if it exists */}
         {question.question && (
-          <CardTitle className="text-lg leading-snug pt-2">
+          <CardTitle className="text-lg leading-snug pt-2 text-primary">
             {question.question}
           </CardTitle>
         )}
@@ -131,14 +137,14 @@ const QuestionCard = ({
         <div className="grow flex flex-col justify-center">
           {renderQuestionBody()}
         </div>
-        <div className="mt-4">
+        <div className="mt-4 space-y-2">
           {isAnswered && (
             <div
               className={cn(
                 "p-4 rounded-md font-bold",
                 isCorrect()
                   ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800"
+                  : "bg-red-100 text-red-800",
               )}
             >
               {isCorrect() ? (
@@ -148,6 +154,9 @@ const QuestionCard = ({
               )}
             </div>
           )}
+          <Button variant={"outline"} onClick={onNext} className="w-full">
+            Skip
+          </Button>
           {!isAnswered && (
             <Button
               onClick={handleCheckAnswer}
@@ -158,7 +167,7 @@ const QuestionCard = ({
             </Button>
           )}
           {isAnswered && (
-            <Button onClick={onNext} className="w-full mt-2">
+            <Button onClick={onNext} className="w-full">
               {isLastQuestion ? "Finish Quiz" : "Next"}
             </Button>
           )}

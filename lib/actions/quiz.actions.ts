@@ -13,6 +13,7 @@ import { MasteryLevel, QuestionType } from "@prisma/client";
 
 export async function createQuizSession(
   wordCount: number = 5,
+  specificWords?: string[],
 ): Promise<{ success: boolean; quizLogId?: string; message?: string }> {
   const session = await auth();
   if (!session?.user?.id || !session.user) {
@@ -21,7 +22,9 @@ export async function createQuizSession(
   const user = session.user;
 
   // 1. Get words for the quiz (New or Learning), ensuring they have meanings
-  const { words: wordsToQuiz } = await getWordsToQuiz({ wordCount });
+  const { words: wordsToQuiz } = specificWords
+    ? await getWordsToQuiz({ wordList: specificWords })
+    : await getWordsToQuiz({ wordCount });
 
   if (wordsToQuiz.length === 0) {
     return { success: true, quizLogId: undefined };
@@ -41,9 +44,10 @@ export async function createQuizSession(
     data: {
       userId: user.id!,
       durationSeconds: 0,
-      quizzesCompleted: 0,
     },
   });
+
+  const matchedWords = new Set<string>();
 
   // 3. Manually generate questions for each word
   for (const word of wordsToQuiz) {
@@ -167,7 +171,8 @@ export async function createQuizSession(
     }
 
     // --- Question Type 4: Matching (if enough words) ---
-    if (wordsToQuiz.length >= 3) {
+    const availableWords = wordsToQuiz.filter((w) => !matchedWords.has(w.word));
+    if (availableWords.length >= 3) {
       if (
         !quizQuestions.find(
           (question) =>
@@ -175,7 +180,7 @@ export async function createQuizSession(
             question.leftItems?.includes(word.word),
         )
       ) {
-        const matchingWords = wordsToQuiz.slice(0, 4); // Use 3 or 4 words
+        const matchingWords = shuffleArray(availableWords).slice(0, 4); // Randomly pick 3 or 4 words
         const leftItems = matchingWords.map((w) => w.word);
         const rightItems = matchingWords.map((w) => w.meanings[0].definition);
 
@@ -193,6 +198,8 @@ export async function createQuizSession(
             ),
           }),
         );
+        // Mark these words as matched to avoid creating duplicate matching questions
+        matchingWords.forEach((w) => matchedWords.add(w.word));
       }
     }
   }
@@ -227,8 +234,10 @@ export async function createQuizSession(
 
 export const getWordsToQuiz = async ({
   wordCount,
+  wordList,
 }: {
-  wordCount: number;
+  wordCount?: number;
+  wordList?: string[];
 }): Promise<{ words: WordWithMeanings[]; estimatedTimeInMinutes: number }> => {
   const session = await auth();
   if (!session?.user?.id || !session.user) {
@@ -236,26 +245,47 @@ export const getWordsToQuiz = async ({
   }
   const user = session.user;
 
-  const words = await prisma.word.findMany({
-    where: {
-      userId: user.id,
-      masteryLevel: {
-        in: [MasteryLevel.New, MasteryLevel.Learning],
+  let words: WordWithMeanings[];
+
+  if (wordList && wordList.length > 0) {
+    // Get specific words by name
+    words = await prisma.word.findMany({
+      where: {
+        userId: user.id,
+        word: {
+          in: wordList,
+        },
+        meanings: {
+          some: { definition: { not: "" } },
+        },
       },
-      meanings: {
-        some: { definition: { not: "" } },
+      include: {
+        meanings: true,
       },
-    },
-    take: wordCount,
-    include: {
-      meanings: true,
-    },
-    orderBy: [
-      // Prioritize words that already have review history, then fall back to older words.
-      { reviews: { _count: "desc" } },
-      { createdAt: "asc" },
-    ],
-  });
+    });
+  } else {
+    // Get words automatically based on mastery level and review history
+    words = await prisma.word.findMany({
+      where: {
+        userId: user.id,
+        masteryLevel: {
+          in: [MasteryLevel.New, MasteryLevel.Learning],
+        },
+        meanings: {
+          some: { definition: { not: "" } },
+        },
+      },
+      take: wordCount || 10,
+      include: {
+        meanings: true,
+      },
+      orderBy: [
+        // Prioritize words that already have review history, then fall back to older words.
+        { reviews: { _count: "desc" } },
+        { createdAt: "asc" },
+      ],
+    });
+  }
 
   // --- Calculate Approximate Quiz Time ---
   let questionCount = 0;
@@ -407,8 +437,15 @@ export async function logQuizResult(
       select: { isCorrect: true },
     });
 
-    const correctAnswersCount = questionsInLog.filter(
-      (q) => q.isCorrect,
+    const totalQuestions = questionsInLog.length;
+    const correctAnswers = questionsInLog.filter(
+      (q) => q.isCorrect === true,
+    ).length;
+    const wrongAnswers = questionsInLog.filter(
+      (q) => q.isCorrect === false,
+    ).length;
+    const skippedQuestions = questionsInLog.filter(
+      (q) => q.isCorrect === null,
     ).length;
 
     // Update the main quiz log with the final details
@@ -417,7 +454,10 @@ export async function logQuizResult(
       data: {
         completedAt: new Date(),
         durationSeconds,
-        quizzesCompleted: correctAnswersCount,
+        correctAnswers,
+        totalQuestions,
+        wrongAnswers,
+        skippedQuestions,
       },
     });
   } catch (error) {
@@ -456,8 +496,9 @@ export const getRecentQuizzes = async () => {
   const quizzes = await prisma.quizzesLog.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
-    take: 5,
   });
+
+  console.log("Fetched recent quizzes:", quizzes);
 
   return quizzes;
 };

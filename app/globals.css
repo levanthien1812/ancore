@@ -87,11 +87,11 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
-  --level-easy: rgb(62, 194, 62);
-  --level-good: rgb(117, 227, 61);
-  --level-medium: rgb(250, 236, 73);
-  --level-hard: rgb(247, 155, 66);
-  --level-forgot: rgb(245, 90, 64);
+  --level-easy: rgb(34, 189, 137);
+  --level-good: rgb(77, 196, 18);
+  --level-medium: rgb(247, 193, 15);
+  --level-hard: rgb(235, 137, 39);
+  --level-forgot: rgb(224, 61, 33);
 }
 
 .dark {

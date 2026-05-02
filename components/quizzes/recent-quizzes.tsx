@@ -22,7 +22,7 @@ const RecentQuizzes = async () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-2 border rounded-lg p-4 h-full">
       {recentQuizzes.map((quiz) => (
         <Card key={quiz.id}>
           <CardHeader>
@@ -31,7 +31,7 @@ const RecentQuizzes = async () => {
             </CardTitle>
             <CardDescription>
               {quiz.completedAt
-                ? `Score: ${quiz.quizzesCompleted} correct`
+                ? `Score: ${quiz.correctAnswers}/${quiz.totalQuestions} correct`
                 : "Incomplete"}
             </CardDescription>
           </CardHeader>

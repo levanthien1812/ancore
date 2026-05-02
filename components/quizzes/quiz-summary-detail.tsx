@@ -36,7 +36,7 @@ const QuizSummaryDetail = ({
                 <div className="col-span-2">{rightId}</div>
               </div>
             );
-          }
+          },
         );
         return <div className="border rounded-md p-4">{correctAnswers}</div>;
       default:
@@ -45,7 +45,7 @@ const QuizSummaryDetail = ({
   };
 
   return (
-    <div className="border border-dashed rounded-lg border-primary p-4 space-y-4">
+    <div className="border border-dashed rounded-lg border-primary p-2 space-y-4 flex-1">
       <p className="text-center text-xl font-bold text-primary-2">
         You got {correctCount} out of {questions.length} correct!
       </p>
@@ -60,7 +60,7 @@ const QuizSummaryDetail = ({
         </Button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {shuffledQuestions.map((q) => (
           <div
             key={q.id}
@@ -68,14 +68,16 @@ const QuizSummaryDetail = ({
               "p-3 border rounded-lg",
               q.isCorrect === true && "border-green-500",
               q.isCorrect === false && "border-red-500",
-              q.isCorrect === null && "border-gray-300"
+              q.isCorrect === null && "border-gray-300",
             )}
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">{q.direction}</p>
                 <p className="font-semibold">
-                  {q.question || q.words[0]?.word}
+                  {q.type === QuizQuestionType.Matching
+                    ? "Multiple Word Matching"
+                    : q.question || q.words[0]?.word}
                 </p>
               </div>
               {q.isCorrect ? (

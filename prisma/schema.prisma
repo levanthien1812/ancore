@@ -169,7 +169,10 @@ model QuizzesLog {
   userId             String
   user               User      @relation(fields: [userId], references: [id])
   durationSeconds    Int
-  quizzesCompleted   Int
+  correctAnswers     Int       @default(0)
+  totalQuestions     Int       @default(0)
+  wrongAnswers       Int       @default(0)
+  skippedQuestions   Int       @default(0)
   createdAt          DateTime  @default(now())
   completedAt        DateTime?
   performanceSummary Json?

@@ -12,16 +12,18 @@ import quizIllustration from "@/public/images/quiz-illustration.jpg";
 const QuizIntro = ({
   wordsToQuizCount,
   estimatedTime,
+  specificWords,
 }: {
   wordsToQuizCount: number;
   estimatedTime: number;
+  specificWords?: string[];
 }) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   const handleStartQuiz = () => {
     startTransition(async () => {
-      const result = await createQuizSession();
+      const result = await createQuizSession(5, specificWords);
       if (result.success && result.quizLogId) {
         router.push(`/quizzes/${result.quizLogId}`);
       } else {
