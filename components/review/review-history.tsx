@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { ChevronDownIcon } from "lucide-react";
+import { CheckCircle, ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -65,7 +65,7 @@ const ReviewHistory = () => {
           <Button
             variant="outline"
             id="date"
-            className="w-48 justify-between font-normal mx-auto"
+            className="w-full justify-between font-normal mx-auto"
           >
             {date ? date.toLocaleDateString() : "Select date"}
             <ChevronDownIcon />
@@ -89,13 +89,16 @@ const ReviewHistory = () => {
       </Popover>
       {isFetchingReviewLogs && <div className="text-center">Loading...</div>}
       {!isFetchingReviewLogs && reviewLogs && reviewLogs.length > 0 && (
-        <div className="flex flex-col space-y-1">
+        <div className="flex flex-col space-y-4 mt-4">
           {reviewLogs.map((log) => (
-            <div key={log.id}>
-              <Badge className="mb-0.5">
-                Completed at:{" "}
-                <span>{format(log.completedAt, "dd/MM/yyyy hh:mm a")}</span>
-              </Badge>
+            <div className="relative" key={log.id}>
+              <div className="absolute -top-4 z-0">
+                <Badge className="rounded-md py-2 px-4">
+                  <CheckCircle width={16} height={16} />
+                  Completed at:{" "}
+                  <span>{format(log.completedAt, "dd/MM/yyyy hh:mm a")}</span>
+                </Badge>
+              </div>
               <ReviewSummaryDetail
                 summary={log.performanceSummary as PerformanceSummary}
               />

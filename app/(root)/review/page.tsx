@@ -1,4 +1,3 @@
-import ReviewCarousel from "@/components/review/review-carousel";
 import ReviewIntro from "@/components/review/review-intro";
 import { getWordsToReview } from "@/lib/actions/word.actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

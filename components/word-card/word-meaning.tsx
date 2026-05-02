@@ -26,7 +26,7 @@ const WordMeaning = ({
   return (
     <div
       key={meaning.id}
-      className="text-white border border-white rounded-lg p-4 max-h-[420px] overflow-y-scroll"
+      className="text-white border border-white rounded-lg p-4 max-h-[420px] custom-scrollbar-y"
     >
       {meaning.partOfSpeech && (
         <p className="italic">({meaning.partOfSpeech})</p>

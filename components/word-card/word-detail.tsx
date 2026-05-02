@@ -86,7 +86,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
         light={true}
       />
 
-      <Carousel setApi={setApi} className="w-full mt-2">
+      <Carousel setApi={setApi} className="w-full mt-4">
         <CarouselContent>
           {word.meanings.map((meaning) => (
             <CarouselItem key={meaning.id}>
