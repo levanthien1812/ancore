@@ -54,18 +54,18 @@ const QuizCarousel = ({
   const handleAnswered = (
     questionId: string,
     userAnswer: string,
-    isCorrect: boolean
+    isCorrect: boolean,
   ) => {
     // Update the local state for immediate UI feedback
     setAnsweredQuestions((prevQuestions) =>
       prevQuestions.map((q) =>
-        q.id === questionId ? { ...q, userAnswer, isCorrect } : q
-      )
+        q.id === questionId ? { ...q, userAnswer, isCorrect } : q,
+      ),
     );
 
     // Call the server action to update the database in the background
     startTransition(() =>
-      updateQuizQuestion(questionId, userAnswer, isCorrect)
+      updateQuizQuestion(questionId, userAnswer, isCorrect),
     );
   };
 
@@ -75,7 +75,7 @@ const QuizCarousel = ({
     } else {
       // This is the last question, finish the session.
       const durationSeconds = Math.floor(
-        (new Date().getTime() - startTime.getTime()) / 1000
+        (new Date().getTime() - startTime.getTime()) / 1000,
       );
       const quizLogId = questions[0]?.quizzesLogId;
 
@@ -96,7 +96,7 @@ const QuizCarousel = ({
   }
   if (questions.length === 0) return null;
   return (
-    <div>
+    <div className="h-full space-y-1 flex flex-col">
       {/* The AlertDialog is not needed as useBeforeUnload handles browser-native prompts */}
       <div className="flex gap-1">
         {questions.map(({ id }, index) => (
@@ -109,15 +109,16 @@ const QuizCarousel = ({
           ></div>
         ))}
       </div>
-      <Carousel className="mt-1" setApi={setApi} opts={{ watchDrag: false }}>
-        <CarouselContent>
+      <Carousel className="flex-1" setApi={setApi} opts={{ watchDrag: false }}>
+        <CarouselContent className="h-full">
           {questions.map((question, index) => (
             <CarouselItem key={question.id}>
               <QuestionCard
                 question={question}
-                onAnswered={handleAnswered.bind(null, question.id)}
+                onAnswer={handleAnswered.bind(null, question.id)}
                 onNext={handleNext}
-                isLastQuestion={index === questions.length - 1}
+                currentIndex={index}
+                totalQuestions={questions.length}
               />
             </CarouselItem>
           ))}

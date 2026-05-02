@@ -1,571 +1,335 @@
 [
   {
-    "word": "resilience",
-    "cefrLevel": "C1",
-    "pronunciation": "/rɪˈzɪliəns/",
+    "word": "resilient",
+    "type": "Word",
     "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "personality,noun,positive",
+    "tags": "personality,positive,advanced",
+    "highlighted": true,
     "meanings": [
       {
-        "definition": "The capacity to recover quickly from difficulties; toughness.",
-        "partOfSpeech": "noun",
-        "exampleSentences": "Her resilience in the face of failure inspired the whole team.",
-        "synonyms": "toughness, flexibility, endurance",
-        "antonyms": "fragility, weakness",
-        "whenToUse": "Use when describing a person or system that can bounce back after a crisis.",
-        "usageNotes": "Often used in business to describe robust strategies or in psychology for mental strength."
-      }
-    ]
-  },
-  {
-    "word": "pragmatic",
-    "cefrLevel": "C1",
-    "pronunciation": "/præɡˈmætɪk/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,logic,business",
-    "meanings": [
-      {
-        "definition": "Dealing with things sensibly and realistically in a way that is based on practical rather than theoretical considerations.",
+        "definition": "Able to withstand or recover quickly from difficult conditions.",
+        "pronunciation": "/rɪˈzɪliənt/",
+        "cefrLevel": "C1",
         "partOfSpeech": "adjective",
-        "exampleSentences": "We need a pragmatic solution to this problem, not just a theory.",
-        "synonyms": "practical, realistic, sensible",
-        "antonyms": "idealistic, impractical",
-        "whenToUse": "Use when creating plans or solving problems where results matter more than feelings.",
-        "usageNotes": "Highly valued in professional environments."
-      }
-    ]
-  },
-  {
-    "word": "alleviate",
-    "cefrLevel": "C1",
-    "pronunciation": "/əˈliːvieɪt/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "verb,health,formal",
-    "meanings": [
-      {
-        "definition": "Make (suffering, deficiency, or a problem) less severe.",
-        "partOfSpeech": "verb",
-        "exampleSentences": "The doctor gave him medicine to alleviate the pain.",
-        "synonyms": "ease, relieve, reduce, mitigate",
-        "antonyms": "aggravate, worsen",
-        "whenToUse": "Use regarding pain, poverty, stress, or traffic.",
-        "usageNotes": "Formal synonym for 'ease' or 'help'."
-      }
-    ]
-  },
-  {
-    "word": "ambiguous",
-    "cefrLevel": "B2",
-    "pronunciation": "/æmˈbɪɡjuəs/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,communication",
-    "meanings": [
-      {
-        "definition": "Open to more than one interpretation; having a double meaning.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "The ending of the movie was ambiguous, leaving the audience guessing.",
-        "synonyms": "unclear, vague, cryptic",
-        "antonyms": "clear, explicit, definite",
-        "whenToUse": "Use when instructions or statements are confusing or not specific.",
-        "usageNotes": "Often used in literary analysis or contract law."
-      }
-    ]
-  },
-  {
-    "word": "meticulous",
-    "cefrLevel": "C2",
-    "pronunciation": "/məˈtɪkjələs/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,work,detail",
-    "meanings": [
-      {
-        "definition": "Showing great attention to detail; very careful and precise.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "He was meticulous about keeping the records accurate.",
-        "synonyms": "careful, conscientious, diligent",
-        "antonyms": "careless, sloppy",
-        "whenToUse": "Use to praise someone's thorough work.",
-        "usageNotes": "Can sometimes imply being too fussy, but usually positive."
-      }
-    ]
-  },
-  {
-    "word": "benevolent",
-    "cefrLevel": "C1",
-    "pronunciation": "/bəˈnevələnt/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,personality,kindness",
-    "meanings": [
-      {
-        "definition": "Well meaning and kindly.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "The benevolent donor gave millions to the charity.",
-        "synonyms": "kind, charitable, generous",
-        "antonyms": "malevolent, unkind",
-        "whenToUse": "Use for leaders, authority figures, or organizations that do good.",
-        "usageNotes": "Derived from Latin 'bene' (good) and 'volens' (wishing)."
-      }
-    ]
-  },
-  {
-    "word": "candid",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈkændɪd/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,communication",
-    "meanings": [
-      {
-        "definition": "Truthful and straightforward; frank.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "To be candid, I don't think this plan will work.",
-        "synonyms": "frank, outspoken, honest",
-        "antonyms": "secretive, guarded",
-        "whenToUse": "Use when giving honest feedback that might be hard to hear.",
-        "usageNotes": "Also refers to a photograph taken informally (a candid shot)."
-      }
-    ]
-  },
-  {
-    "word": "diligent",
-    "cefrLevel": "B2",
-    "pronunciation": "/ˈdɪlɪdʒənt/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,work,study",
-    "meanings": [
-      {
-        "definition": "Having or showing care and conscientiousness in one's work or duties.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "She is a diligent student who never misses a deadline.",
-        "synonyms": "hard-working, assiduous, industrious",
-        "antonyms": "lazy, casual",
-        "whenToUse": "Use to describe consistent hard work and effort.",
-        "usageNotes": "A very common compliment in academic reports."
-      }
-    ]
-  },
-  {
-    "word": "eloquent",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈeləkwənt/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,speech,communication",
-    "meanings": [
-      {
-        "definition": "Fluent or persuasive in speaking or writing.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "He made an eloquent speech defending his position.",
-        "synonyms": "articulate, expressive, fluent",
-        "antonyms": "inarticulate",
-        "whenToUse": "Use to describe powerful speeches or beautifully written text.",
-        "usageNotes": "Focuses on the beauty and effectiveness of the language used."
-      }
-    ]
-  },
-  {
-    "word": "feasible",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈfiːzəbl/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,business,planning",
-    "meanings": [
-      {
-        "definition": "Possible to do easily or conveniently.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "It is not feasible to finish this project by tomorrow.",
-        "synonyms": "practicable, workable, achievable",
-        "antonyms": "impossible, impractical",
-        "whenToUse": "Use regarding budgets, timelines, or project scopes.",
-        "usageNotes": "Often paired with 'study' (e.g., a feasibility study)."
-      }
-    ]
-  },
-  {
-    "word": "gregarious",
-    "cefrLevel": "C2",
-    "pronunciation": "/ɡrɪˈɡeəriəs/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,personality,social",
-    "meanings": [
-      {
-        "definition": "Fond of company; sociable.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "He is a gregarious person who loves parties and meeting new people.",
-        "synonyms": "sociable, outgoing, convivial",
-        "antonyms": "shy, reserved",
-        "whenToUse": "Use to describe extroverts who thrive in groups.",
-        "usageNotes": "Can also refer to animals living in flocks."
-      }
-    ]
-  },
-  {
-    "word": "hypocrisy",
-    "cefrLevel": "C1",
-    "pronunciation": "/hɪˈpɒkrəsi/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "noun,behavior,negative",
-    "meanings": [
-      {
-        "definition": "The practice of claiming to have moral standards or beliefs to which one's own behavior does not conform.",
-        "partOfSpeech": "noun",
-        "exampleSentences": "It was sheer hypocrisy for him to criticize my clothes when he was dressed so poorly.",
-        "synonyms": "insincerity, double standards, deceit",
-        "antonyms": "sincerity, honesty",
-        "whenToUse": "Use when someone says one thing but does another.",
-        "usageNotes": "A strong criticism of character."
-      }
-    ]
-  },
-  {
-    "word": "inevitable",
-    "cefrLevel": "B2",
-    "pronunciation": "/ɪnˈevɪtəbl/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,time,destiny",
-    "meanings": [
-      {
-        "definition": "Certain to happen; unavoidable.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "War seemed inevitable given the rising tensions.",
-        "synonyms": "unavoidable, inescapable, bound to happen",
-        "antonyms": "avoidable, uncertain",
-        "whenToUse": "Use when an outcome is 100% guaranteed.",
-        "usageNotes": "Noun form is 'inevitability'."
-      }
-    ]
-  },
-  {
-    "word": "juxtapose",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˌdʒʌkstəˈpəʊz/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "verb,art,analysis",
-    "meanings": [
-      {
-        "definition": "Place or deal with close together for contrasting effect.",
-        "partOfSpeech": "verb",
-        "exampleSentences": "The artist juxtaposed bright colors with dark shadows to create tension.",
-        "synonyms": "contrast, compare, collocate",
-        "antonyms": "separate",
-        "whenToUse": "Use in art, photography, or literary analysis.",
-        "usageNotes": "Usually used as 'juxtapose X with Y'."
-      }
-    ]
-  },
-  {
-    "word": "lucrative",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈluːkrətɪv/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,money,business",
-    "meanings": [
-      {
-        "definition": "Producing a great deal of profit.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "He gave up a lucrative career in law to become a teacher.",
-        "synonyms": "profitable, gainful, moneymaking",
-        "antonyms": "unprofitable",
-        "whenToUse": "Use regarding deals, contracts, or careers.",
-        "usageNotes": "Derived from Latin 'lucrum' (profit)."
-      }
-    ]
-  },
-  {
-    "word": "mitigate",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈmɪtɪɡeɪt/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "verb,problem-solving,formal",
-    "meanings": [
-      {
-        "definition": "Make less severe, serious, or painful.",
-        "partOfSpeech": "verb",
-        "exampleSentences": "We need to plant trees to mitigate the effects of climate change.",
-        "synonyms": "alleviate, reduce, diminish",
-        "antonyms": "aggravate, intensify",
-        "whenToUse": "Common in 'risk mitigation' strategies.",
-        "usageNotes": "Often confused with 'militate', but they have different meanings."
-      }
-    ]
-  },
-  {
-    "word": "nostalgia",
-    "cefrLevel": "B2",
-    "pronunciation": "/nɒˈstældʒə/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "noun,emotion,memory",
-    "meanings": [
-      {
-        "definition": "A sentimental longing or wistful affection for the past.",
-        "partOfSpeech": "noun",
-        "exampleSentences": "Hearing that song filled her with nostalgia for her college days.",
-        "synonyms": "reminiscence, remembrance, homesickness",
-        "antonyms": "future-focused",
-        "whenToUse": "Use regarding old music, childhood memories, or history.",
-        "usageNotes": "Adjective form is 'nostalgic'."
-      }
-    ]
-  },
-  {
-    "word": "obsolescent",
-    "cefrLevel": "C2",
-    "pronunciation": "/ˌɒbsəˈlesnt/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,technology,time",
-    "meanings": [
-      {
-        "definition": "Becoming obsolete; going out of use.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "DVD players are becoming obsolescent technology.",
-        "synonyms": "aging, dying out, declining",
-        "antonyms": "current, modern, vogue",
-        "whenToUse": "Use when something is not quite dead yet, but is on the way out.",
-        "usageNotes": "Different from 'obsolete' (which means it is already out of use)."
-      }
-    ]
-  },
-  {
-    "word": "paradox",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈpærədɒks/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "noun,logic,philosophy",
-    "meanings": [
-      {
-        "definition": "A seemingly absurd or self-contradictory statement that when investigated may prove to be well founded or true.",
-        "partOfSpeech": "noun",
-        "exampleSentences": "It is a paradox that computers need to be turned off to work better.",
-        "synonyms": "contradiction, anomaly, enigma",
-        "antonyms": "normality",
-        "whenToUse": "Use when a situation seems impossible but is happening.",
-        "usageNotes": "Common in logic puzzles and philosophy."
-      }
-    ]
-  },
-  {
-    "word": "redundant",
-    "cefrLevel": "B2",
-    "pronunciation": "/rɪˈdʌndənt/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,work,language",
-    "meanings": [
-      {
-        "definition": "No longer needed or useful; superfluous.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "The old system is now redundant because of the new software.",
-        "synonyms": "unnecessary, inessential, surplus",
-        "antonyms": "essential, necessary",
-        "whenToUse": "Use regarding employment (being laid off) or repeating words.",
-        "usageNotes": "In UK English, 'made redundant' means losing your job."
-      }
-    ]
-  },
-  {
-    "word": "scrutinize",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈskruːtɪnaɪz/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "verb,investigation,detail",
-    "meanings": [
-      {
-        "definition": "Examine or inspect closely and thoroughly.",
-        "partOfSpeech": "verb",
-        "exampleSentences": "The auditor scrutinized the company's financial records.",
-        "synonyms": "inspect, survey, scan, analyze",
-        "antonyms": "glance, ignore",
-        "whenToUse": "Use regarding contracts, evidence, or detailed work.",
-        "usageNotes": "Implies a critical or suspicious look."
-      }
-    ]
-  },
-  {
-    "word": "tentative",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈtentətɪv/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,planning,uncertainty",
-    "meanings": [
-      {
-        "definition": "Not certain or fixed; provisional.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "We have a tentative agreement, but nothing is signed yet.",
-        "synonyms": "provisional, unconfirmed, subject to change",
-        "antonyms": "definite, confirmed",
-        "whenToUse": "Use for schedules, appointments, or first drafts.",
-        "usageNotes": "Can also mean 'hesitant' (e.g., a tentative step)."
+        "exampleSentences": "She is a resilient girl who quickly bounces back from setbacks.|The local economy has proven remarkably resilient.",
+        "synonyms": "tough, hardy, flexible, strong",
+        "antonyms": "vulnerable, fragile, weak",
+        "whenToUse": "Use when describing a person's character or a system's ability to handle stress.",
+        "usageNotes": "Often used in psychological and economic contexts."
       }
     ]
   },
   {
     "word": "ubiquitous",
-    "cefrLevel": "C1",
-    "pronunciation": "/juːˈbɪkwɪtəs/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,frequency,formal",
+    "type": "Word",
+    "masteryLevel": "Learning",
+    "tags": "formal,academic",
     "meanings": [
       {
         "definition": "Present, appearing, or found everywhere.",
+        "pronunciation": "/juːˈbɪkwɪtəs/",
+        "cefrLevel": "C2",
         "partOfSpeech": "adjective",
-        "exampleSentences": "Smartphones have become ubiquitous in modern society.",
-        "synonyms": "omnipresent, everywhere, pervasive",
+        "exampleSentences": "Mobile phones are ubiquitous these days.|The company's logo has become ubiquitous in the city.",
+        "synonyms": "omnipresent, ever-present, pervasive",
         "antonyms": "rare, scarce",
-        "whenToUse": "Use regarding technology, trends, or fashion.",
-        "usageNotes": "Often used to describe things that seem to be everywhere at once."
+        "whenToUse": "To describe something that is very common and seen everywhere.",
+        "usageNotes": "A more formal alternative to 'common' or 'everywhere'."
       }
     ]
   },
   {
-    "word": "viable",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈvaɪəbl/",
+    "word": "break the ice",
+    "type": "Phrase",
     "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,business,biology",
+    "tags": "idiom,social",
     "meanings": [
       {
-        "definition": "Capable of working successfully; feasible.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "Is solar power a viable alternative to coal?",
-        "synonyms": "feasible, workable, practical",
-        "antonyms": "impossible, unworkable",
-        "whenToUse": "Use regarding business plans or biological survival.",
-        "usageNotes": "Specifically refers to the ability to survive or succeed."
+        "definition": "To say or do something that makes people feel more relaxed in a social situation.",
+        "cefrLevel": "B2",
+        "partOfSpeech": "idiom",
+        "exampleSentences": "A joke can help to break the ice at a party.|The teacher organized a game to break the ice on the first day of class.",
+        "synonyms": "start the conversation, loosen up",
+        "antonyms": "stifle conversation",
+        "whenToUse": "Specifically used for the beginning of a meeting or social gathering where people don't know each other well."
       }
     ]
   },
   {
-    "word": "wary",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˈweəri/",
+    "word": "mitigate",
+    "type": "Word",
     "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,caution,emotion",
+    "tags": "formal,problem-solving",
     "meanings": [
       {
-        "definition": "Feeling or showing caution about possible dangers or problems.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "Dogs that have been mistreated are often wary of strangers.",
-        "synonyms": "cautious, careful, suspicious",
-        "antonyms": "trustful, reckless",
-        "whenToUse": "Use when someone is hesitant to trust.",
-        "usageNotes": "Followed by 'of' (e.g., wary of the dog)."
-      }
-    ]
-  },
-  {
-    "word": "zenith",
-    "cefrLevel": "C2",
-    "pronunciation": "/ˈzenɪθ/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "noun,position,literary",
-    "meanings": [
-      {
-        "definition": "The time at which something is most powerful or successful.",
-        "partOfSpeech": "noun",
-        "exampleSentences": "At the zenith of his career, he was the most famous actor in the world.",
-        "synonyms": "peak, pinnacle, acme, height",
-        "antonyms": "nadir, bottom",
-        "whenToUse": "Use to describe the absolute top of a career or empire.",
-        "usageNotes": "Originally an astronomical term for the point in the sky directly above."
-      }
-    ]
-  },
-  {
-    "word": "altruistic",
-    "cefrLevel": "C1",
-    "pronunciation": "/ˌæl.truˈɪs.tɪk/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,behavior,ethics",
-    "meanings": [
-      {
-        "definition": "Showing a disinterested and selfless concern for the well-being of others.",
-        "partOfSpeech": "adjective",
-        "exampleSentences": "His altruistic motives were questioned by the cynical press.",
-        "synonyms": "unselfish, selfless, philanthropic",
-        "antonyms": "selfish, egoistic",
-        "whenToUse": "Use when describing charity or selfless acts.",
-        "usageNotes": "Noun form is 'altruism'."
-      }
-    ]
-  },
-  {
-    "word": "brevity",
-    "cefrLevel": "C2",
-    "pronunciation": "/ˈbrevəti/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "noun,writing,communication",
-    "meanings": [
-      {
-        "definition": "Concise and exact use of words in writing or speech.",
-        "partOfSpeech": "noun",
-        "exampleSentences": "The brevity of the meeting was appreciated by everyone.",
-        "synonyms": "conciseness, concision, succicntness",
-        "antonyms": "verbosity, wordiness",
-        "whenToUse": "Use regarding short speeches or quick notes.",
-        "usageNotes": "Famous quote: 'Brevity is the soul of wit'."
-      }
-    ]
-  },
-  {
-    "word": "concur",
-    "cefrLevel": "C1",
-    "pronunciation": "/kənˈkɜːr/",
-    "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "verb,agreement,formal",
-    "meanings": [
-      {
-        "definition": "Be of the same opinion; agree.",
+        "definition": "To make something less severe, serious, or painful.",
+        "pronunciation": "/ˈmɪtɪɡeɪt/",
+        "cefrLevel": "C1",
         "partOfSpeech": "verb",
-        "exampleSentences": "The board concurred with the chairman's decision.",
-        "synonyms": "agree, accord, be in accord",
-        "antonyms": "disagree, dissent",
-        "whenToUse": "Use in formal meetings or legal contexts.",
-        "usageNotes": "Also means things happening at the same time (concurrently)."
+        "exampleSentences": "Drainage schemes have helped to mitigate the effects of floods.|The government is trying to mitigate the impact of the rising cost of living.",
+        "synonyms": "alleviate, reduce, diminish, lessen",
+        "antonyms": "aggravate, exacerbate, worsen",
+        "whenToUse": "Common in professional, legal, or environmental contexts regarding problems.",
+        "usageNotes": "Different from 'solve'; it means making the bad situation better, not completely fixing it."
       }
     ]
   },
   {
-    "word": "disparate",
-    "cefrLevel": "C2",
-    "pronunciation": "/ˈdɪspərət/",
+    "word": "ephemeral",
+    "type": "Word",
     "masteryLevel": "New",
-    "audioUrl": null,
-    "tags": "adjective,comparison,formal",
+    "tags": "nature,time,advanced",
     "meanings": [
       {
-        "definition": "Essentially different in kind; not allowing comparison.",
+        "definition": "Lasting for a very short time.",
+        "pronunciation": "/ɪˈfem.ər.əl/",
+        "cefrLevel": "C2",
         "partOfSpeech": "adjective",
-        "exampleSentences": "The project brought together people from disparate backgrounds.",
-        "synonyms": "contrasting, different, unalike",
-        "antonyms": "similar, homogeneous",
-        "whenToUse": "Use when things are so different they cannot be compared easily.",
-        "usageNotes": "Often used as 'disparate impact' in sociology."
+        "exampleSentences": "Fame in the world of rock and roll is often ephemeral.|The colors of a sunset are beautiful but ephemeral.",
+        "synonyms": "fleeting, transient, short-lived",
+        "antonyms": "permanent, lasting",
+        "whenToUse": "To describe beauty, fame, or biological life cycles that don't last long."
+      }
+    ]
+  },
+  {
+    "word": "pragmatic",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "logic,business",
+    "meanings": [
+      {
+        "definition": "Dealing with things sensibly and realistically in a way that is based on practical rather than theoretical considerations.",
+        "pronunciation": "/præɡˈmætɪk/",
+        "cefrLevel": "B2",
+        "partOfSpeech": "adjective",
+        "exampleSentences": "We need to take a pragmatic approach to the problem.|She is a pragmatic politician.",
+        "synonyms": "practical, realistic",
+        "antonyms": "idealistic, impractical",
+        "whenToUse": "When discussing decision making or problem solving based on facts."
+      }
+    ]
+  },
+  {
+    "word": "ambiguous",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "communication,unclear",
+    "meanings": [
+      {
+        "definition": "Open to more than one interpretation; not having one obvious meaning.",
+        "pronunciation": "/æmˈbɪɡjuəs/",
+        "cefrLevel": "B2",
+        "partOfSpeech": "adjective",
+        "exampleSentences": "The wording of the agreement is ambiguous.|His reply to my question was somewhat ambiguous.",
+        "synonyms": "equivocal, unclear",
+        "antonyms": "clear, precise",
+        "whenToUse": "Describing language, instructions, or signs that are confusing or have multiple meanings."
+      }
+    ]
+  },
+  {
+    "word": "cut corners",
+    "type": "Phrase",
+    "masteryLevel": "New",
+    "tags": "idiom,work",
+    "meanings": [
+      {
+        "definition": "To do something in the easiest, cheapest, or fastest way, often by ignoring rules or quality.",
+        "cefrLevel": "B2",
+        "partOfSpeech": "idiom",
+        "exampleSentences": "Don't cut corners when you're building a house.|The company was accused of cutting corners on safety.",
+        "synonyms": "skim, skip steps",
+        "antonyms": "be thorough, do it properly",
+        "whenToUse": "Usually used as a criticism for poor quality work done too quickly."
+      }
+    ]
+  },
+  {
+    "word": "exacerbate",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "formal,problem",
+    "meanings": [
+      {
+        "definition": "To make a problem, bad situation, or negative feeling worse.",
+        "pronunciation": "/ɪɡˈzæs.ə.beɪt/",
+        "cefrLevel": "C1",
+        "partOfSpeech": "verb",
+        "exampleSentences": "Her allergy was exacerbated by the dust.|The new law will only exacerbate the problem.",
+        "synonyms": "aggravate, worsen",
+        "antonyms": "improve, alleviate",
+        "whenToUse": "Common in medical, political, or social contexts to describe worsening conditions."
+      }
+    ]
+  },
+  {
+    "word": "meticulous",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "personality,positive",
+    "meanings": [
+      {
+        "definition": "Showing great attention to detail; very careful and precise.",
+        "pronunciation": "/məˈtɪk.jə.ləs/",
+        "cefrLevel": "C1",
+        "partOfSpeech": "adjective",
+        "exampleSentences": "He was meticulous about his appearance.|The researcher kept meticulous records.",
+        "synonyms": "careful, thorough, diligent",
+        "antonyms": "careless, sloppy",
+        "whenToUse": "Use when praising someone's accuracy or thoroughness in their work."
+      }
+    ]
+  },
+  {
+    "word": "inevitably",
+    "type": "Word",
+    "masteryLevel": "Learning",
+    "tags": "advanced,logic",
+    "meanings": [
+      {
+        "definition": "In a way that cannot be avoided.",
+        "pronunciation": "/ɪˈnev.ɪ.tə.bli/",
+        "cefrLevel": "B2",
+        "partOfSpeech": "adverb",
+        "exampleSentences": "Inevitably, there was a certain amount of confusion.|The decision will inevitably lead to higher taxes.",
+        "synonyms": "unavoidably, naturally",
+        "antonyms": "avoidably, uncertainly"
+      }
+    ]
+  },
+  {
+    "word": "scrutinize",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "formal,action",
+    "meanings": [
+      {
+        "definition": "To examine or inspect closely and thoroughly.",
+        "pronunciation": "/ˈkruː.tɪ.naɪz/",
+        "cefrLevel": "C1",
+        "partOfSpeech": "verb",
+        "exampleSentences": "He scrutinized the document for any errors.|The bank will scrutinize your financial records before approving the loan.",
+        "synonyms": "examine, inspect, study",
+        "antonyms": "ignore, overlook"
+      }
+    ]
+  },
+  {
+    "word": "superfluous",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "academic,advanced",
+    "meanings": [
+      {
+        "definition": "Unnecessary, especially through being more than enough.",
+        "pronunciation": "/suːˈpɜː.flu.əs/",
+        "cefrLevel": "C2",
+        "partOfSpeech": "adjective",
+        "exampleSentences": "The report contained a lot of superfluous detail.|Our technician checked the wiring and replaced a few superfluous parts.",
+        "synonyms": "redundant, excess, extra",
+        "antonyms": "necessary, essential"
+      }
+    ]
+  },
+  {
+    "word": "under the weather",
+    "type": "Phrase",
+    "masteryLevel": "New",
+    "tags": "idiom,health",
+    "meanings": [
+      {
+        "definition": "Slightly unwell or in low spirits.",
+        "cefrLevel": "B1",
+        "partOfSpeech": "idiom",
+        "exampleSentences": "I'm feeling a bit under the weather today, so I'll stay home.|He's been under the weather lately.",
+        "synonyms": "unwell, ill, sick",
+        "antonyms": "healthy, fit",
+        "whenToUse": "A polite, casual way to say you are slightly sick without being specific."
+      }
+    ]
+  },
+  {
+    "word": "cognitive",
+    "type": "Word",
+    "masteryLevel": "Learning",
+    "tags": "science,psychology",
+    "meanings": [
+      {
+        "definition": "Relating to the mental processes of perception, memory, judgment, and reasoning.",
+        "pronunciation": "/ˈkɒɡ.nə.tɪv/",
+        "cefrLevel": "C1",
+        "partOfSpeech": "adjective",
+        "exampleSentences": "Cognitive development in children is fascinating.|Sleep deprivation can impair cognitive function.",
+        "synonyms": "mental, intellectual",
+        "antonyms": "physical"
+      }
+    ]
+  },
+  {
+    "word": "envisage",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "formal,future",
+    "meanings": [
+      {
+        "definition": "To contemplate or conceive of as a possibility or a desirable future event.",
+        "pronunciation": "/ɪnˈvɪz.ɪdʒ/",
+        "cefrLevel": "C1",
+        "partOfSpeech": "verb",
+        "exampleSentences": "I don't envisage any problems with this plan.|It's hard to envisage how the city will look in 50 years.",
+        "synonyms": "imagine, envision, foresee",
+        "antonyms": "ignore, disregard"
+      }
+    ]
+  },
+  {
+    "word": "prerequisite",
+    "type": "Word",
+    "masteryLevel": "New",
+    "tags": "academic,formal",
+    "meanings": [
+      {
+        "definition": "A thing that is required as a prior condition for something else to happen or exist.",
+        "pronunciation": "/ˌpriːˈrek.wɪ.zɪt/",
+        "cefrLevel": "C1",
+        "partOfSpeech": "noun",
+        "exampleSentences": "A degree is a prerequisite for this job.|Good health is a prerequisite for happiness.",
+        "synonyms": "requirement, condition, necessity",
+        "antonyms": "optional"
+      }
+    ]
+  },
+  {
+    "word": "alleviate",
+    "type": "Word",
+    "masteryLevel": "Learning",
+    "tags": "formal,solution",
+    "meanings": [
+      {
+        "definition": "To make suffering, deficiency, or a problem less severe.",
+        "pronunciation": "/əˈliː.vi.eɪt/",
+        "cefrLevel": "C1",
+        "partOfSpeech": "verb",
+        "exampleSentences": "The drugs will help to alleviate the pain.|The government is taking steps to alleviate poverty.",
+        "synonyms": "relieve, ease, reduce",
+        "antonyms": "exacerbate, worsen"
+      }
+    ]
+  },
+  {
+    "word": "best of both worlds",
+    "type": "Phrase",
+    "masteryLevel": "New",
+    "tags": "idiom,advantage",
+    "meanings": [
+      {
+        "definition": "A situation in which you can enjoy the advantages of two very different things at the same time.",
+        "cefrLevel": "B2",
+        "partOfSpeech": "idiom",
+        "exampleSentences": "She lives in the country but works in the city, so she has the best of both worlds.|This hybrid car gives you the best of both worlds.",
+        "synonyms": "win-win",
+        "antonyms": "compromise"
       }
     ]
   }

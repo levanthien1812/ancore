@@ -3,14 +3,23 @@ import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "@/db/prisma";
+import { hashSync } from "bcrypt-ts-edge";
 
 async function main() {
   console.log(`Start seeding ...`);
-  const user = await prisma.user.findFirst({
+  let user = await prisma.user.findFirst({
     where: { email: "levanthienabc@gmail.com" },
   });
 
-  if (!user) return;
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        email: "levanthienabc@gmail.com",
+        name: "Le Van Thien",
+        password: hashSync("18122002"),
+      },
+    });
+  }
 
   try {
     await prisma.quizQuestion.deleteMany({ where: { userId: user.id } });
@@ -25,7 +34,7 @@ async function main() {
       process.cwd(),
       "db",
       "sample-data",
-      "sample-words.json"
+      "sample-words.json",
     );
     const fileContent = fs.readFileSync(filePath, "utf-8");
     const sampleWords: WordWithMeanings[] = JSON.parse(fileContent);
@@ -54,7 +63,7 @@ async function main() {
 
       // 3. Create a corresponding review session for the new word
       const now = new Date();
-      const initialInterval = 1; // Review again in 1 day
+      const initialInterval = 0; // Review again in 1 day
       await prisma.reviewSession.create({
         data: {
           userId: newWord.userId,

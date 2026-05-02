@@ -21,7 +21,7 @@ const MatchingBody = ({
   setSelectedAnswer: (answer: string) => void;
 }) => {
   const [selectedMatchs, setSelectedMatchs] = useState<Record<string, string>>(
-    {}
+    {},
   );
 
   // Initialize state from props using useMemo to avoid re-shuffling on every render
@@ -31,7 +31,7 @@ const MatchingBody = ({
         id: item,
         text: item,
       })),
-    [question.leftItems]
+    [question.leftItems],
   );
   const initialRightItems = useMemo(
     () =>
@@ -39,7 +39,7 @@ const MatchingBody = ({
         id: item,
         text: item,
       })),
-    [question.rightItems]
+    [question.rightItems],
   );
 
   const [leftItems, setLeftItems] = useState<MatchItem[]>(initialLeftItems);
@@ -71,9 +71,12 @@ const MatchingBody = ({
   const getItemClasses = (item: MatchItem, isLeft: boolean) => {
     const isSelected = isLeft && selectedLeft?.id === item.id;
 
-    return cn("border p-3 rounded-md text-left cursor-pointer transition-all", {
-      "ring-2 ring-blue-500": isSelected,
-    });
+    return cn(
+      "border p-3 rounded-md text-left cursor-pointer transition-all overflow-hidden",
+      {
+        "ring-2 ring-blue-500": isSelected,
+      },
+    );
   };
 
   const handleReset = () => {
@@ -83,13 +86,29 @@ const MatchingBody = ({
     setSelectedLeft(null);
   };
 
+  const handleClickSelectedMatch = (leftId: string) => {
+    const rightId = selectedMatchs[leftId];
+    if (!rightId) return;
+    setSelectedMatchs((prev) => {
+      const newMatchs = { ...prev };
+      delete newMatchs[leftId];
+      return newMatchs;
+    });
+    setLeftItems((prev) => [...prev, { id: leftId, text: leftId }]);
+    setRightItems((prev) => [...prev, { id: rightId, text: rightId }]);
+  };
+
   return (
     <div>
       {Object.keys(selectedMatchs).length > 0 && (
         <>
           <div className="border rounded-md p-4">
             {Object.entries(selectedMatchs).map(([leftId, rightId], index) => (
-              <div key={leftId} className="grid grid-cols-3 gap-x-4">
+              <div
+                key={leftId}
+                className="grid grid-cols-3 gap-x-4 cursor-pointer"
+                onClick={() => handleClickSelectedMatch(leftId)}
+              >
                 <div className="space-y-3 col-span-1">{leftId}</div>
                 <div className="space-y-3 col-span-2">{rightId}</div>
                 {index !== Object.entries(selectedMatchs).length - 1 && (
