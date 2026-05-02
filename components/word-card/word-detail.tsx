@@ -51,7 +51,9 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
           <Badge className="bg-primary-2 text-white">
             {currentMeaning?.cefrLevel}
           </Badge>
-          <div className="text-4xl font-bold mt-2 text-white">{word.word}</div>
+          <div className="text-4xl font-bold mt-2 text-white whitespace-nowrap">
+            {word.word}
+          </div>
         </div>
         <div className="flex gap-1 justify-end">
           <AddWord

@@ -6,6 +6,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Button } from "@/components/ui/button";
+import { useLayout } from "@/components/layout/layout-context";
 
 const PAGE_SIZE = 50;
 
@@ -38,16 +39,26 @@ const WordsPage = () => {
   });
 
   const allWords = data?.pages.flat() || [];
+  const { mode } = useLayout();
 
   if (isLoading) {
     return (
       <div className="container mx-auto space-y-2 p-4 md:p-0">
         <h2 className="text-3xl">Word list</h2>
-        <div className="space-y-2">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-        </div>
+        {mode === "list" && (
+          <div className="space-y-2">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <Skeleton className="h-12 w-full" key={index} />
+            ))}
+          </div>
+        )}
+        {mode === "grid" && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+            {Array.from({ length: 10 }).map((_, index) => (
+              <Skeleton className="h-36 sm:h-28 w-full" key={index} />
+            ))}
+          </div>
+        )}
       </div>
     );
   }
