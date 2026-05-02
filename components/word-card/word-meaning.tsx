@@ -10,7 +10,7 @@ const WordMeaning = ({
 }) => {
   const examples = meaning.exampleSentences
     ? meaning.exampleSentences.split("|").map((example) => (
-        <li key={example} className="italic">
+        <li key={example} className="text-sm italic">
           <div
             dangerouslySetInnerHTML={{
               __html: example.replace(
@@ -26,7 +26,7 @@ const WordMeaning = ({
   return (
     <div
       key={meaning.id}
-      className="text-white border border-white  rounded-lg p-4"
+      className="text-white border border-white rounded-lg p-4 max-h-[420px] overflow-y-scroll"
     >
       {meaning.partOfSpeech && (
         <p className="italic">({meaning.partOfSpeech})</p>
@@ -34,8 +34,8 @@ const WordMeaning = ({
       <p className="text-primary-2 text-xl font-bold">{meaning.definition}</p>
       {examples.length > 0 && (
         <div className="mt-2">
-          <p className="text-lg">Examples:</p>
-          <ul className="list-disc ms-4">{examples}</ul>
+          <p className="text-md">Examples:</p>
+          <ul className="list-disc ms-4 mt-1">{examples}</ul>
         </div>
       )}
       {meaning.synonyms && meaning.synonyms.length > 0 && (

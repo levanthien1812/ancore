@@ -11,6 +11,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { WordOfTheDay } from "../home/word-of-the-day";
+import { PlusIcon } from "lucide-react";
 
 type AddWordProps = {
   word?: WordWithMeanings;
@@ -29,7 +30,10 @@ const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
             className="bg-primary-2 px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
             onClick={(e) => e.stopPropagation()}
           >
-            {word ? "Edit word" : "Add word"}
+            <span className="hidden sm:block">
+              {word ? "Edit word" : "Add word"}
+            </span>
+            <PlusIcon width={16} height={16} className="block sm:hidden" />
           </Button>
         )}
       </DialogTrigger>

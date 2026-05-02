@@ -26,7 +26,6 @@ export function buildWordAutofillPrompt(word: string, user: User): string {
         "exampleSentences": "<example_1|example_2|example_3>",
         "synonyms": "<synonym_1, synonym_2, synonym_3>",
         "antonyms": "<antonym_1, antonym_2, antonym_3>",
-        "whenToUse": "",
         }
     ]
     }

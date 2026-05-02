@@ -10,7 +10,7 @@ import {
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import type { Word, WordMeaning } from "@prisma/client";
+import type { DifficultyLevel, Word, WordMeaning } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -34,9 +34,8 @@ import {
   saveWord,
 } from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
-import { MASTERY_LEVELS } from "@/lib/constants/enums";
+import { CEFR_LEVELS, CEFRLevel, MASTERY_LEVELS } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
-import { Volume2Icon } from "lucide-react";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
@@ -88,7 +87,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     useForm<WordWithMeanings>({
       defaultValues: defaultValues(),
     });
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control,
     name: "meanings",
   });
@@ -130,12 +129,28 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         setWordExistsError(`Could not find information for "${enteredWord}".`);
         return;
       }
-      const result = JSON.parse(data);
-      console.log(result);
 
-      setValue("word", result.word.toLowerCase());
-      setValue("meanings", result.meanings);
-      setGenerated(true);
+      setValue("word", data.word.toLowerCase());
+
+      const mappedMeanings = data.meanings.map((meaning) => ({
+        id: "123",
+        wordId: word?.id ?? "",
+        definition: meaning.definition,
+        pronunciation: meaning.pronunciation ?? null,
+        cefrLevel:
+          meaning.cefrLevel &&
+          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+            ? (meaning.cefrLevel as CEFRLevel)
+            : null,
+        partOfSpeech: meaning.partOfSpeech ?? null,
+        exampleSentences: meaning.exampleSentences ?? null,
+        synonyms: meaning.synonyms ?? null,
+        antonyms: meaning.antonyms ?? null,
+        whenToUse: null,
+        usageNotes: data.usageNotes ?? null,
+      }));
+
+      replace(mappedMeanings);
     },
   });
 

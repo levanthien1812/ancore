@@ -12,7 +12,7 @@ import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel, QuestionType } from "@prisma/client";
 
 export async function createQuizSession(
-  wordCount: number = 5
+  wordCount: number = 5,
 ): Promise<{ success: boolean; quizLogId?: string; message?: string }> {
   const session = await auth();
   if (!session?.user?.id || !session.user) {
@@ -56,7 +56,7 @@ export async function createQuizSession(
         const prompt = buildDistractorGenerationPrompt(
           // No contextWord needed here
           word.word,
-          distractorPool
+          distractorPool,
         );
         const { object } = await generateObject({
           model: "openai/gpt-4-turbo",
@@ -73,12 +73,12 @@ export async function createQuizSession(
             options: [...object.distractors, word.word], // Combine and shuffle on client
             // options: [word.word, "heelo", "hi", "goodbye"],
             answer: word.word,
-          })
+          }),
         );
       } catch (error) {
         console.error(
           `Failed to generate distractors for ${word.word}:`,
-          error
+          error,
         );
       }
     }
@@ -117,7 +117,7 @@ export async function createQuizSession(
       try {
         const prompt = buildDistractorGenerationPrompt(
           correctAnswer,
-          distractorPool
+          distractorPool,
         );
         const { object } = await generateObject({
           model: "openai/gpt-4-turbo",
@@ -134,12 +134,12 @@ export async function createQuizSession(
             options: [...object.distractors, correctAnswer],
             // options: ["hello", "hi", "goodbye", correctAnswer],
             answer: correctAnswer,
-          })
+          }),
         );
       } catch (error) {
         console.error(
           `Failed to generate distractors for ${questionType} of ${word.word}:`,
-          error
+          error,
         );
       }
     }
@@ -150,7 +150,7 @@ export async function createQuizSession(
     if (example) {
       const questionText = example.replace(
         new RegExp(`\\b${word.word}\\b`, "gi"),
-        "_____"
+        "_____",
       );
       if (questionText !== example) {
         // Ensure the word was actually in the sentence
@@ -161,7 +161,7 @@ export async function createQuizSession(
             question: questionText,
             type: QuestionType.FillInTheBlank,
             answer: word.word,
-          })
+          }),
         );
       }
     }
@@ -172,7 +172,7 @@ export async function createQuizSession(
         !quizQuestions.find(
           (question) =>
             question.type === QuestionType.Matching &&
-            question.leftItems?.includes(word.word)
+            question.leftItems?.includes(word.word),
         )
       ) {
         const matchingWords = wordsToQuiz.slice(0, 4); // Use 3 or 4 words
@@ -189,9 +189,9 @@ export async function createQuizSession(
             rightItems,
             // The answer is the correct mapping, which the client can verify
             answer: JSON.stringify(
-              Object.fromEntries(leftItems.map((k, i) => [k, rightItems[i]]))
+              Object.fromEntries(leftItems.map((k, i) => [k, rightItems[i]])),
             ),
-          })
+          }),
         );
       }
     }
@@ -214,7 +214,7 @@ export async function createQuizSession(
               words: { connect: wordIds.map((id) => ({ id })) },
             },
           });
-        })
+        }),
       );
     } catch (error) {
       console.error("Failed to save quiz questions:", error);
@@ -250,7 +250,11 @@ export const getWordsToQuiz = async ({
     include: {
       meanings: true,
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: [
+      // Prioritize words that already have review history, then fall back to older words.
+      { reviews: { _count: "desc" } },
+      { createdAt: "asc" },
+    ],
   });
 
   // --- Calculate Approximate Quiz Time ---
@@ -331,7 +335,7 @@ export async function cleanupAbandonedQuizzes() {
 export async function updateQuizQuestion(
   questionId: string,
   userAnswer: string,
-  isCorrect: boolean
+  isCorrect: boolean,
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -389,7 +393,7 @@ export async function updateQuizQuestion(
 
 export async function logQuizResult(
   quizLogId: string,
-  durationSeconds: number
+  durationSeconds: number,
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -404,7 +408,7 @@ export async function logQuizResult(
     });
 
     const correctAnswersCount = questionsInLog.filter(
-      (q) => q.isCorrect
+      (q) => q.isCorrect,
     ).length;
 
     // Update the main quiz log with the final details

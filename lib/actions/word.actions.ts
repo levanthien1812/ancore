@@ -453,12 +453,10 @@ export const fillWithAI = async (word: string) =>
     const prompt = buildWordAutofillPrompt(word, user as User);
 
     const data = await fillWordWithAi(prompt);
-    console.log(data);
 
     if (data) {
       try {
-        const parsed = JSON.parse(data);
-        if (!parsed || !parsed.meanings || parsed.meanings.length === 0) {
+        if (!data.meanings || data.meanings.length === 0) {
           return null;
         }
       } catch (error) {
