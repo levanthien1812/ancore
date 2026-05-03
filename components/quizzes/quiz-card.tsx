@@ -67,7 +67,7 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
       {
         label: "View Details",
         onClick: () => {},
-        variant: "default",
+        variant: "default" as const,
         icon: <ChevronRight width={14} height={14} />,
       },
     ],
@@ -75,7 +75,7 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
       {
         label: "View Details",
         onClick: () => {},
-        variant: "default",
+        variant: "default" as const,
         icon: <ChevronRight width={14} height={14} />,
       },
     ],
@@ -83,13 +83,13 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
       {
         label: "View Details",
         onClick: () => {},
-        variant: "outline",
+        variant: "outline" as const,
         icon: <ChevronRight width={14} height={14} />,
       },
       {
         label: "Retry",
         onClick: () => {},
-        variant: "default",
+        variant: "default" as const,
         icon: <RotateCcw width={14} height={14} />,
       },
     ],
@@ -97,7 +97,7 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
       {
         label: "Continue",
         onClick: () => {},
-        variant: "default",
+        variant: "default" as const,
         icon: <ChevronRight width={14} height={14} />,
       },
     ],
