@@ -95,3 +95,19 @@ export const NOTE_TAGS: NoteTags[] = [
   NoteTags.VOCABULARY,
   NoteTags.EXPRESSION,
 ];
+
+export enum QuizStatusUI {
+  ALL = "ALL",
+  PERFECT = "PERFECT",
+  EXCELLENT = "EXCELLENT",
+  NEEDS_REVIEW = "NEEDS_REVIEW",
+  IN_PROGRESS = "IN_PROGRESS",
+}
+
+export enum QuizStatusLabel {
+  ALL = "All",
+  PERFECT = "Perfect",
+  EXCELLENT = "Excellent",
+  NEEDS_REVIEW = "Needs Review",
+  IN_PROGRESS = "In Progress",
+}

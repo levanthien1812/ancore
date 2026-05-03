@@ -154,30 +154,49 @@ model QuizQuestion {
   rightItems String[]     @default([])
   answer     String
   createdAt  DateTime     @default(now())
-  userAnswer String?
-  isCorrect  Boolean?
-
-  quizzesLogId String
-  quizzesLog   QuizzesLog @relation(fields: [quizzesLogId], references: [id])
 
   // Many-to-many relationship with Word
   words Word[] @relation("WordToQuizQuestion")
+
+  quizAnswers QuizAnswer[]
 }
 
 model QuizzesLog {
-  id                 String    @id @default(cuid())
+  id                 String     @id @default(cuid())
   userId             String
-  user               User      @relation(fields: [userId], references: [id])
+  user               User       @relation(fields: [userId], references: [id])
   durationSeconds    Int
-  correctAnswers     Int       @default(0)
-  totalQuestions     Int       @default(0)
-  wrongAnswers       Int       @default(0)
-  skippedQuestions   Int       @default(0)
-  createdAt          DateTime  @default(now())
+  correctAnswers     Int        @default(0)
+  totalQuestions     Int        @default(0)
+  totalWords         Int        @default(0)
+  wrongAnswers       Int        @default(0)
+  skippedQuestions   Int        @default(0)
+  createdAt          DateTime   @default(now())
   completedAt        DateTime?
+  status             QuizStatus @default(InProgress)
   performanceSummary Json?
 
-  questions QuizQuestion[]
+  quizAnswers QuizAnswer[]
+}
+
+model QuizAnswer {
+  id             String       @id @default(cuid())
+  quizQuestionId String
+  quizQuestion   QuizQuestion @relation(fields: [quizQuestionId], references: [id])
+  quizzesLogId   String
+  quizzesLog     QuizzesLog   @relation(fields: [quizzesLogId], references: [id])
+  userAnswer     String?
+  isCorrect      Boolean?
+  createdAt      DateTime     @default(now())
+
+  @@unique([quizQuestionId, quizzesLogId])
+}
+
+enum QuizStatus {
+  Perfect
+  InProgress
+  NeedsReview
+  Excellent
 }
 
 enum QuestionType {

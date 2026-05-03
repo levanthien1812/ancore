@@ -40,7 +40,7 @@ const WordCard = ({
       onClick={isSelectMode ? handleCardClick : undefined}
     >
       <div className="flex gap-2 items-start">
-        <div className="flex flex-col flex-1 sm:flex-row gap-1 sm:gap-2 sm:items-center overflow-hidden">
+        <div className="flex flex-col flex-1 items-start overflow-hidden">
           <div className="flex gap-2 items-center">
             {isSelectMode && (
               <div className="flex">

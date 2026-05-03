@@ -20,19 +20,19 @@ const QuizSessionPage = async (props: Props) => {
 
   const quizLog = await getQuizLog(params.quizLogId);
 
-  if (!quizLog || !quizLog.questions || quizLog.questions.length === 0) {
+  if (!quizLog || !quizLog.quizAnswers || quizLog.quizAnswers.length === 0) {
     notFound();
   }
 
   // Determine if the quiz has been started (at least one question answered)
-  const isQuizStarted = quizLog.questions.some((q) => q.userAnswer !== null);
+  const isQuizStarted = quizLog.quizAnswers.some((q) => q.userAnswer !== null);
 
   return (
     <div className={`w-full max-w-[440px] mx-auto py-2 px-2 h-full`}>
       {quizLog.completedAt || isQuizStarted ? (
-        <QuizSummary questions={quizLog.questions} />
+        <QuizSummary quizAnswers={quizLog.quizAnswers} />
       ) : (
-        <QuizCarousel questions={quizLog.questions} />
+        <QuizCarousel questions={quizLog.quizAnswers} />
       )}
     </div>
   );

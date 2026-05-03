@@ -1,14 +1,17 @@
 "use client";
-
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import Link from "next/link";
 import Praise from "@/public/images/praise.png";
 import Image from "next/image";
 import QuizSummaryDetail from "./quiz-summary-detail";
-import { QuizQuestionWithWords } from "@/lib/type";
+import { QuizAnswerWithQuestion } from "@/lib/type";
 
-const QuizSummary = ({ questions }: { questions: QuizQuestionWithWords[] }) => {
+const QuizSummary = ({
+  quizAnswers,
+}: {
+  quizAnswers: QuizAnswerWithQuestion[];
+}) => {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
@@ -18,7 +21,7 @@ const QuizSummary = ({ questions }: { questions: QuizQuestionWithWords[] }) => {
         <div className="flex justify-center items-center">
           <Image src={Praise} alt="praise" width={200} />
         </div>
-        <QuizSummaryDetail questions={questions} />
+        <QuizSummaryDetail quizAnswers={quizAnswers} />
         <div className="flex gap-2">
           <Button asChild className="flex-1">
             <Link href="/quizzes">Take Another Quiz</Link>

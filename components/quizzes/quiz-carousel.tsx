@@ -7,17 +7,17 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import QuestionCard from "./question-card";
-import { QuizQuestionWithWords } from "@/lib/type";
 import { cn } from "@/lib/utils";
-import { logQuizResult, updateQuizQuestion } from "@/lib/actions/quiz.actions";
+import { logQuizResult, updateQuizAnswer } from "@/lib/actions/quiz.actions";
 import QuizSummary from "./quiz-summary";
 import { toast } from "sonner";
 import { useBeforeUnload } from "@/lib/hooks/use-before-unload";
+import { QuizAnswerWithQuestion } from "@/lib/type";
 
 const QuizCarousel = ({
   questions,
 }: {
-  questions: QuizQuestionWithWords[];
+  questions: QuizAnswerWithQuestion[];
 }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -25,8 +25,8 @@ const QuizCarousel = ({
   const [isPending, startTransition] = useTransition();
 
   // State to hold the questions with user answers
-  const [answeredQuestions, setAnsweredQuestions] =
-    useState<QuizQuestionWithWords[]>(questions);
+  const [currentAnswers, setCurrentAnswers] =
+    useState<QuizAnswerWithQuestion[]>(questions);
   const [sessionFinished, setSessionFinished] = useState(false);
 
   // Hook to prevent accidental navigation away from the quiz
@@ -51,22 +51,20 @@ const QuizCarousel = ({
     };
   }, [api]);
 
-  const handleAnswered = (
-    questionId: string,
-    userAnswer: string,
-    isCorrect: boolean,
-  ) => {
-    // Update the local state for immediate UI feedback
-    setAnsweredQuestions((prevQuestions) =>
-      prevQuestions.map((q) =>
-        q.id === questionId ? { ...q, userAnswer, isCorrect } : q,
-      ),
-    );
-
+  const handleAnswered = (answerId: string, userAnswer: string) => {
     // Call the server action to update the database in the background
-    startTransition(() =>
-      updateQuizQuestion(questionId, userAnswer, isCorrect),
-    );
+    startTransition(async () => {
+      const result = await updateQuizAnswer(answerId, userAnswer);
+      if (result) {
+        setCurrentAnswers((prev) =>
+          prev.map((a) =>
+            a.id === answerId
+              ? { ...a, userAnswer, isCorrect: result.isCorrect }
+              : a,
+          ),
+        );
+      }
+    });
   };
 
   const handleNext = () => {
@@ -77,7 +75,7 @@ const QuizCarousel = ({
       const durationSeconds = Math.floor(
         (new Date().getTime() - startTime.getTime()) / 1000,
       );
-      const quizLogId = questions[0]?.quizzesLogId;
+      const quizLogId = currentAnswers[0]?.quizzesLogId;
 
       if (quizLogId) {
         startTransition(async () => {
@@ -92,16 +90,16 @@ const QuizCarousel = ({
 
   if (sessionFinished) {
     // Pass the final list of questions with answers to the summary
-    return <QuizSummary questions={answeredQuestions} />;
+    return <QuizSummary quizAnswers={currentAnswers} />;
   }
-  if (questions.length === 0) return null;
+  if (currentAnswers.length === 0) return null;
   return (
     <div className="h-full space-y-1 flex flex-col">
       {/* The AlertDialog is not needed as useBeforeUnload handles browser-native prompts */}
       <div className="flex gap-1">
-        {questions.map(({ id }, index) => (
+        {currentAnswers.map((_, index) => (
           <div
-            key={id}
+            key={index}
             className={cn("h-1 rounded-full flex-1", {
               "bg-primary/90": index === current,
               "bg-muted": index !== current,
@@ -111,14 +109,15 @@ const QuizCarousel = ({
       </div>
       <Carousel className="flex-1" setApi={setApi} opts={{ watchDrag: false }}>
         <CarouselContent className="h-full">
-          {questions.map((question, index) => (
-            <CarouselItem key={question.id}>
+          {currentAnswers.map((answer, index) => (
+            <CarouselItem key={answer.id}>
               <QuestionCard
-                question={question}
-                onAnswer={handleAnswered.bind(null, question.id)}
+                question={answer.quizQuestion}
+                onAnswer={(userAnswer) => handleAnswered(answer.id, userAnswer)}
+                isCorrect={answer.isCorrect}
                 onNext={handleNext}
                 currentIndex={index}
-                totalQuestions={questions.length}
+                totalQuestions={currentAnswers.length}
               />
             </CarouselItem>
           ))}

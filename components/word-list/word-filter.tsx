@@ -197,7 +197,10 @@ const WordFilter = ({
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto flex-1 md:w-auto">
+                <Button
+                  variant="outline"
+                  className="ml-auto flex-1 md:flex-0 md:w-fit"
+                >
                   Columns <ChevronDown />
                 </Button>
               </DropdownMenuTrigger>

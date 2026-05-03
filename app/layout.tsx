@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Merriweather } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import Providers from "./providers";
 import { QueryProvider } from "@/lib/query-provider";
 
-const merriweather = Merriweather({
+const font = DM_Sans({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
@@ -28,7 +28,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body className={`${merriweather.className} antialiased`}>
+      <body className={`${font.className} antialiased tracking-tight`}>
         <Providers>
           <QueryProvider>{children}</QueryProvider>
         </Providers>
