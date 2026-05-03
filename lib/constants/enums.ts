@@ -82,6 +82,13 @@ export enum QuizQuestionType {
   FillInTheBlank = "FillInTheBlank",
 }
 
+export enum QuizQuestionTypeLabel {
+  MultipleChoice_DefinitionToWord = "Definition",
+  MultipleChoice_WordToSynonym = "Synonym/Antonym",
+  Matching = "Matching",
+  FillInTheBlank = "Fill in the blank",
+}
+
 export enum NoteTags {
   PRONUNICATION = "pronunciation",
   GRAMMAR = "grammar",
@@ -97,11 +104,11 @@ export const NOTE_TAGS: NoteTags[] = [
 ];
 
 export enum QuizStatusUI {
-  ALL = "ALL",
-  PERFECT = "PERFECT",
-  EXCELLENT = "EXCELLENT",
-  NEEDS_REVIEW = "NEEDS_REVIEW",
-  IN_PROGRESS = "IN_PROGRESS",
+  ALL = "All",
+  PERFECT = "Perfect",
+  EXCELLENT = "Excellent",
+  NEEDS_REVIEW = "NeedsReview",
+  IN_PROGRESS = "InProgress",
 }
 
 export enum QuizStatusLabel {
