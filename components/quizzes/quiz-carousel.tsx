@@ -12,21 +12,18 @@ import { logQuizResult, updateQuizAnswer } from "@/lib/actions/quiz.actions";
 import QuizSummary from "./quiz-summary";
 import { toast } from "sonner";
 import { useBeforeUnload } from "@/lib/hooks/use-before-unload";
-import { QuizAnswerWithQuestion } from "@/lib/type";
+import { QuizAnswerWithQuestion, QuizLogWithAnswers } from "@/lib/type";
 
-const QuizCarousel = ({
-  questions,
-}: {
-  questions: QuizAnswerWithQuestion[];
-}) => {
+const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [startTime] = useState(new Date());
   const [isPending, startTransition] = useTransition();
 
   // State to hold the questions with user answers
-  const [currentAnswers, setCurrentAnswers] =
-    useState<QuizAnswerWithQuestion[]>(questions);
+  const [currentAnswers, setCurrentAnswers] = useState<
+    QuizAnswerWithQuestion[]
+  >(quizzesLog.quizAnswers);
   const [sessionFinished, setSessionFinished] = useState(false);
 
   // Hook to prevent accidental navigation away from the quiz
@@ -90,7 +87,7 @@ const QuizCarousel = ({
 
   if (sessionFinished) {
     // Pass the final list of questions with answers to the summary
-    return <QuizSummary quizAnswers={currentAnswers} />;
+    return <QuizSummary quizzesLog={quizzesLog} />;
   }
   if (currentAnswers.length === 0) return null;
   return (
