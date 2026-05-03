@@ -32,7 +32,7 @@ const QuizSessionPage = async (props: Props) => {
       {quizLog.completedAt || isQuizStarted ? (
         <QuizSummary quizzesLog={quizLog} />
       ) : (
-        <QuizCarousel questions={quizLog.quizAnswers} />
+        <QuizCarousel quizzesLog={quizLog} />
       )}
     </div>
   );
