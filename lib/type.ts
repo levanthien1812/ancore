@@ -1,4 +1,4 @@
-import { MasteryLevel, QuizQuestion, Word } from "@prisma/client";
+import { MasteryLevel, QuizAnswer, QuizQuestion, Word } from "@prisma/client";
 
 export type WordsCountByMasteryLevel = {
   [key in MasteryLevel]: number;
@@ -28,4 +28,8 @@ export type ActionState = {
   success: boolean;
   message: string;
   errors?: Record<string, string[]>;
+};
+
+export type QuizAnswerWithQuestion = QuizAnswer & {
+  quizQuestion: QuizQuestionWithWords;
 };

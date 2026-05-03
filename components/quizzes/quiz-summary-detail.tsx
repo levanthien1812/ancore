@@ -1,24 +1,27 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { QuizQuestionWithWords } from "@/lib/type";
 import { Button } from "../ui/button";
 import { CheckCircle, XCircle, HelpCircle } from "lucide-react";
 import { shuffleArray } from "@/lib/utils/shuffle-array";
 import { cn } from "@/lib/utils";
 import { QuizQuestionType } from "@/lib/constants/enums";
+import { QuizAnswerWithQuestion } from "@/lib/type";
 
 const QuizSummaryDetail = ({
-  questions,
+  quizAnswers,
 }: {
-  questions: QuizQuestionWithWords[];
+  quizAnswers: QuizAnswerWithQuestion[];
 }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   // Randomize questions once on component mount
-  const shuffledQuestions = useMemo(() => shuffleArray(questions), [questions]);
+  const shuffledAnswers = useMemo(
+    () => shuffleArray(quizAnswers),
+    [quizAnswers],
+  );
 
-  const correctCount = questions.filter((q) => q.isCorrect).length;
+  const correctCount = quizAnswers.filter((a) => a.isCorrect).length;
 
   const answer = (questionType: QuizQuestionType, answer: string) => {
     switch (questionType) {
@@ -47,7 +50,7 @@ const QuizSummaryDetail = ({
   return (
     <div className="border border-dashed rounded-lg border-primary p-2 space-y-4 flex-1">
       <p className="text-center text-xl font-bold text-primary-2">
-        You got {correctCount} out of {questions.length} correct!
+        You got {correctCount} out of {quizAnswers.length} correct!
       </p>
 
       <div className="text-right">
@@ -61,28 +64,30 @@ const QuizSummaryDetail = ({
       </div>
 
       <div className="space-y-2">
-        {shuffledQuestions.map((q) => (
+        {shuffledAnswers.map((a) => (
           <div
-            key={q.id}
+            key={a.id}
             className={cn(
               "p-3 border rounded-lg",
-              q.isCorrect === true && "border-green-500",
-              q.isCorrect === false && "border-red-500",
-              q.isCorrect === null && "border-gray-300",
+              a.isCorrect === true && "border-green-500",
+              a.isCorrect === false && "border-red-500",
+              a.isCorrect === null && "border-gray-300",
             )}
           >
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <p className="text-sm text-muted-foreground">{q.direction}</p>
+                <p className="text-sm text-muted-foreground">
+                  {a.quizQuestion.direction}
+                </p>
                 <p className="font-semibold">
-                  {q.type === QuizQuestionType.Matching
+                  {a.quizQuestion.type === QuizQuestionType.Matching
                     ? "Multiple Word Matching"
-                    : q.question || q.words[0]?.word}
+                    : a.quizQuestion.question || a.quizQuestion.words[0]?.word}
                 </p>
               </div>
-              {q.isCorrect ? (
+              {a.isCorrect ? (
                 <CheckCircle className="text-green-500 ml-2" />
-              ) : q.isCorrect === false ? (
+              ) : a.isCorrect === false ? (
                 <XCircle className="text-red-500 ml-2" />
               ) : (
                 <HelpCircle className="text-gray-400 ml-2" />
@@ -90,21 +95,27 @@ const QuizSummaryDetail = ({
             </div>
             {showDetails && (
               <div className="mt-2 pt-2 border-t text-sm space-y-1">
-                <p>
+                <div>
                   <span className="font-semibold">Your answer:</span>{" "}
-                  <span className="text-muted-foreground">
-                    {q.userAnswer
-                      ? answer(q.type as QuizQuestionType, q.userAnswer)
+                  <div className="text-muted-foreground">
+                    {a.userAnswer
+                      ? answer(
+                          a.quizQuestion.type as QuizQuestionType,
+                          a.userAnswer,
+                        )
                       : "Not answered"}
-                  </span>
-                </p>
-                {!q.isCorrect && (
-                  <p>
+                  </div>
+                </div>
+                {!a.isCorrect && (
+                  <div>
                     <span className="font-semibold">Correct answer:</span>{" "}
-                    <span className="text-muted-foreground">
-                      {answer(q.type as QuizQuestionType, q.answer)}
-                    </span>
-                  </p>
+                    <div className="text-muted-foreground">
+                      {answer(
+                        a.quizQuestion.type as QuizQuestionType,
+                        a.quizQuestion.answer,
+                      )}
+                    </div>
+                  </div>
                 )}
               </div>
             )}

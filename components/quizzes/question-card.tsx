@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -13,12 +13,14 @@ import { QuizQuestion } from "@prisma/client";
 const QuestionCard = ({
   question,
   onAnswer,
+  isCorrect,
   onNext,
   currentIndex,
   totalQuestions,
 }: {
   question: QuizQuestion;
-  onAnswer: (userAnswer: string, isCorrect: boolean) => void;
+  onAnswer: (userAnswer: string) => void;
+  isCorrect: boolean | null;
   onNext: () => void;
   currentIndex: number;
   totalQuestions: number;
@@ -27,22 +29,10 @@ const QuestionCard = ({
   const [isAnswered, setIsAnswered] = useState(false);
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
-  const isCorrect = useCallback(() => {
-    if (!selectedAnswer) return false;
-    if (question.type === QuizQuestionType.Matching) {
-      const selectedMatchs = JSON.parse(selectedAnswer);
-      const correctAnswerMap = JSON.parse(question.answer);
-      return Object.entries(selectedMatchs).every(([leftId, rightId]) => {
-        return correctAnswerMap[leftId] === rightId;
-      });
-    }
-    return selectedAnswer === question.answer;
-  }, [selectedAnswer, question.answer, question.type]);
-
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
       setIsAnswered(true);
-      onAnswer(selectedAnswer, isCorrect());
+      onAnswer(selectedAnswer);
     }
   };
 
@@ -138,16 +128,16 @@ const QuestionCard = ({
           {renderQuestionBody()}
         </div>
         <div className="mt-4 space-y-2">
-          {isAnswered && (
+          {isAnswered && isCorrect !== null && (
             <div
               className={cn(
                 "p-4 rounded-md font-bold",
-                isCorrect()
+                isCorrect
                   ? "bg-green-100 text-green-800"
                   : "bg-red-100 text-red-800",
               )}
             >
-              {isCorrect() ? (
+              {isCorrect ? (
                 <div className="text-center">Correct!</div>
               ) : (
                 <div>Incorrect. The correct answer is: {correctAnswer()}</div>

@@ -30,7 +30,7 @@ const WordPronunciation = ({
   if (!pronunciation) return null;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1" title={formattedPronunciation}>
       {pronunciation && (
         <div
           className={`${light ? "text-white" : "text-gray-600"} ${mode === "list" ? "text-md" : "text-sm italic"}`}
