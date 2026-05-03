@@ -28,9 +28,9 @@ const QuizSessionPage = async (props: Props) => {
   const isQuizStarted = quizLog.quizAnswers.some((q) => q.userAnswer !== null);
 
   return (
-    <div className={`w-full max-w-[440px] mx-auto py-2 px-2 h-full`}>
+    <div className={`w-full max-w-[500px] mx-auto py-2 px-2 h-full`}>
       {quizLog.completedAt || isQuizStarted ? (
-        <QuizSummary quizAnswers={quizLog.quizAnswers} />
+        <QuizSummary quizzesLog={quizLog} />
       ) : (
         <QuizCarousel questions={quizLog.quizAnswers} />
       )}

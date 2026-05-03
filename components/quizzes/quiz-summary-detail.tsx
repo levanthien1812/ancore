@@ -1,125 +1,119 @@
 "use client";
-
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
-import { CheckCircle, XCircle, HelpCircle } from "lucide-react";
-import { shuffleArray } from "@/lib/utils/shuffle-array";
-import { cn } from "@/lib/utils";
-import { QuizQuestionType } from "@/lib/constants/enums";
-import { QuizAnswerWithQuestion } from "@/lib/type";
+import {
+  CheckCircle,
+  ListChevronsDownUp,
+  ClipboardList,
+  Star,
+  CircleX,
+} from "lucide-react";
+import { QuizLogWithAnswers } from "@/lib/type";
+import Image from "next/image";
+import Medal from "@/public/images/medal.png";
+import AnswerCard from "./answer-card";
 
 const QuizSummaryDetail = ({
-  quizAnswers,
+  quizzesLog,
 }: {
-  quizAnswers: QuizAnswerWithQuestion[];
+  quizzesLog: QuizLogWithAnswers;
 }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   // Randomize questions once on component mount
-  const shuffledAnswers = useMemo(
-    () => shuffleArray(quizAnswers),
-    [quizAnswers],
-  );
+  // const shuffledAnswers = useMemo(
+  //   () => shuffleArray(quizzesLog.quizAnswers),
+  //   [quizAnswers],
+  // );
 
-  const correctCount = quizAnswers.filter((a) => a.isCorrect).length;
-
-  const answer = (questionType: QuizQuestionType, answer: string) => {
-    switch (questionType) {
-      case QuizQuestionType.MultipleChoice_DefinitionToWord:
-      case QuizQuestionType.MultipleChoice_WordToSynonym:
-      case QuizQuestionType.FillInTheBlank:
-        return <span>{answer}</span>;
-      case QuizQuestionType.Matching:
-        const correctAnswerMap = JSON.parse(answer) as Record<string, string>;
-        const correctAnswers = Object.entries(correctAnswerMap).map(
-          ([leftId, rightId]) => {
-            return (
-              <div key={leftId} className="grid grid-cols-3 gap-x-4">
-                <div>{leftId}</div>
-                <div className="col-span-2">{rightId}</div>
-              </div>
-            );
-          },
-        );
-        return <div className="border rounded-md p-4">{correctAnswers}</div>;
-      default:
-        return null;
-    }
-  };
+  const correctCount = quizzesLog.quizAnswers.filter((a) => a.isCorrect).length;
 
   return (
-    <div className="border border-dashed rounded-lg border-primary p-2 space-y-4 flex-1">
-      <p className="text-center text-xl font-bold text-primary-2">
-        You got {correctCount} out of {quizAnswers.length} correct!
-      </p>
+    <div className="space-y-2 flex-1">
+      <div className="flex gap-2 items-center">
+        <div>
+          <Image src={Medal} alt="Medal" width={64} height={64} />
+        </div>
+        <div className="">
+          <p className="text-xl font-bold">
+            You got{" "}
+            <span className="text-green-500 text-2xl">{correctCount}</span> out
+            of {quizzesLog.quizAnswers.length} correct!
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Good effort! Keep it up!
+          </p>
+        </div>
+      </div>
 
       <div className="text-right">
         <Button
-          variant="link"
+          variant="outline"
+          size={"sm"}
           className="text-primary"
           onClick={() => setShowDetails(!showDetails)}
         >
-          {showDetails ? "Hide Details" : "View Details"}
+          {showDetails ? "Hide Details" : "View Details"}{" "}
+          <ListChevronsDownUp width={16} />
         </Button>
       </div>
 
-      <div className="space-y-2">
-        {shuffledAnswers.map((a) => (
-          <div
-            key={a.id}
-            className={cn(
-              "p-3 border rounded-lg",
-              a.isCorrect === true && "border-green-500",
-              a.isCorrect === false && "border-red-500",
-              a.isCorrect === null && "border-gray-300",
-            )}
-          >
-            <div className="flex justify-between items-start">
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">
-                  {a.quizQuestion.direction}
-                </p>
-                <p className="font-semibold">
-                  {a.quizQuestion.type === QuizQuestionType.Matching
-                    ? "Multiple Word Matching"
-                    : a.quizQuestion.question || a.quizQuestion.words[0]?.word}
-                </p>
-              </div>
-              {a.isCorrect ? (
-                <CheckCircle className="text-green-500 ml-2" />
-              ) : a.isCorrect === false ? (
-                <XCircle className="text-red-500 ml-2" />
-              ) : (
-                <HelpCircle className="text-gray-400 ml-2" />
-              )}
-            </div>
-            {showDetails && (
-              <div className="mt-2 pt-2 border-t text-sm space-y-1">
-                <div>
-                  <span className="font-semibold">Your answer:</span>{" "}
-                  <div className="text-muted-foreground">
-                    {a.userAnswer
-                      ? answer(
-                          a.quizQuestion.type as QuizQuestionType,
-                          a.userAnswer,
-                        )
-                      : "Not answered"}
-                  </div>
-                </div>
-                {!a.isCorrect && (
-                  <div>
-                    <span className="font-semibold">Correct answer:</span>{" "}
-                    <div className="text-muted-foreground">
-                      {answer(
-                        a.quizQuestion.type as QuizQuestionType,
-                        a.quizQuestion.answer,
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+      <div className="flex gap-2 bg-gray-50 rounded-md p-3 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200 [&>*:not(:last-child)]:pr-2 [&>*:not(:last-child)]:flex-1">
+        <div className="flex gap-2 items-center">
+          <div className="p-2 rounded-full bg-purple-100 flex items-center justify-center">
+            <Star width={14} height={14} className="text-purple-500" />
           </div>
+          <div>
+            <p className="text-lg font-bold leading-none">
+              {Math.round((correctCount / quizzesLog.quizAnswers.length) * 100)}
+              %
+            </p>
+            <p className="text-xs text-muted-foreground">Score</p>
+          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <div className="p-2 rounded-full bg-blue-100 flex items-center justify-center">
+            <ClipboardList width={14} height={14} className="text-blue-500" />
+          </div>
+          <div>
+            <p className="text-lg font-bold leading-none">
+              {quizzesLog.totalQuestions}
+            </p>
+            <p className="text-xs text-muted-foreground">Questions</p>
+          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <div className="p-2 rounded-full bg-green-100 flex items-center justify-center">
+            <CheckCircle width={14} height={14} className="text-green-500" />
+          </div>
+          <div>
+            <p className="text-lg font-bold leading-none">
+              {quizzesLog.correctAnswers}
+            </p>
+            <p className="text-xs text-muted-foreground">Correct</p>
+          </div>
+        </div>
+        <div className="flex gap-2 items-center">
+          <div className="p-2 rounded-full bg-red-100 flex items-center justify-center">
+            <CircleX width={14} height={14} className="text-red-500" />
+          </div>
+          <div>
+            <p className="text-lg font-bold leading-none">
+              {quizzesLog.wrongAnswers}
+            </p>
+            <p className="text-xs text-muted-foreground">Incorrect</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {quizzesLog.quizAnswers.map((a, index) => (
+          <AnswerCard
+            key={a.id}
+            answer={a}
+            index={index}
+            showDetails={showDetails}
+          />
         ))}
       </div>
     </div>

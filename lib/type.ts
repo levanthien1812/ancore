@@ -1,4 +1,10 @@
-import { MasteryLevel, QuizAnswer, QuizQuestion, Word } from "@prisma/client";
+import {
+  MasteryLevel,
+  QuizAnswer,
+  QuizQuestion,
+  QuizzesLog,
+  Word,
+} from "@prisma/client";
 
 export type WordsCountByMasteryLevel = {
   [key in MasteryLevel]: number;
@@ -20,16 +26,20 @@ export type WordsCountByPeriod = {
   [key in MasteryLevel]: number;
 };
 
-export type QuizQuestionWithWords = QuizQuestion & {
-  words: Word[];
-};
-
 export type ActionState = {
   success: boolean;
   message: string;
   errors?: Record<string, string[]>;
 };
 
+export type QuizQuestionWithWords = QuizQuestion & {
+  words: Word[];
+};
+
 export type QuizAnswerWithQuestion = QuizAnswer & {
   quizQuestion: QuizQuestionWithWords;
+};
+
+export type QuizLogWithAnswers = QuizzesLog & {
+  quizAnswers: QuizAnswerWithQuestion[];
 };

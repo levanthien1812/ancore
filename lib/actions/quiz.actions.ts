@@ -552,6 +552,7 @@ export async function getQuizLog(quizLogId: string) {
       },
     },
   });
+  console.log("Fetched quiz log:", quizLog);
 
   if (quizLog?.quizAnswers) {
     quizLog.quizAnswers = shuffleArray(quizLog.quizAnswers);

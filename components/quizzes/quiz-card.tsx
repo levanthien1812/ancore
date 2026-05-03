@@ -18,6 +18,7 @@ import "react-circular-progressbar/dist/styles.css";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { convertSecondsToMinutes } from "@/lib/utils/time-convert";
 import { QuizStatusLabel } from "@/lib/constants/enums";
+import { useRouter } from "next/navigation";
 
 type Action = {
   label: string;
@@ -27,6 +28,8 @@ type Action = {
 };
 
 const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
+  const router = useRouter();
+
   const statusBgColor = {
     Perfect: "bg-[#4C8CE4]/10",
     Excellent: "bg-[#48A111]/10",
@@ -66,7 +69,9 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
     Perfect: [
       {
         label: "View Details",
-        onClick: () => {},
+        onClick: () => {
+          router.push(`/quizzes/${quiz.id}`);
+        },
         variant: "default" as const,
         icon: <ChevronRight width={14} height={14} />,
       },
@@ -74,7 +79,9 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
     Excellent: [
       {
         label: "View Details",
-        onClick: () => {},
+        onClick: () => {
+          router.push(`/quizzes/${quiz.id}`);
+        },
         variant: "default" as const,
         icon: <ChevronRight width={14} height={14} />,
       },
@@ -82,13 +89,17 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
     NeedsReview: [
       {
         label: "View Details",
-        onClick: () => {},
+        onClick: () => {
+          router.push(`/quizzes/${quiz.id}`);
+        },
         variant: "outline" as const,
         icon: <ChevronRight width={14} height={14} />,
       },
       {
         label: "Retry",
-        onClick: () => {},
+        onClick: () => {
+          router.push(`/quizzes/${quiz.id}`);
+        },
         variant: "default" as const,
         icon: <RotateCcw width={14} height={14} />,
       },
@@ -104,7 +115,9 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
   }[quiz.status];
 
   return (
-    <div className={`border-l-4 ${statusBorderColor} rounded-xl shadow-lg p-4`}>
+    <div
+      className={`border-l-4 ${statusBorderColor} rounded-xl shadow-[0_0_10px_3px_rgba(0,0,0,0.1)] p-4`}
+    >
       <div className={`flex gap-3 `}>
         <div>
           <div
