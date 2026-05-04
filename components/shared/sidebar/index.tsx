@@ -35,13 +35,13 @@ const SidebarItem = ({
       <Link
         href={item.path}
         className={cn(
-          "flex items-center justify-center md:justify-start gap-2 py-2 px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-md md:rounded-none",
+          "flex flex-col md:flex-row justify-between items-center md:items-start md:justify-center gap-0 md:gap-2 py-0.5 md:py-2 px-2 md:px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-sm md:rounded-none",
           isActive && "bg-primary-2 text-white",
         )}
       >
-        {item.icon}
+        <span className="">{item.icon}</span>
         {open && (
-          <span className="hidden md:block w-[100px]">{item.title}</span>
+          <span className="md:w-[100px] text-center text-xs">{item.title}</span>
         )}
       </Link>
     </li>
@@ -55,34 +55,34 @@ const Sidebar = () => {
     return [
       {
         title: "Home",
-        icon: <House />,
+        icon: <House width={22} />,
         path: "/",
       },
       {
         title: "Word list",
-        icon: <BookAudio />,
+        icon: <BookAudio width={22} />,
         path: "/words",
       },
       {
         title: "Review",
-        icon: <Star />,
+        icon: <Star width={22} />,
         path: "/review",
       },
       {
         title: "Quizzes",
-        icon: <CircleQuestionMark />,
+        icon: <CircleQuestionMark width={22} />,
         path: "/quizzes",
       },
       {
         title: "Notes",
-        icon: <NotebookPen />,
+        icon: <NotebookPen width={22} />,
         path: "/notes",
       },
     ];
   }, []);
 
   return (
-    <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1.5 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
+    <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
       <div className="hidden md:flex justify-end px-2">
         <button
           onClick={() => setOpen((prev) => !prev)}

@@ -57,9 +57,9 @@ const WordOfTheDay = () => {
   return (
     <>
       {wordOfTheDay && (
-        <div className="py-6 px-4 rounded-2xl bg-purple-50">
+        <div className="py-6 px-4 rounded-2xl bg-purple-50 h-full">
           <p className="text-xl font-bold">✨ Word of the day ✨</p>
-          <div className="flex flex-col md:flex-row gap-3 mt-3">
+          <div className="flex flex-col gap-3 mt-3">
             <div className="flex flex-col justify-center items-center p-3 bg-purple-100 rounded-xl">
               <p className="text-2xl text-purple-600 font-bold">
                 {wordOfTheDay?.word}

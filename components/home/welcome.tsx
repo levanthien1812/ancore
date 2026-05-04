@@ -7,7 +7,7 @@ import {
   getWordCountLearned,
 } from "@/lib/actions/word.actions";
 import Image from "next/image";
-import fireGpt from "@/public/images/fire-gpt.png";
+import BigFire from "@/public/images/big-fire.png";
 import AddWord from "../add-word/add-word";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
@@ -117,8 +117,8 @@ const Welcome = () => {
             </Link>
           </div>
         </div>
-        <div className="flex items-end">
-          <Image src={fireGpt} alt="fire" height={120} />
+        <div className="flex items-end w-1/3 md:w-2/5">
+          <Image src={BigFire} alt="fire" className="w-full" />
         </div>
       </div>
     </div>
