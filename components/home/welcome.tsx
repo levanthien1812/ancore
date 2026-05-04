@@ -67,7 +67,7 @@ const Welcome = () => {
             <div className="rounded-full p-3 bg-orange-100 flex items-center justify-center">
               <Image src={Star} alt="star" width={24} height={24} />
             </div>
-            <p className="leading-none text-sm text-gray-500">
+            <div className="leading-none text-sm text-gray-500">
               You&apos;ve learned <br />
               {isFetchingWordsLearned ? (
                 <Skeleton className="h-5 w-20 inline-block" />
@@ -77,13 +77,13 @@ const Welcome = () => {
                 </span>
               )}{" "}
               words in a row
-            </p>
+            </div>
           </div>
           <div className="flex gap-2 p-3 bg-orange-50 rounded-md items-center">
             <div className="rounded-full p-3 bg-orange-100 flex items-center justify-center">
               <Image src={Fire} alt="star" width={24} height={24} />
             </div>
-            <p className="leading-none text-sm text-gray-500">
+            <div className="leading-none text-sm text-gray-500">
               Your current streak is <br />
               {isFetchingStreak ? (
                 <Skeleton className="h-5 w-20 inline-block" />
@@ -93,7 +93,7 @@ const Welcome = () => {
                 </span>
               )}{" "}
               days
-            </p>
+            </div>
           </div>
           <div className="flex flex-col gap-1 mt-auto">
             <AddWord

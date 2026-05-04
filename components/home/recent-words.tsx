@@ -104,7 +104,7 @@ const RecentWords = () => {
                       <Button
                         size={"sm"}
                         variant={"outline"}
-                        className="bg-transparent"
+                        className="bg-transparent py-1 h-fit"
                         onClick={() => setSelectedIndex(index)}
                       >
                         Detail
