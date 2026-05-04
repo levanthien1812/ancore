@@ -1,5 +1,5 @@
 "use client";
-import { MasteryLevel } from "@/lib/constants/enums";
+import { MasteryLevel, MasteryLevelColorCode } from "@/lib/constants/enums";
 import {
   Select,
   SelectContent,
@@ -23,24 +23,9 @@ const WordMasteryLevel = ({
   const { mode } = useLayout();
 
   const demonstratorStyle = useMemo(() => {
-    switch (selectedValue) {
-      case MasteryLevel.New:
-        return {
-          backgroundImage: "linear-gradient(to bottom, #F3623E, #A65744)",
-        };
-      case MasteryLevel.Learning:
-        return {
-          backgroundImage: "linear-gradient(to bottom, #FFB43B, #BF811D)",
-        };
-      case MasteryLevel.Familiar:
-        return {
-          backgroundImage: "linear-gradient(to bottom, #FEDA49, #C8A61F)",
-        };
-      case MasteryLevel.Mastered:
-        return {
-          backgroundImage: "linear-gradient(to bottom, #37F5A3, #109A5F)",
-        };
-    }
+    return {
+      backgroundImage: `linear-gradient(to bottom, ${MasteryLevelColorCode[selectedValue].primary}, ${MasteryLevelColorCode[selectedValue].dark})`,
+    };
   }, [selectedValue]);
 
   const handleChange = (value: MasteryLevel) => {

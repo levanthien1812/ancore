@@ -12,6 +12,8 @@ import { toBoolean } from "../utils/to-boolean";
 import { buildWordAutofillPrompt } from "../ai-prompts/word-autofill";
 import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
 import { authenticationAction } from "./_helpers";
+import { buildWordOfTheDayPrompt } from "../ai-prompts/word-of-the-day";
+import { generateWordOfTheDayWithAI } from "@/app/services/generate-word-of-the-day-with-ai";
 
 export async function getWordListByFilter(
   wordFilter: WordFitler,
@@ -463,5 +465,19 @@ export const fillWithAI = async (word: string) =>
         return null;
       }
     }
+    return data;
+  });
+
+export const getWordOfTheDay = async () =>
+  authenticationAction(async (userId) => {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) return null;
+
+    const prompt = buildWordOfTheDayPrompt(user);
+    const data = await generateWordOfTheDayWithAI(prompt);
+
     return data;
   });

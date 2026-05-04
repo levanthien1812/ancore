@@ -118,3 +118,29 @@ export enum QuizStatusLabel {
   NEEDS_REVIEW = "Needs Review",
   IN_PROGRESS = "In Progress",
 }
+
+export const MasteryLevelColorCode: Record<
+  MasteryLevel,
+  { primary: string; light: string; dark: string }
+> = {
+  [MasteryLevel.New]: {
+    primary: "#3B82F6",
+    light: "#DBEAFE",
+    dark: "#1D4ED8",
+  },
+  [MasteryLevel.Learning]: {
+    primary: "#F59E0B",
+    light: "#FEF3C7",
+    dark: "#B45309",
+  },
+  [MasteryLevel.Familiar]: {
+    primary: "#8B5CF6",
+    light: "#EDE9FE",
+    dark: "#6D28D9",
+  },
+  [MasteryLevel.Mastered]: {
+    primary: "#22C55E",
+    light: "#DCFCE7",
+    dark: "#15803D",
+  },
+};
