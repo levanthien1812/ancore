@@ -55,7 +55,7 @@ const AnswerCard = ({
           {index + 1}
         </div>
         <div className="flex-1 space-y-1">
-          <div className="flex gap-2 items-end">
+          <div className="flex gap-2 items-center">
             <div
               className={`${answer.isCorrect ? "text-green-500" : "text-red-500"} text-sm font-bold`}
             >
@@ -64,6 +64,16 @@ const AnswerCard = ({
 
             <div className="flex justify-between items-center px-2 py-0.5 bg-gray-50 text-gray-500 text-xs rounded-full w-fit shadow">
               {QuizQuestionTypeLabel[answer.quizQuestion.type]}
+            </div>
+
+            <div className="ms-auto">
+              {answer.isCorrect ? (
+                <CheckCircle width={18} className="text-green-500 ml-2" />
+              ) : answer.isCorrect === false ? (
+                <XCircle width={18} className="text-red-500 ml-2" />
+              ) : (
+                <HelpCircle width={18} className="text-gray-400 ml-2" />
+              )}
             </div>
           </div>
           <div>
@@ -104,16 +114,6 @@ const AnswerCard = ({
                 </div>
               )}
             </div>
-          )}
-        </div>
-
-        <div>
-          {answer.isCorrect ? (
-            <CheckCircle width={18} className="text-green-500 ml-2" />
-          ) : answer.isCorrect === false ? (
-            <XCircle width={18} className="text-red-500 ml-2" />
-          ) : (
-            <HelpCircle width={18} className="text-gray-400 ml-2" />
           )}
         </div>
       </div>

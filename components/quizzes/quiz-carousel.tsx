@@ -24,10 +24,12 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
   const [currentAnswers, setCurrentAnswers] = useState<
     QuizAnswerWithQuestion[]
   >(quizzesLog.quizAnswers);
-  const [sessionFinished, setSessionFinished] = useState(false);
+  const [finalQuizLog, setFinalQuizLog] = useState<QuizLogWithAnswers | null>(
+    null,
+  );
 
   // Hook to prevent accidental navigation away from the quiz
-  useBeforeUnload(!sessionFinished);
+  useBeforeUnload(!finalQuizLog);
 
   useEffect(() => {
     if (!api) {
@@ -48,15 +50,24 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
     };
   }, [api]);
 
-  const handleAnswered = (answerId: string, userAnswer: string) => {
+  const handleAnswered = (
+    answerId: string,
+    userAnswer: string | null,
+    isSkipped: boolean = false,
+  ) => {
     // Call the server action to update the database in the background
     startTransition(async () => {
-      const result = await updateQuizAnswer(answerId, userAnswer);
+      const result = await updateQuizAnswer(answerId, userAnswer, isSkipped);
       if (result) {
         setCurrentAnswers((prev) =>
           prev.map((a) =>
             a.id === answerId
-              ? { ...a, userAnswer, isCorrect: result.isCorrect }
+              ? {
+                  ...a,
+                  userAnswer,
+                  isCorrect: result.isCorrect,
+                  isSkipped,
+                }
               : a,
           ),
         );
@@ -65,6 +76,13 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
   };
 
   const handleNext = () => {
+    const currentAnswer = currentAnswers[current];
+
+    // If user clicks next/skip without answering, mark it as an explicit skip in the DB
+    if (currentAnswer.userAnswer === null && !currentAnswer.isSkipped) {
+      handleAnswered(currentAnswer.id, null, true);
+    }
+
     if (api?.canScrollNext()) {
       api.scrollNext();
     } else {
@@ -76,8 +94,10 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
 
       if (quizLogId) {
         startTransition(async () => {
-          await logQuizResult(quizLogId, durationSeconds);
-          setSessionFinished(true);
+          const updatedResult = await logQuizResult(quizLogId, durationSeconds);
+          if (updatedResult) {
+            setFinalQuizLog(updatedResult);
+          }
         });
       } else {
         toast.error("Could not save quiz results. Quiz Log ID is missing.");
@@ -85,10 +105,10 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
     }
   };
 
-  if (sessionFinished) {
-    // Pass the final list of questions with answers to the summary
-    return <QuizSummary quizzesLog={quizzesLog} />;
+  if (finalQuizLog) {
+    return <QuizSummary quizzesLog={finalQuizLog} />;
   }
+
   if (currentAnswers.length === 0) return null;
   return (
     <div className="h-full space-y-1 flex flex-col">
@@ -104,17 +124,24 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
           ></div>
         ))}
       </div>
-      <Carousel className="flex-1" setApi={setApi} opts={{ watchDrag: false }}>
+      <Carousel
+        className="flex-1 h-full"
+        setApi={setApi}
+        opts={{ watchDrag: false }}
+      >
         <CarouselContent className="h-full">
           {currentAnswers.map((answer, index) => (
-            <CarouselItem key={answer.id}>
+            <CarouselItem key={answer.id} className="h-full">
               <QuestionCard
                 question={answer.quizQuestion}
-                onAnswer={(userAnswer) => handleAnswered(answer.id, userAnswer)}
+                onAnswer={(userAnswer, isSkipped) =>
+                  handleAnswered(answer.id, userAnswer, isSkipped)
+                }
                 isCorrect={answer.isCorrect}
                 onNext={handleNext}
                 currentIndex={index}
                 totalQuestions={currentAnswers.length}
+                isSubmitting={isPending}
               />
             </CarouselItem>
           ))}

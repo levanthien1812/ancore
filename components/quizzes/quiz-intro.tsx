@@ -23,7 +23,7 @@ const QuizIntro = ({
 
   const handleStartQuiz = () => {
     startTransition(async () => {
-      const result = await createQuizSession(5, specificWords);
+      const result = await createQuizSession(wordsToQuizCount, specificWords);
       if (result.success && result.quizLogId) {
         router.push(`/quizzes/${result.quizLogId}`);
       } else {

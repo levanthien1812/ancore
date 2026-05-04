@@ -187,6 +187,7 @@ model QuizAnswer {
   quizzesLog     QuizzesLog   @relation(fields: [quizzesLogId], references: [id])
   userAnswer     String?
   isCorrect      Boolean?
+  isSkipped      Boolean?     @default(false)
   createdAt      DateTime     @default(now())
 
   @@unique([quizQuestionId, quizzesLogId])
