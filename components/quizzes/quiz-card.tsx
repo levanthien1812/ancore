@@ -12,6 +12,7 @@ import {
   RotateCcw,
   Star,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
@@ -19,6 +20,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { convertSecondsToMinutes } from "@/lib/utils/time-convert";
 import { QuizStatusLabel } from "@/lib/constants/enums";
 import { useRouter } from "next/navigation";
+import { retryQuizSession } from "@/lib/actions/quiz.actions";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 type Action = {
   label: string;
@@ -29,6 +33,7 @@ type Action = {
 
 const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const statusBgColor = {
     Perfect: "bg-[#4C8CE4]/10",
@@ -65,54 +70,66 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
     InProgress: <CircleX width={20} height={20} color="#FF8C00" />,
   }[quiz.status];
 
-  const actions: Action[] = {
-    Perfect: [
-      {
-        label: "View Details",
-        onClick: () => {
-          router.push(`/quizzes/${quiz.id}`);
+  const handleRetry = () => {
+    startTransition(async () => {
+      const result = await retryQuizSession(quiz.id);
+      if (result.success && result.quizLogId) {
+        router.push(`/quizzes/${result.quizLogId}`);
+      } else {
+        toast.error(result.message || "Failed to retry quiz");
+      }
+    });
+  };
+
+  const actions: Action[] =
+    {
+      Perfect: [
+        {
+          label: "View Details",
+          onClick: () => {
+            router.push(`/quizzes/${quiz.id}`);
+          },
+          variant: "default" as const,
+          icon: <ChevronRight width={14} height={14} />,
         },
-        variant: "default" as const,
-        icon: <ChevronRight width={14} height={14} />,
-      },
-    ],
-    Excellent: [
-      {
-        label: "View Details",
-        onClick: () => {
-          router.push(`/quizzes/${quiz.id}`);
+      ],
+      Excellent: [
+        {
+          label: "View Details",
+          onClick: () => {
+            router.push(`/quizzes/${quiz.id}`);
+          },
+          variant: "default" as const,
+          icon: <ChevronRight width={14} height={14} />,
         },
-        variant: "default" as const,
-        icon: <ChevronRight width={14} height={14} />,
-      },
-    ],
-    NeedsReview: [
-      {
-        label: "View Details",
-        onClick: () => {
-          router.push(`/quizzes/${quiz.id}`);
+      ],
+      NeedsReview: [
+        {
+          label: "View Details",
+          onClick: () => {
+            router.push(`/quizzes/${quiz.id}`);
+          },
+          variant: "outline" as const,
+          icon: <ChevronRight width={14} height={14} />,
         },
-        variant: "outline" as const,
-        icon: <ChevronRight width={14} height={14} />,
-      },
-      {
-        label: "Retry",
-        onClick: () => {
-          router.push(`/quizzes/${quiz.id}`);
+        {
+          label: "Retry",
+          onClick: handleRetry,
+          variant: "default" as const,
+          icon: <RotateCcw width={14} height={14} />,
         },
-        variant: "default" as const,
-        icon: <RotateCcw width={14} height={14} />,
-      },
-    ],
-    InProgress: [
-      {
-        label: "Continue",
-        onClick: () => {},
-        variant: "default" as const,
-        icon: <ChevronRight width={14} height={14} />,
-      },
-    ],
-  }[quiz.status];
+      ],
+      InProgress: [
+        {
+          label: "Continue",
+          onClick: () => {
+            router.push(`/quizzes/${quiz.id}`);
+          },
+          variant: "default" as const,
+          icon: <ChevronRight width={14} height={14} />,
+        },
+      ] as Action[],
+    }[quiz.status] || [];
 
   return (
     <div
@@ -218,10 +235,17 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
                   variant={action.variant}
                   size={"sm"}
                   onClick={action.onClick}
+                  disabled={isPending}
                   className="h-fit px-4 py-1 min-w-[100px] justify-center rounded-sm text-xs flex items-center gap-1"
                 >
-                  <span>{action.label}</span>
-                  {action.icon}
+                  {isPending && action.label === "Retry" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <>
+                      <span>{action.label}</span>
+                      {action.icon}
+                    </>
+                  )}
                 </Button>
               ))}
             </div>

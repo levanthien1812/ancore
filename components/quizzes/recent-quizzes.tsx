@@ -59,13 +59,13 @@ const RecentQuizzes = () => {
   return (
     <div className="flex flex-col gap-2 border rounded-lg p-2 sm:p-4 h-full">
       <div className="flex justify-between items-center gap-1">
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar">
           {statusCounts
             .filter((sc) => sc.count > 0)
             .map(({ status, count, label }) => (
               <button
                 key={status}
-                className={`text-xs text-muted-foreground rounded-sm px-2 py-1.5 font-medium ${statusFilter === status ? "bg-primary text-white" : "bg-gray-100 hover:bg-gray-200"}`}
+                className={`text-xs text-muted-foreground rounded-sm px-2 py-1.5 font-medium whitespace-nowrap ${statusFilter === status ? "bg-primary text-white" : "bg-gray-100 hover:bg-gray-200"}`}
                 onClick={() => handleStatusFilterChange(status)}
                 disabled={statusFilter === status}
               >
@@ -73,7 +73,7 @@ const RecentQuizzes = () => {
               </button>
             ))}
         </div>
-        <Input type="date" className="w-[120px] ms-auto text-xs" />
+        <Input type="date" className="w-[110px] ms-auto shrink-0" size="sm" />
       </div>
       {filteredQuizzes.map((quiz) => (
         <QuizCard key={quiz.id} quiz={quiz} />

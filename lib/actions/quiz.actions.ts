@@ -607,3 +607,51 @@ export const getRecentQuizzes = async () => {
 
   return quizzes;
 };
+
+/**
+ * Creates a new quiz session using the exact same questions from an existing one.
+ */
+export async function retryQuizSession(quizLogId: string) {
+  try {
+    // 1. Find the original quiz log and its associated questions
+    const originalLog = await prisma.quizzesLog.findUnique({
+      where: { id: quizLogId },
+      include: { quizAnswers: true },
+    });
+
+    if (!originalLog) {
+      return { success: false, message: "Original quiz session not found." };
+    }
+
+    // 2. Create the new session and answers in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create a new InProgress session
+      const newLog = await tx.quizzesLog.create({
+        data: {
+          userId: originalLog.userId,
+          totalQuestions: originalLog.totalQuestions,
+          totalWords: originalLog.totalWords,
+          status: "InProgress",
+          durationSeconds: 0,
+        },
+      });
+
+      // Create new answer placeholders linked to the original questions
+      const newAnswersData = originalLog.quizAnswers.map((ans) => ({
+        quizzesLogId: newLog.id,
+        quizQuestionId: ans.quizQuestionId,
+      }));
+
+      await tx.quizAnswer.createMany({
+        data: newAnswersData,
+      });
+
+      return newLog;
+    });
+
+    return { success: true, quizLogId: result.id };
+  } catch (error) {
+    console.error("Retry quiz error:", error);
+    return { success: false, message: "Failed to create retry session." };
+  }
+}
