@@ -58,7 +58,7 @@ const QuizSummaryDetail = ({
         </Button>
       </div>
 
-      <div className="flex gap-2 bg-gray-50 rounded-md p-3 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200 [&>*:not(:last-child)]:pr-2 [&>*:not(:last-child)]:flex-1">
+      <div className="flex gap-2 bg-gray-50 rounded-md p-3 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200 [&>*:not(:last-child)]:pr-2 [&>*:not(:last-child)]:flex-1 custom-scrollbar-x overflow-x-auto">
         <div className="flex gap-2 items-center">
           <div className="p-2 rounded-full bg-purple-100 flex items-center justify-center">
             <Star width={14} height={14} className="text-purple-500" />

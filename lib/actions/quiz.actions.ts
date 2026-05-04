@@ -7,6 +7,7 @@ import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel, QuestionType, QuizStatus } from "@prisma/client";
 import { generateDistractorsWithAi } from "@/app/services/generate-distractors-with-ai";
+import { QuizLogWithAnswers } from "../type";
 
 export async function createQuizSession(
   wordCount: number = 5,
@@ -59,7 +60,7 @@ export async function createQuizSession(
       // QuestionType.Matching, // Matching will be generated separately if enough words
     ])[0];
 
-    const existingDefQuestion = await prisma.quizQuestion.findFirst({
+    const existingQuestion = await prisma.quizQuestion.findFirst({
       where: {
         userId: user.id,
         words: { some: { id: word.id } },
@@ -67,18 +68,21 @@ export async function createQuizSession(
       },
     });
 
-    if (existingDefQuestion) {
-      questionsToLink.push({ questionId: existingDefQuestion.id });
+    if (existingQuestion) {
+      questionsToLink.push({ questionId: existingQuestion.id });
     } else {
       switch (randomQuestionType) {
         // --- Question Type 1: Give Definition -> Choose Word ---
         case QuestionType.MultipleChoice_DefinitionToWord:
           if (mainMeaning.definition) {
+            const filteredPool = distractorPool.filter(
+              (w) => w.toLowerCase() !== word.word.toLowerCase(),
+            );
+
             try {
               const prompt = buildDistractorGenerationPrompt(
-                // No contextWord needed here
                 word.word,
-                distractorPool,
+                filteredPool,
               );
 
               const object = await generateDistractorsWithAi(prompt);
@@ -115,15 +119,15 @@ export async function createQuizSession(
             .filter((a) => a.length > 0);
 
           // Randomly decide to create a synonym or antonym question if both are available
-          const createSynonym = synonyms && synonyms.length > 0;
-          const createAntonym = antonyms && antonyms.length > 0;
+          const canCreateSynonym = synonyms && synonyms.length > 0;
+          const canCreateAntonym = antonyms && antonyms.length > 0;
           let questionType: "synonym" | "antonym" | null = null;
 
-          if (createSynonym && createAntonym) {
+          if (canCreateSynonym && canCreateAntonym) {
             questionType = Math.random() > 0.5 ? "synonym" : "antonym";
-          } else if (createSynonym) {
+          } else if (canCreateSynonym) {
             questionType = "synonym";
-          } else if (createAntonym) {
+          } else if (canCreateAntonym) {
             questionType = "antonym";
           }
 
@@ -137,10 +141,17 @@ export async function createQuizSession(
               isSynonym ? " synonym" : "n antonym"
             } for the word below?`;
 
+            const filteredPool = distractorPool.filter(
+              (w) =>
+                w.toLowerCase() !== word.word.toLowerCase() &&
+                w.toLowerCase() !== correctAnswer.toLowerCase(),
+            );
+
             try {
               const prompt = buildDistractorGenerationPrompt(
                 correctAnswer,
-                distractorPool,
+                filteredPool,
+                word.word,
               );
 
               const object = await generateDistractorsWithAi(prompt);
@@ -198,7 +209,7 @@ export async function createQuizSession(
       const rightItems = matchingWords.map((w) => w.meanings[0].definition);
 
       // Check if any of these words are already in a matching question for this user
-      const existingMatching = await prisma.quizQuestion.findFirst({
+      const existingMatchingQuestion = await prisma.quizQuestion.findFirst({
         where: {
           userId: user.id,
           type: QuestionType.Matching,
@@ -206,7 +217,7 @@ export async function createQuizSession(
         },
       });
 
-      if (!existingMatching) {
+      if (!existingMatchingQuestion) {
         questionsToLink.push({
           newData: quizQuestionSchema.parse({
             wordIds: matchingWords.map((w) => w.id),
@@ -221,8 +232,11 @@ export async function createQuizSession(
           }),
         });
         // Mark these words as matched to avoid creating duplicate matching questions
-        matchingWords.forEach((w) => matchedWords.add(w.word));
+      } else {
+        questionsToLink.push({ questionId: existingMatchingQuestion.id });
       }
+      // Mark these words as matched
+      matchingWords.forEach((w) => matchedWords.add(w.word));
     }
   }
 
@@ -257,6 +271,7 @@ export async function createQuizSession(
         }),
       );
     } catch (error) {
+      await prisma.quizzesLog.delete({ where: { id: quizzesLog.id } });
       console.error("Failed to save quiz questions:", error);
       return { success: false, message: "Could not create quiz session." };
     }
@@ -395,7 +410,12 @@ export async function cleanupAbandonedQuizzes() {
   }
 }
 
-export async function updateQuizAnswer(answerId: string, userAnswer: string) {
+export async function updateQuizAnswer(
+  answerId: string,
+  userAnswer: string | null,
+  isSkipped: boolean = false,
+) {
+  console.log({ answerId, userAnswer, isSkipped });
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Authentication required.");
@@ -413,7 +433,9 @@ export async function updateQuizAnswer(answerId: string, userAnswer: string) {
 
     let isCorrect = false;
 
-    if (quizAnswer.quizQuestion.type === QuestionType.Matching) {
+    if (isSkipped || userAnswer === null) {
+      isCorrect = false;
+    } else if (quizAnswer.quizQuestion.type === QuestionType.Matching) {
       try {
         const userObj = JSON.parse(userAnswer);
         const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
@@ -432,7 +454,7 @@ export async function updateQuizAnswer(answerId: string, userAnswer: string) {
 
     const answer = await prisma.quizAnswer.update({
       where: { id: answerId },
-      data: { userAnswer, isCorrect },
+      data: { userAnswer, isCorrect, isSkipped },
       include: {
         quizQuestion: { include: { words: true } },
       },
@@ -481,7 +503,7 @@ export async function updateQuizAnswer(answerId: string, userAnswer: string) {
 export async function logQuizResult(
   quizLogId: string,
   durationSeconds: number,
-) {
+): Promise<QuizLogWithAnswers | undefined> {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Authentication required.");
@@ -489,29 +511,30 @@ export async function logQuizResult(
 
   try {
     // Fetch the questions from the log to calculate the final score
+
     const answersInLog = await prisma.quizAnswer.findMany({
       where: {
         quizzesLogId: quizLogId,
         quizzesLog: { userId: session.user.id },
       },
-      select: { isCorrect: true, userAnswer: true },
+      select: { isCorrect: true, userAnswer: true, isSkipped: true },
     });
 
     const totalQuestions = answersInLog.length;
-    const correctAnswers = answersInLog.filter(
-      (q) => q.isCorrect === true,
-    ).length;
+    const correctAnswers = answersInLog.filter((q) => q.isCorrect).length;
+    const skippedQuestions = answersInLog.filter((q) => q.isSkipped).length;
     const wrongAnswers = answersInLog.filter(
-      (q) => q.userAnswer && q.isCorrect === false,
+      (q) => !q.isSkipped && q.userAnswer !== null && !q.isCorrect,
     ).length;
-    const skippedQuestions = answersInLog.filter(
-      (q) => q.userAnswer === null,
+
+    const unreachedQuestions = answersInLog.filter(
+      (q) => !q.isSkipped && q.userAnswer === null,
     ).length;
 
     // Calculate quiz status based on performance
     let status: QuizStatus;
-    // Check for incomplete quiz (e.g., if there are skipped questions, it might be considered "InProgress")
-    if (skippedQuestions > 0) {
+    // If there are unreached questions, the user quit early
+    if (unreachedQuestions > 0) {
       status = QuizStatus.InProgress;
     } else {
       if (correctAnswers === totalQuestions) {
@@ -523,7 +546,7 @@ export async function logQuizResult(
       }
     }
     // Update the main quiz log with the final details
-    await prisma.quizzesLog.update({
+    const updatedLog = await prisma.quizzesLog.update({
       where: { id: quizLogId, userId: session.user.id },
       data: {
         completedAt: new Date(),
@@ -534,7 +557,18 @@ export async function logQuizResult(
         skippedQuestions,
         status,
       },
+      include: {
+        quizAnswers: {
+          include: { quizQuestion: { include: { words: true } } },
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
     });
+
+    console.log("Updated quiz log:", updatedLog);
+    return updatedLog as QuizLogWithAnswers;
   } catch (error) {
     console.error("Failed to log quiz result:", error);
   }
@@ -552,7 +586,6 @@ export async function getQuizLog(quizLogId: string) {
       },
     },
   });
-  console.log("Fetched quiz log:", quizLog);
 
   if (quizLog?.quizAnswers) {
     quizLog.quizAnswers = shuffleArray(quizLog.quizAnswers);
@@ -571,8 +604,6 @@ export const getRecentQuizzes = async () => {
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
   });
-
-  console.log("Fetched recent quizzes:", quizzes);
 
   return quizzes;
 };

@@ -9,7 +9,7 @@ const ReviewPage = async () => {
   if (!wordsToReview) return null;
 
   return (
-    <div className="w-full max-w-[500px] mx-auto py-2 px-4 md:px-0 flex flex-col h-full">
+    <div className="w-full max-w-[500px] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
       <Tabs defaultValue="start" className="h-full flex flex-col">
         <TabsList className="mx-auto">
           <TabsTrigger value="start" className="text-sm">

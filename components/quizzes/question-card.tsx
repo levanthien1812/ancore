@@ -17,13 +17,15 @@ const QuestionCard = ({
   onNext,
   currentIndex,
   totalQuestions,
+  isSubmitting,
 }: {
   question: QuizQuestion;
-  onAnswer: (userAnswer: string) => void;
+  onAnswer: (userAnswer: string | null, isSkipped?: boolean) => void;
   isCorrect: boolean | null;
   onNext: () => void;
   currentIndex: number;
   totalQuestions: number;
+  isSubmitting: boolean;
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
@@ -32,8 +34,13 @@ const QuestionCard = ({
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
       setIsAnswered(true);
-      onAnswer(selectedAnswer);
+      onAnswer(selectedAnswer, false);
     }
+  };
+
+  const handleSkip = () => {
+    setIsAnswered(true);
+    onAnswer(null, true);
   };
 
   const renderQuestionBody = () => {
@@ -123,8 +130,8 @@ const QuestionCard = ({
           </CardTitle>
         )}
       </CardHeader>
-      <CardContent className="grow flex flex-col justify-between custom-scrollbar-y">
-        <div className="grow flex flex-col justify-center">
+      <CardContent className="flex-1 flex flex-col justify-center custom-scrollbar-y overflow-y-auto">
+        <div className="flex-1 flex flex-col justify-center">
           {renderQuestionBody()}
         </div>
         <div className="mt-4 space-y-2">
@@ -144,9 +151,11 @@ const QuestionCard = ({
               )}
             </div>
           )}
-          <Button variant={"outline"} onClick={onNext} className="w-full">
-            Skip
-          </Button>
+          {!isAnswered && (
+            <Button variant={"outline"} onClick={handleSkip} className="w-full">
+              Skip
+            </Button>
+          )}
           {!isAnswered && (
             <Button
               onClick={handleCheckAnswer}
@@ -157,8 +166,12 @@ const QuestionCard = ({
             </Button>
           )}
           {isAnswered && (
-            <Button onClick={onNext} className="w-full">
-              {isLastQuestion ? "Finish Quiz" : "Next"}
+            <Button onClick={onNext} className="w-full" disabled={isSubmitting}>
+              {isLastQuestion
+                ? isSubmitting
+                  ? "Saving..."
+                  : "Finish Quiz"
+                : "Next"}
             </Button>
           )}
         </div>

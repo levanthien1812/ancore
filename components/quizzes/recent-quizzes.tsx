@@ -4,6 +4,7 @@ import QuizCard from "./quiz-card";
 import { QuizStatusLabel, QuizStatusUI } from "@/lib/constants/enums";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Input } from "../ui/input";
 
 type QuizStatusCount = {
   status: QuizStatusUI;
@@ -56,20 +57,23 @@ const RecentQuizzes = () => {
     setStatusFilter(status);
 
   return (
-    <div className="flex flex-col gap-2 border rounded-lg p-4 h-full">
-      <div className="flex gap-1">
-        {statusCounts
-          .filter((sc) => sc.count > 0)
-          .map(({ status, count, label }) => (
-            <button
-              key={status}
-              className={`text-xs text-muted-foreground rounded-sm px-2 py-1.5 font-medium ${statusFilter === status ? "bg-primary text-white" : "bg-gray-100 hover:bg-gray-200"}`}
-              onClick={() => handleStatusFilterChange(status)}
-              disabled={statusFilter === status}
-            >
-              {label} ({count})
-            </button>
-          ))}
+    <div className="flex flex-col gap-2 border rounded-lg p-2 sm:p-4 h-full">
+      <div className="flex justify-between items-center gap-1">
+        <div className="flex gap-1">
+          {statusCounts
+            .filter((sc) => sc.count > 0)
+            .map(({ status, count, label }) => (
+              <button
+                key={status}
+                className={`text-xs text-muted-foreground rounded-sm px-2 py-1.5 font-medium ${statusFilter === status ? "bg-primary text-white" : "bg-gray-100 hover:bg-gray-200"}`}
+                onClick={() => handleStatusFilterChange(status)}
+                disabled={statusFilter === status}
+              >
+                {label} ({count})
+              </button>
+            ))}
+        </div>
+        <Input type="date" className="w-[120px] ms-auto text-xs" />
       </div>
       {filteredQuizzes.map((quiz) => (
         <QuizCard key={quiz.id} quiz={quiz} />
