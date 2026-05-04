@@ -56,9 +56,9 @@ const RecentWords = () => {
   }, []);
 
   return (
-    <div className=" flex flex-col bg-background-2 p-4 md:p-8 rounded-2xl gap-2">
+    <div className=" flex flex-col bg-white p-4 rounded-2xl gap-2">
       <div className="">
-        <span className="text-2xl md:text-[40px] font-bold text-primary">
+        <span className="text-2xl font-bold text-primary">
           📋 Recent words!
         </span>
 
@@ -126,9 +126,6 @@ const RecentWords = () => {
         setSelectedIndex={setSelectedIndex}
         totalWord={words.length}
       />
-      <div className="mt-2 sm:mt-8">
-        <WordOfTheDay />
-      </div>
     </div>
   );
 };

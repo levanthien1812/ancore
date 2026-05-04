@@ -1,12 +1,11 @@
 "use client";
-import { buildWordOfTheDayPrompt } from "@/lib/ai-prompts/word-of-the-day";
-import { User } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
-import { BookmarkPlus } from "lucide-react";
+import { Bookmark, BookmarkPlus } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import AddWord from "../add-word/add-word";
 import { CEFRLevel } from "@/lib/constants/enums";
+import { getWordOfTheDay } from "@/lib/actions/word.actions";
 
 export interface WordOfTheDay {
   word: string;
@@ -27,6 +26,7 @@ const WordOfTheDay = () => {
     if (!session.data) return;
     const cachedWordOfTheDay = localStorage.getItem("wordOfTheDay");
     if (cachedWordOfTheDay) {
+      console.log("cachedWordOfTheDay", cachedWordOfTheDay);
       const { word, date } = JSON.parse(cachedWordOfTheDay);
       if (new Date(date).toDateString() === new Date().toDateString()) {
         setWordOfTheDay(word);
@@ -36,17 +36,8 @@ const WordOfTheDay = () => {
       }
     }
 
-    const prompt = buildWordOfTheDayPrompt(session.data.user as User);
     try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await response.json();
-      const result = JSON.parse(data.result);
+      const result = await getWordOfTheDay();
       setWordOfTheDay(result);
       localStorage.setItem(
         "wordOfTheDay",
@@ -65,12 +56,12 @@ const WordOfTheDay = () => {
 
   return (
     <>
-      <p className="text-xl font-bold">✨ Word of the day ✨</p>
       {wordOfTheDay && (
-        <div className="border-2 border-dashed border-primary-2 p-3 rounded-2xl">
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col justify-center items-center p-3 bg-amber-300 rounded-xl w-full">
-              <p className="text-3xl text-primary font-bold">
+        <div className="py-6 px-4 rounded-2xl bg-purple-50">
+          <p className="text-xl font-bold">✨ Word of the day ✨</p>
+          <div className="flex flex-col md:flex-row gap-3 mt-3">
+            <div className="flex flex-col justify-center items-center p-3 bg-purple-100 rounded-xl">
+              <p className="text-2xl text-purple-600 font-bold">
                 {wordOfTheDay?.word}
               </p>
               <p className="text-gray-600 text-nowrap text-sm">
@@ -79,11 +70,14 @@ const WordOfTheDay = () => {
             </div>
             <div className="">
               <div>
-                <p className="font-bold text-justify">
+                <p className="font-bold text-purple-600">Meaning</p>
+                <p className="text-justify">
                   ({wordOfTheDay?.meanings[0]?.partOfSpeech}) -{" "}
                   {wordOfTheDay?.meanings[0]?.definition}
                 </p>
-                <p className="text-gray-600 italic text-sm mt-1">Example:</p>
+              </div>
+              <div className="mt-2">
+                <p className="font-bold text-purple-600">Example:</p>
                 <ul className="list-disc ms-4 text-gray-600 italic text-sm">
                   {wordOfTheDay?.meanings[0]?.exampleSentences
                     .split("|")
@@ -94,17 +88,17 @@ const WordOfTheDay = () => {
                     ))}
                 </ul>
               </div>
-              <div className="flex items-end justify-center float-right">
-                <AddWord
-                  triggerButton={
-                    <button className="p-2 rounded-lg bg-blue-100 cursor-pointer hover:bg-blue-200">
-                      <BookmarkPlus className="text-primary" />
-                    </button>
-                  }
-                  wordOfTheDay={wordOfTheDay}
-                />
-              </div>
             </div>
+          </div>
+          <div className="mt-2 flex justify-end">
+            <AddWord
+              triggerButton={
+                <button className="p-2 rounded-md cursor-pointer hover:bg-purple-100 flex gap-1 items-center text-primary text-sm">
+                  <Bookmark width={20} /> Save word
+                </button>
+              }
+              wordOfTheDay={wordOfTheDay}
+            />
           </div>
         </div>
       )}

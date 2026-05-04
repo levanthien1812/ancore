@@ -4,10 +4,11 @@ import WordCountByMasteryLevelChart from "@/components/home/word-count-by-master
 import RecentWords from "@/components/home/recent-words";
 import { Suspense } from "react";
 import { OnboardingDialog } from "@/components/home/onboarding-dialog";
+import WordOfTheDay from "@/components/home/word-of-the-day";
 
 export default async function Home() {
   return (
-    <div className="container mx-auto p-4 md:p-0">
+    <div className="mx-auto p-4 bg-gray-50">
       <Suspense>
         <OnboardingDialog />
       </Suspense>
@@ -18,11 +19,14 @@ export default async function Home() {
         <div className="col-span-1 md:col-span-4">
           <WordCountByMasteryLevelChart />
         </div>
-        <div className="col-span-1 md:col-span-5 md:row-span-3">
+        <div className="col-span-1 md:col-span-5 md:row-span-2">
           <RecentWords />
         </div>
-        <div className="col-span-1 md:col-span-7">
+        <div className="col-span-1 md:col-span-7 md:row-span-2">
           <WordCountByPeriodChart />
+        </div>
+        <div className="col-span-1 md:col-span-5">
+          <WordOfTheDay />
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 import { getWordsCountByPeriod } from "@/lib/actions/word.actions";
-import { BarChart, Bar, XAxis } from "recharts";
+import { BarChart, Bar, XAxis, Cell } from "recharts";
 import {
   ChartConfig,
   ChartContainer,
@@ -23,6 +23,9 @@ import { Period } from "@/lib/type";
 import { Label } from "../ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
+import { Flame, Info, MoveUpRight, Sigma } from "lucide-react";
+import { MasteryLevelColorCode } from "@/lib/constants/enums";
+import { MasteryLevel } from "@prisma/client";
 
 const periodQuantitiesMap: Record<
   Period,
@@ -64,21 +67,28 @@ const WordCountByPeriodChart = () => {
   const chartConfig = {
     new: {
       label: "New",
-      color: "#2563eb",
+      color: MasteryLevelColorCode.New.primary,
     },
     mastered: {
       label: "Mastered",
-      color: "#60a5fa",
+      color: MasteryLevelColorCode.Mastered.primary,
     },
   } as ChartConfig;
 
   return (
-    <div className="bg-background-2 p-4 md:p-8 rounded-2xl gap-2">
-      <p className="text-2xl md:text-[28px] font-bold text-primary">
-        📊 Word counts by periods
+    <div className="bg-white p-4 rounded-2xl gap-2">
+      <p className="text-2xl font-bold text-primary">
+        Word counts by periods{" "}
+        <span>
+          <Info
+            width={18}
+            height={18}
+            className="inline text-muted-foreground"
+          />
+        </span>
       </p>
-      <div className="flex justify-end items-center gap-2 mt-2">
-        <div>
+      <div className="flex justify-end items-center gap-4 mt-2">
+        <div className="flex flex-col md:flex-row md:gap-2">
           <Label htmlFor="period" className="">
             Period
           </Label>
@@ -100,7 +110,7 @@ const WordCountByPeriodChart = () => {
             </SelectContent>
           </Select>
         </div>
-        <div>
+        <div className="flex flex-col md:flex-row md:gap-2">
           <Label htmlFor="quantity" className="">
             Quantity
           </Label>
@@ -123,8 +133,23 @@ const WordCountByPeriodChart = () => {
           </Select>
         </div>
       </div>
-      <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+      <ChartContainer config={chartConfig} className="h-[300px] w-full">
         <BarChart accessibilityLayer data={chartData}>
+          <defs>
+            {Object.entries(MasteryLevelColorCode).map(([level, color]) => (
+              <linearGradient
+                key={level}
+                id={`grad-${level}`}
+                x1="0"
+                y1="0"
+                x2="1"
+                y2="1"
+              >
+                <stop offset="0%" stopColor={color.light} stopOpacity={1} />
+                <stop offset="40%" stopColor={color.primary} stopOpacity={1} />
+              </linearGradient>
+            ))}
+          </defs>
           <XAxis
             dataKey="day"
             tickLine={false}
@@ -136,18 +161,50 @@ const WordCountByPeriodChart = () => {
           <ChartLegend content={<ChartLegendContent />} />
           <Bar
             dataKey="new"
-            fill="var(--color-chart-1)"
-            radius={8}
+            fill={`url(#grad-${MasteryLevel.New})`}
+            radius={[12, 12, 0, 0]}
             fontSize={14}
           />
           <Bar
             dataKey="mastered"
-            fill="var(--color-chart-2)"
-            radius={8}
+            fill={`url(#grad-${MasteryLevel.Mastered})`}
+            radius={[12, 12, 0, 0]}
             fontSize={14}
           />
         </BarChart>
       </ChartContainer>
+
+      <div className="flex gap-3 bg-gray-50 rounded-md py-4 border px-6 *:flex-1">
+        <div className="flex gap-3 items-center">
+          <div className="p-3 rounded-full bg-purple-100 flex items-center justify-center">
+            <Sigma width={20} height={20} className="text-purple-500" />
+          </div>
+          <div>
+            <p className="text-xl font-bold">{33}</p>
+            <p className="text-xs text-muted-foreground">Words this week</p>
+          </div>
+        </div>
+        <div className="flex gap-3 items-center">
+          <div className="p-3 rounded-full bg-blue-100 flex items-center justify-center">
+            <MoveUpRight width={20} height={20} className="text-blue-500" />
+          </div>
+          <div>
+            <p className="text-xl font-bold">{"+57"}%</p>
+            <p className="text-xs text-muted-foreground">Questions</p>
+          </div>
+        </div>
+        <div className="flex gap-3 items-center">
+          <div className="p-3 rounded-full bg-green-100 flex items-center justify-center">
+            <Flame width={20} height={20} className="text-green-500" />
+          </div>
+          <div>
+            <p className="text-xl font-bold">{9}</p>
+            <p className="text-xs text-muted-foreground">
+              Best day ({"02/05/2026"})
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
