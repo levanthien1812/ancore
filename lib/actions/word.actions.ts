@@ -40,7 +40,7 @@ export async function getWordListByFilter(
 
 export async function getRecentWords() {
   const data = await prisma.word.findMany({
-    take: 10,
+    take: 15,
     orderBy: {
       updatedAt: "desc",
     },

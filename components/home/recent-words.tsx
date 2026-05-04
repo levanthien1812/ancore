@@ -40,23 +40,23 @@ const RecentWords = () => {
   };
 
   const tableSkeleton = useMemo(() => {
-    return Array.from({ length: 5 }).map((_, index) => (
+    return Array.from({ length: 15 }).map((_, index) => (
       <TableRow key={index} className="border-b border-primary">
         <TableCell className="text-center">
-          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-6 w-full" />
         </TableCell>
         <TableCell className="text-center">
-          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-6 w-full" />
         </TableCell>
         <TableCell className="text-center">
-          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-6 w-full" />
         </TableCell>
       </TableRow>
     ));
   }, []);
 
   return (
-    <div className=" flex flex-col bg-white p-4 rounded-2xl gap-2">
+    <div className=" flex flex-col bg-white p-4 rounded-2xl gap-2 h-full">
       <div className="">
         <span className="text-2xl font-bold text-primary">
           📋 Recent words!
@@ -97,7 +97,7 @@ const RecentWords = () => {
                         wordId={word.id}
                       />
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs text-gray-600">
                       {format(word.updatedAt, "dd/MM/yyyy")}
                     </TableCell>
                     <TableCell>

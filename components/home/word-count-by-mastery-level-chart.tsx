@@ -51,7 +51,7 @@ const WordCountByMasteryLevelChart = () => {
   );
 
   return (
-    <div className="bg-white p-4 rounded-2xl gap-2">
+    <div className="bg-white p-4 rounded-2xl gap-2 h-full">
       <p className="text-2xl font-bold text-primary">
         Word counts by mastery level{" "}
         <span>
@@ -111,7 +111,7 @@ const WordCountByMasteryLevelChart = () => {
             {Object.entries(percentages).map(([level, percentage]) => (
               <div key={level} className="flex items-center gap-1 flex-1 px-2">
                 <div>
-                  <div className="text-xl font-bold flex gap-1 items-center">
+                  <div className="texl-lg sm:text-xl font-bold flex gap-1 items-center">
                     <div
                       className="w-2 h-2 rounded-full"
                       style={{

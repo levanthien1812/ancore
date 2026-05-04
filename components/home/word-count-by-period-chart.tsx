@@ -59,7 +59,7 @@ const WordCountByPeriodChart = () => {
   }, [period]);
 
   const chartData = wordCounts?.map((period) => ({
-    day: format(period.periodStart, "dd/MM/yyyy"),
+    day: format(period.periodStart, "dd/MM"),
     new: period.New,
     mastered: period.Mastered,
   }));
@@ -76,7 +76,7 @@ const WordCountByPeriodChart = () => {
   } as ChartConfig;
 
   return (
-    <div className="bg-white p-4 rounded-2xl gap-2">
+    <div className="bg-white p-4 rounded-2xl gap-2 h-full">
       <p className="text-2xl font-bold text-primary">
         Word counts by periods{" "}
         <span>
@@ -87,7 +87,7 @@ const WordCountByPeriodChart = () => {
           />
         </span>
       </p>
-      <div className="flex justify-end items-center gap-4 mt-2">
+      <div className="flex justify-center md:justify-end items-center gap-2 md:gap-4 mt-2">
         <div className="flex flex-col md:flex-row md:gap-2">
           <Label htmlFor="period" className="">
             Period
@@ -133,7 +133,7 @@ const WordCountByPeriodChart = () => {
           </Select>
         </div>
       </div>
-      <ChartContainer config={chartConfig} className="h-[300px] w-full">
+      <ChartContainer config={chartConfig} className="h-[260px] w-full">
         <BarChart accessibilityLayer data={chartData}>
           <defs>
             {Object.entries(MasteryLevelColorCode).map(([level, color]) => (
@@ -155,7 +155,7 @@ const WordCountByPeriodChart = () => {
             tickLine={false}
             tickMargin={10}
             axisLine={true}
-            fontSize={14}
+            fontSize={12}
           />
           <ChartTooltip content={<ChartTooltipContent />} />
           <ChartLegend content={<ChartLegendContent />} />
@@ -174,30 +174,30 @@ const WordCountByPeriodChart = () => {
         </BarChart>
       </ChartContainer>
 
-      <div className="flex gap-3 bg-gray-50 rounded-md py-4 border px-6 *:flex-1">
-        <div className="flex gap-3 items-center">
-          <div className="p-3 rounded-full bg-purple-100 flex items-center justify-center">
+      <div className="flex gap-2 md:gap-3 bg-gray-50 rounded-md py-2 md:py-4 border px-3 sm:px-6 *:flex-1 mt-2">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-center">
+          <div className="p-2 sm:p-3 rounded-full bg-purple-100 flex items-center justify-center">
             <Sigma width={20} height={20} className="text-purple-500" />
           </div>
-          <div>
+          <div className="text-center md:text-start">
             <p className="text-xl font-bold">{33}</p>
             <p className="text-xs text-muted-foreground">Words this week</p>
           </div>
         </div>
-        <div className="flex gap-3 items-center">
-          <div className="p-3 rounded-full bg-blue-100 flex items-center justify-center">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-center">
+          <div className="p-2 sm:p-3 rounded-full bg-blue-100 flex items-center justify-center">
             <MoveUpRight width={20} height={20} className="text-blue-500" />
           </div>
-          <div>
+          <div className="text-center md:text-start">
             <p className="text-xl font-bold">{"+57"}%</p>
-            <p className="text-xs text-muted-foreground">Questions</p>
+            <p className="text-xs text-muted-foreground">vs last week</p>
           </div>
         </div>
-        <div className="flex gap-3 items-center">
-          <div className="p-3 rounded-full bg-green-100 flex items-center justify-center">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-center">
+          <div className="p-2 sm:p-3 rounded-full bg-green-100 flex items-center justify-center">
             <Flame width={20} height={20} className="text-green-500" />
           </div>
-          <div>
+          <div className="text-center md:text-start">
             <p className="text-xl font-bold">{9}</p>
             <p className="text-xs text-muted-foreground">
               Best day ({"02/05/2026"})
