@@ -8,4 +8,7 @@ export const QUERY_KEY = {
   GET_REVIEW_LOGS: "getReviewLogs",
   GET_NOTES: "getNotes",
   GET_QUIZ_LOGS: "getQuizLogs",
+  GET_WORDS_THIS_WEEK: "getWordsThisWeek",
+  GET_WEEK_COMPARISON: "getWeekComparison",
+  GET_BEST_DAY: "getBestDay",
 };

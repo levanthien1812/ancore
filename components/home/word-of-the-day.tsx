@@ -6,7 +6,9 @@ import { Skeleton } from "../ui/skeleton";
 import AddWord from "../add-word/add-word";
 import { CEFRLevel } from "@/lib/constants/enums";
 import { getWordOfTheDay } from "@/lib/actions/word.actions";
-
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { EllipsisIcon } from "lucide-react";
 export interface WordOfTheDay {
   word: string;
   pronunciation: string;
@@ -73,8 +75,20 @@ const WordOfTheDay = () => {
   }
 
   return (
-    <div className="py-6 px-4 rounded-2xl bg-purple-50 h-full">
-      <p className="text-xl font-bold">✨ Word of the day ✨</p>
+    <div className="py-6 px-4 rounded-2xl bg-purple-50 h-full border border-purple-300">
+      <div className="flex gap-2 justify-between">
+        <p className="text-xl font-bold">✨ Word of the day ✨</p>
+        <Popover>
+          <PopoverTrigger asChild>
+            <EllipsisIcon width={18} />
+          </PopoverTrigger>
+          <PopoverContent className="w-fit p-0">
+            <div>
+              <Button variant={"outline"}>Stop</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
       <div className="flex flex-col gap-3 mt-3">
         <div className="flex flex-col justify-center items-center p-3 bg-purple-100 rounded-xl">
           <p className="text-2xl text-purple-600 font-bold">

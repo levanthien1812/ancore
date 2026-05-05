@@ -262,20 +262,52 @@ export async function getLearnStreak() {
   return calculateStreak(uniqueDays);
 }
 
+const getStartOfPeriod = (
+  period: Period,
+  givenDate?: Date,
+  periodCount?: number,
+) => {
+  const count = periodCount || 1;
+  const date = givenDate || new Date();
+  if (count > 1) {
+    switch (period) {
+      case "day":
+        date.setUTCDate(date.getUTCDate() - (count - 1));
+        break;
+      case "week":
+        date.setUTCDate(date.getUTCDate() - (count - 1) * 7);
+        break;
+      case "month":
+        date.setUTCMonth(date.getUTCMonth() - (count - 1));
+        break;
+    }
+  }
+
+  switch (period) {
+    case "day":
+      break;
+    case "week":
+      const dayOfWeek = date.getUTCDay();
+      if (dayOfWeek === 0) {
+        date.setUTCDate(date.getUTCDate() - 6);
+      } else {
+        date.setUTCDate(date.getUTCDate() - (dayOfWeek - 1));
+      }
+      break;
+    case "month":
+      date.setUTCDate(1);
+      break;
+  }
+  date.setUTCHours(0, 0, 0, 0);
+  return date;
+};
+
 export const getWordsCountByPeriod: (
   period: Period,
   periodCount: number,
 ) => Promise<WordsCountByPeriod[] | null> = async (period, periodCount) =>
   authenticationAction(async (userId) => {
-    const startDate = new Date();
-    startDate.setUTCHours(0, 0, 0, 0); // Normalize to start of the day
-    if (period === "day") {
-      startDate.setUTCDate(startDate.getUTCDate() - (periodCount - 1));
-    } else if (period === "week") {
-      startDate.setUTCDate(startDate.getUTCDate() - (periodCount - 1) * 7);
-    } else if (period === "month") {
-      startDate.setUTCMonth(startDate.getUTCMonth() - (periodCount - 1));
-    }
+    const startDate = getStartOfPeriod(period, undefined, periodCount);
 
     const wordsCount: {
       period_start: Date;
@@ -305,23 +337,21 @@ export const getWordsCountByPeriod: (
     today.setUTCHours(0, 0, 0, 0);
 
     for (let i = 0; i < periodCount; i++) {
-      const currentDate = new Date(today);
-      if (period === "day") {
-        currentDate.setUTCDate(today.getUTCDate() - i);
-      } else if (period === "week") {
-        currentDate.setUTCDate(today.getUTCDate() - i * 7);
-      } else if (period === "month") {
-        currentDate.setUTCMonth(today.getUTCMonth() - i);
-      }
-      const dateKey = currentDate.toISOString().split("T")[0];
+      const startOfPeriod = getStartOfPeriod(period, today, i + 1);
+      const dateKey = startOfPeriod.toISOString().split("T")[0];
       const countsForDate = dbResultsMap.get(dateKey) || {};
+      console.log(dateKey, countsForDate);
 
       finalData.push({
-        periodStart: currentDate,
+        periodStart: startOfPeriod,
         ...defaultWordsCountByMasteryLevel,
         ...countsForDate,
       });
     }
+
+    // console.log(wordsCount);
+    console.log(dbResultsMap);
+    // console.log(finalData);
 
     return finalData.reverse(); // Return in chronological order
   });
@@ -338,6 +368,106 @@ export const getWordCountLearned = async () =>
     });
 
     return wordsCount;
+  });
+
+export const getWordsThisWeek = async () =>
+  authenticationAction(async (userId) => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    const dayOfWeek = now.getUTCDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // To get Monday
+    startOfWeek.setUTCDate(now.getUTCDate() - daysToSubtract);
+    startOfWeek.setUTCHours(0, 0, 0, 0);
+
+    const wordsCount = await prisma.word.count({
+      where: {
+        userId,
+        createdAt: {
+          gte: startOfWeek,
+        },
+      },
+    });
+
+    return wordsCount;
+  });
+
+export const getWordsLastWeek = async () =>
+  authenticationAction(async (userId) => {
+    const now = new Date();
+    const startOfLastWeek = new Date(now);
+    const dayOfWeek = now.getUTCDay();
+    const daysToSubtract = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // To get Monday of current week
+    startOfLastWeek.setUTCDate(now.getUTCDate() - daysToSubtract - 7); // Monday of last week
+    startOfLastWeek.setUTCHours(0, 0, 0, 0);
+
+    const endOfLastWeek = new Date(startOfLastWeek);
+    endOfLastWeek.setUTCDate(startOfLastWeek.getUTCDate() + 6);
+    endOfLastWeek.setUTCHours(23, 59, 59, 999);
+
+    const wordsCount = await prisma.word.count({
+      where: {
+        userId,
+        createdAt: {
+          gte: startOfLastWeek,
+          lte: endOfLastWeek,
+        },
+      },
+    });
+
+    return wordsCount;
+  });
+
+export const getWeekComparison = async () => {
+  const [thisWeek, lastWeek] = await Promise.all([
+    getWordsThisWeek(),
+    getWordsLastWeek(),
+  ]);
+  if (thisWeek === null || lastWeek === null) {
+    return {
+      thisWeek: 0,
+      lastWeek: 0,
+      difference: 0,
+      percentageChange: 0,
+    };
+  }
+
+  const difference = thisWeek - lastWeek;
+  const percentageChange =
+    lastWeek > 0 ? (difference / lastWeek) * 100 : thisWeek > 0 ? 100 : 0;
+
+  return {
+    thisWeek,
+    lastWeek,
+    difference,
+    percentageChange: Math.round(percentageChange * 100) / 100, // Round to 2 decimal places
+  };
+};
+
+export const getBestDay = async () =>
+  authenticationAction(async (userId) => {
+    // Get data for the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setUTCDate(thirtyDaysAgo.getUTCDate() - 30);
+    thirtyDaysAgo.setUTCHours(0, 0, 0, 0);
+
+    const dailyCounts = await prisma.$queryRaw<{ date: Date; count: bigint }[]>`
+    SELECT DATE_TRUNC('day', "createdAt") as date, COUNT(*) as count
+    FROM "Word"
+    WHERE "userId" = ${userId} AND "createdAt" >= ${thirtyDaysAgo}
+    GROUP BY date
+    ORDER BY count DESC
+    LIMIT 1
+  `;
+
+    if (dailyCounts.length === 0) {
+      return null;
+    }
+
+    const bestDay = dailyCounts[0];
+    return {
+      date: bestDay.date,
+      count: Number(bestDay.count),
+    };
   });
 
 export const getWordsToReview = async (limit: number = 10) =>
