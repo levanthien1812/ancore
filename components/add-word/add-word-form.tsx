@@ -259,9 +259,13 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
       {/* Add a hidden input for the word ID if it exists */}
       {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
       <div className="rounded-lg border border-gray-200">
-        <div className="w-full px-4 py-2 flex items-center justify-between bg-gray-50">
+        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between bg-gray-50">
           <div className="flex gap-2">
-            <Info width={20} height={20} className="text-blue-600 my-auto" />
+            <Info
+              width={20}
+              height={20}
+              className="text-blue-600 my-auto hidden md:block"
+            />
             <div>
               <p className="text-lg font-bold">1. Basic information</p>
               <p className="text-xs text-muted-foreground">
@@ -273,7 +277,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             <Button
               type="button"
               variant={entryType === "word" ? "default" : "outline"}
-              className="py-1 px-4 rounded-full h-fit"
+              className="py-1 px-2 sm:px-4 rounded-full h-fit"
               onClick={() => setEntryType("word")}
             >
               Word
@@ -281,16 +285,16 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             <Button
               type="button"
               variant={entryType === "phrase" ? "default" : "outline"}
-              className="py-1 px-4 rounded-full h-fit"
+              className="py-1 px-2 sm:px-4 rounded-full h-fit"
               onClick={() => setEntryType("phrase")}
             >
               Phrase
             </Button>
           </div>
         </div>
-        <div className="w-full border-t border-gray-200 p-4">
-          <div className="grid grid-cols-12">
-            <div className="col-span-8 pe-4 border-e">
+        <div className="w-full border-t border-gray-200 p-2 sm:p-4">
+          <div className="grid grid-cols-1 md:grid-cols-12">
+            <div className="col-span-7 pe-0 border-e-0 md:pe-4 md:border-e">
               <div className="flex gap-2 items-end">
                 <WordSuggest
                   enteredWord={enteredWord}
@@ -313,7 +317,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
                 </Button>
               </div>
             </div>
-            <div className="col-span-4 flex gap-2 ps-4">
+            <div className="col-span-5 flex gap-2 ps-0 mt-3 md:ps-4 md:mt-0">
               <div className="grid gap-1 w-full">
                 <Label htmlFor="masteryLevel" className="text-right">
                   Mastery Level
@@ -362,12 +366,12 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         </div>
       </div>
       <div className="rounded-lg border border-gray-200 mt-2">
-        <div className="w-full px-4 py-2 flex items-center justify-between bg-gray-50">
+        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between bg-gray-50">
           <div className="flex gap-2">
             <BookOpen
               width={20}
               height={20}
-              className="text-blue-600 my-auto"
+              className="text-blue-600 my-auto hidden md:block"
             />
             <div>
               <p className="text-lg font-bold">2. Meaning ({fields.length})</p>
@@ -407,9 +411,13 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         </div>
       </div>
       <div className="rounded-lg border border-gray-200 mt-2">
-        <div className="w-full px-4 py-2 flex items-center justify-between bg-gray-50">
+        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between bg-gray-50">
           <div className="flex gap-2">
-            <Layers2 width={20} height={20} className="text-blue-600 my-auto" />
+            <Layers2
+              width={20}
+              height={20}
+              className="text-blue-600 my-auto hidden md:block"
+            />
             <div>
               <p className="text-lg font-bold">3. Additional Infomation</p>
               <p className="text-xs text-muted-foreground">
@@ -418,7 +426,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
             </div>
           </div>
         </div>
-        <div className="w-full border-t border-gray-200 p-4">
+        <div className="w-full border-t border-gray-200 p-2 sm:p-4">
           <div className="grid gap-1">
             <Label htmlFor="tags" className="text-right">
               Tags

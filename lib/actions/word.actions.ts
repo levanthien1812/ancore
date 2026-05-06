@@ -72,6 +72,7 @@ export async function updateWord(id: string, data: Partial<Word>) {
     },
     data,
   });
+  revalidatePath("/words");
   return updatedData;
 }
 

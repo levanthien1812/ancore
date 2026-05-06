@@ -53,7 +53,7 @@ const WordsPage = () => {
           </div>
         )}
         {mode === "grid" && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
             {Array.from({ length: 10 }).map((_, index) => (
               <Skeleton className="h-36 sm:h-28 w-full" key={index} />
             ))}

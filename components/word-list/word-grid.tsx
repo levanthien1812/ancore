@@ -138,7 +138,7 @@ const WordGrid = ({
         isSelectMode={isSelectMode}
         onToggleSelectMode={handleToggleSelectMode}
       />
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {table.getRowModel().rows.map((row) => (
           <React.Fragment key={row.id}>
             <WordCard
