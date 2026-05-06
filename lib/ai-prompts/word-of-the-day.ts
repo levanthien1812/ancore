@@ -9,7 +9,7 @@ export function buildWordOfTheDayPrompt(user: User): string {
   }
 
   return `
-    Suggest one English "Word of the Day" suitable for a ${userInfo}.
+    Suggest one English "Word of the Day" suitable for ${userInfo}.
     The word should be educational, not slang or a proper noun.
 
     Respond ONLY in valid JSON matching this structure:

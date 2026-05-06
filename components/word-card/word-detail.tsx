@@ -2,7 +2,6 @@
 import { WordWithMeanings } from "../add-word/add-word-form";
 import WordMeaning from "./word-meaning";
 import { Badge } from "../ui/badge";
-import WordPronunciation from "../word-list/word-pronunciation";
 import {
   Carousel,
   CarouselApi,
@@ -11,10 +10,20 @@ import {
 } from "../ui/carousel";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { ArrowLeft, ArrowRight, EllipsisIcon, PenIcon } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  EllipsisIcon,
+  PenIcon,
+  Star,
+  Volume2Icon,
+} from "lucide-react";
 import { Popover, PopoverContent } from "../ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import AddWord from "../add-word/add-word";
+import { formatPronunciation } from "@/lib/utils/pronunciation";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import IconDisplay from "../shared/icon-display";
 
 const WordDetail = ({ word }: { word: WordWithMeanings }) => {
   const [api, setApi] = useState<CarouselApi | null>(null);
@@ -47,29 +56,30 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
   return (
     <div>
       <div className="grid grid-cols-2 gap-2">
-        <div>
-          <Badge className="bg-primary-2 text-white">
-            {currentMeaning?.cefrLevel}
-          </Badge>
-          <div className="text-4xl font-bold mt-2 text-white whitespace-nowrap">
+        <div className="space-y-2">
+          {currentMeaning?.cefrLevel && (
+            <Badge className="bg-primary-2 text-white">
+              {currentMeaning?.cefrLevel}
+            </Badge>
+          )}
+          <div className="text-4xl font-bold text-white whitespace-nowrap">
             {word.word}
           </div>
         </div>
         <div className="flex gap-1 justify-end">
+          <IconDisplay
+            icon={Volume2Icon}
+            asButton
+            onClick={() => handlePlayAudio(word.word)}
+          />
           <AddWord
             word={word}
-            triggerButton={
-              <Button size={"icon"} title="Edit word">
-                <PenIcon />
-              </Button>
-            }
+            triggerButton={<IconDisplay icon={PenIcon} asButton />}
           />
 
           <Popover>
             <PopoverTrigger asChild>
-              <Button size={"icon"} title="More actions">
-                <EllipsisIcon />
-              </Button>
+              <IconDisplay icon={EllipsisIcon} asButton />
             </PopoverTrigger>
             <PopoverContent className="w-fit p-0">
               <div>
@@ -80,11 +90,9 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
         </div>
       </div>
 
-      <WordPronunciation
-        word={word.word}
-        pronunciation={currentMeaning?.pronunciation}
-        light={true}
-      />
+      <p className="text-sm text-white">
+        {formatPronunciation(currentMeaning?.pronunciation)}
+      </p>
 
       <Carousel setApi={setApi} className="w-full mt-4">
         <CarouselContent>
@@ -95,27 +103,28 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
           ))}
         </CarouselContent>
         {word.meanings.length > 1 && (
-          <div className="flex gap-2 mt-2">
-            <Button
-              variant="outline"
-              size={"icon"}
+          <div className="flex gap-1 mt-2">
+            <button className="me-auto flex gap-2 items-center text-sm py-1 px-2 border rounded-sm bg-white/10 text-white cursor-pointer hover:bg-white/20">
+              <Star width={14} height={14} color="yellow" fill="yellow" />{" "}
+              Favorite
+            </button>
+            <IconDisplay
+              asButton
+              icon={ArrowLeft}
               onClick={() => api?.scrollPrev()}
               disabled={!canPrev}
-            >
-              <ArrowLeft />
-            </Button>
-
-            <Button
-              variant="outline"
-              size={"icon"}
+            />
+            <IconDisplay
+              asButton
+              icon={ArrowRight}
               onClick={() => api?.scrollNext()}
               disabled={!canNext}
-            >
-              <ArrowRight />
-            </Button>
+            />
           </div>
         )}
       </Carousel>
+
+      <div className="mt-2"></div>
     </div>
   );
 };

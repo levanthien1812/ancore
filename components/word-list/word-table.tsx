@@ -12,7 +12,6 @@ import {
 } from "../ui/table";
 import WordMasteryLevel from "./word-mastery-level";
 import { MasteryLevel } from "@/lib/constants/enums";
-import WordPronunciation from "./word-pronunciation";
 import WordDefinition from "./word-definition";
 import WordTitle from "./word-title";
 import WordActions from "./word-actions";
@@ -34,6 +33,10 @@ import { format } from "date-fns";
 import ActionsPanel from "./actions-panel";
 import WordFilter from "./word-filter";
 import Pagination from "./pagination";
+import { formatPronunciation } from "@/lib/utils/pronunciation";
+import IconDisplay from "../shared/icon-display";
+import { Volume2Icon } from "lucide-react";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const WordTable = ({
   words,
@@ -74,10 +77,22 @@ const WordTable = ({
         accessorKey: "word",
         header: "Word",
         cell: ({ row }) => (
-          <WordTitle
-            word={row.original}
-            onClick={() => onClickTitle(row.index)}
-          />
+          <div className="flex gap-2 items-center">
+            <WordTitle
+              word={row.original}
+              onClick={() => onClickTitle(row.index)}
+            />
+            <IconDisplay
+              icon={Volume2Icon}
+              asButton
+              size="sm"
+              onClick={(e) => handlePlayAudio(row.original.word)}
+              bgClass="bg-primary"
+              hoverClass="hover:bg-primary/90"
+              activeClass="active:bg-primary/80"
+              additionalClasses="ms-auto"
+            />
+          </div>
         ),
         enableSorting: true,
         enableGlobalFilter: true,
@@ -108,11 +123,9 @@ const WordTable = ({
         cell: ({ row }) => (
           <>
             {row.original.meanings.map((meaning) => (
-              <WordPronunciation
-                word={row.original.word}
-                pronunciation={meaning.pronunciation}
-                key={meaning.id}
-              />
+              <p className="text-sm" key={meaning.id}>
+                {formatPronunciation(meaning.pronunciation)}
+              </p>
             ))}
           </>
         ),

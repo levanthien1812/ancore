@@ -1,15 +1,13 @@
-import React from "react";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import { Ellipsis } from "lucide-react";
-import { Popover, PopoverTrigger } from "../ui/popover";
-import { PopoverContent } from "@radix-ui/react-popover";
-import WordActions from "./word-actions";
+import { Dot, Volume2Icon } from "lucide-react";
 import WordTitle from "./word-title";
 import WordDefinition from "./word-definition";
-import WordPronunciation from "./word-pronunciation";
 import WordMasteryLevel from "./word-mastery-level";
 import { MasteryLevel } from "@/lib/constants/enums";
 import { shorten } from "@/lib/utils/shorten";
+import { formatPronunciation } from "@/lib/utils/pronunciation";
+import IconDisplay from "../shared/icon-display";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const WordCard = ({
   word,
@@ -59,27 +57,39 @@ const WordCard = ({
               onClick={handleCardClick}
               disabled={isSelectMode}
             />
+            <IconDisplay
+              icon={Volume2Icon}
+              asButton
+              size="sm"
+              onClick={(e) => handlePlayAudio(word.word)}
+            />
           </div>
-          <WordPronunciation
-            word={word.word}
-            pronunciation={word.meanings[0]?.pronunciation}
-            light={true}
+          <div className="flex items-center">
+            <p className="text-sm text-white">
+              {formatPronunciation(word.meanings[0]?.pronunciation)}
+            </p>
+            {word.meanings[0]?.partOfSpeech &&
+              word.meanings[0].pronunciation && (
+                <Dot width={16} height={16} color="white" opacity={0.5} />
+              )}
+            <p className="font-bold text-sm text-blue-300">
+              {word.meanings[0].partOfSpeech}
+            </p>
+          </div>
+        </div>
+        <div></div>
+        <div className="flex gap-1 items-center">
+          {word.highlighted && <div className="ms-auto">⭐</div>}
+          <WordMasteryLevel
+            level={word.masteryLevel as MasteryLevel}
+            wordId={word.id}
           />
         </div>
-        {word.highlighted && <div className="ms-auto">⭐</div>}
       </div>
 
       <div className="mt-2">
         <WordDefinition
-          meanings={word.meanings.map((meaning) =>
-            shorten(meaning.definition, 50),
-          )}
-        />
-      </div>
-      <div className="absolute bottom-0 right-0 p-2">
-        <WordMasteryLevel
-          level={word.masteryLevel as MasteryLevel}
-          wordId={word.id}
+          meanings={word.meanings.map((meaning) => meaning.definition)}
         />
       </div>
     </div>

@@ -1,5 +1,8 @@
 import type { WordMeaning } from "@prisma/client";
+import { NotebookPen, Quote, Star, ThumbsDown, ThumbsUp } from "lucide-react";
 import React from "react";
+import { Badge } from "../ui/badge";
+import IconDisplay from "../shared/icon-display";
 
 const WordMeaning = ({
   word,
@@ -26,38 +29,83 @@ const WordMeaning = ({
   return (
     <div
       key={meaning.id}
-      className="text-white border border-white rounded-lg p-4 max-h-[420px] custom-scrollbar-y"
+      className="text-white border border-white/40 rounded-lg p-4 max-h-[420px] no-scrollbar overflow-y-auto"
     >
       {meaning.partOfSpeech && (
-        <p className="italic">({meaning.partOfSpeech})</p>
+        <p className="font-bold text-blue-400">{meaning.partOfSpeech}</p>
       )}
-      <p className="text-primary-2 text-xl font-bold">{meaning.definition}</p>
+      <p className=" text-xl font-bold">{meaning.definition}</p>
       {examples.length > 0 && (
-        <div className="mt-2">
-          <p className="text-md">Examples:</p>
-          <ul className="list-disc ms-4 mt-1">{examples}</ul>
-        </div>
+        <>
+          <hr className="border-gray-100/20 my-3" />
+          <div className="flex gap-2">
+            <IconDisplay icon={Quote} bgClass="bg-blue-400" />
+            <div className="">
+              <p className="text-md font-bold">Examples:</p>
+              <ul className="list-disc ms-4 mt-1">{examples}</ul>
+            </div>
+          </div>
+        </>
       )}
-      {meaning.synonyms && meaning.synonyms.length > 0 && (
-        <hr className="my-2 border-dashed" />
-      )}
-      {meaning.synonyms && meaning.synonyms.length > 0 && (
-        <div className="mt-2">
-          <p className="text-md">Synonyms:</p>
-          <p className="text-sm italic">👉 {meaning.synonyms}</p>
-        </div>
-      )}
-      {meaning.antonyms && meaning.antonyms.length > 0 && (
-        <div className="mt-2">
-          <p className="text-md">Antonyms:</p>
-          <p className="text-sm italic">👉 {meaning.antonyms}</p>
-        </div>
+      {(meaning.synonyms || meaning.antonyms) && (
+        <>
+          <hr className="my-3 border-gray-100/20" />
+          <div className="flex gap-2">
+            {meaning.synonyms && meaning.synonyms.length > 0 && (
+              <div className="flex gap-2">
+                <IconDisplay icon={ThumbsUp} bgClass="bg-green-700" />
+                <div className="flex-1">
+                  <p className="text-md font-bold">Synonyms:</p>
+
+                  <div className="flex gap-1 flex-wrap mt-1">
+                    {meaning.synonyms.split(",").map((synonym, index) => (
+                      <Badge
+                        variant={"outline"}
+                        key={index}
+                        className="text-white text-sm bg-white/10"
+                      >
+                        {synonym}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+            {meaning.antonyms && meaning.antonyms.length > 0 && (
+              <div className="flex gap-2">
+                <IconDisplay icon={ThumbsDown} bgClass="bg-red-700" />
+                <div className="flex-1">
+                  <p className="text-md font-bold">Antonyms:</p>
+                  <div className="flex gap-1 flex-wrap mt-1">
+                    {meaning.antonyms.split(",").map((antonym, index) => (
+                      <Badge
+                        variant={"outline"}
+                        key={index}
+                        className="text-white text-sm bg-white/10"
+                      >
+                        {antonym}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
       {meaning.usageNotes && meaning.usageNotes.length > 0 && (
-        <div className="mt-2">
-          <p className="text-md">Usage notes:</p>
-          <p className="text-sm italic">📝 {meaning.usageNotes}</p>
-        </div>
+        <>
+          <>
+            <hr className="border-gray-100/20 my-3" />
+            <div className="flex gap-2">
+              <IconDisplay icon={NotebookPen} bgClass="bg-purple-400" />
+              <div className="">
+                <p className="text-md font-bold">Usage Notes:</p>
+                <p className="mt-1 text-sm">{meaning.usageNotes}</p>
+              </div>
+            </div>
+          </>
+        </>
       )}
     </div>
   );

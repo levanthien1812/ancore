@@ -265,3 +265,55 @@ export async function resetPassword(prevState: unknown, formData: FormData) {
     };
   }
 }
+
+export const stopWordOfTheDay = async () => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Authentication required." };
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        wordOfTheDayStopped: true,
+      },
+    });
+    return { success: true, message: "Word of the day stopped." };
+  } catch (error) {
+    return { success: false, message: "Database error." };
+  }
+};
+
+export const enableWordOfTheDay = async () => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { success: false, message: "Authentication required." };
+  }
+
+  try {
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        wordOfTheDayStopped: false,
+      },
+    });
+    return { success: true, message: "Word of the day enabled." };
+  } catch (error) {
+    return { success: false, message: "Database error." };
+  }
+};
+
+export const getWordOfTheDayPreference = async () => {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { stopped: false };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { wordOfTheDayStopped: true },
+  });
+
+  return { stopped: Boolean(user?.wordOfTheDayStopped) };
+};
