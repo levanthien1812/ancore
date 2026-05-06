@@ -10,7 +10,7 @@ import {
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import type { DifficultyLevel, Word, WordMeaning } from "@prisma/client";
+import type { Word, WordMeaning } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -40,6 +40,9 @@ import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
+import { BookOpen, Info, Layers2, Plus, Sparkles } from "lucide-react";
+import { Badge } from "../ui/badge";
+import { X } from "lucide-react";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -93,6 +96,16 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   });
 
   const highlighted = watch("highlighted");
+  const watchedTags = watch("tags"); // Watch the tags field from react-hook-form
+  const [currentTagInput, setCurrentTagInput] = useState(""); // Local state for the tag input field
+
+  const parsedTags = useMemo(() => {
+    if (!watchedTags) return [];
+    return watchedTags
+      .split(",")
+      .map((tag) => tag.trim())
+      .filter(Boolean);
+  }, [watchedTags]);
 
   const checkWord = useCallback(
     async (wordToCheck: string) => {
@@ -205,6 +218,23 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     });
   };
 
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && currentTagInput.trim()) {
+      e.preventDefault();
+      const newTag = currentTagInput.trim();
+      if (!parsedTags.includes(newTag)) {
+        const updatedTags = [...parsedTags, newTag];
+        setValue("tags", updatedTags.join(", "));
+      }
+      setCurrentTagInput("");
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const updatedTags = parsedTags.filter((tag) => tag !== tagToRemove);
+    setValue("tags", updatedTags.join(", "));
+  };
+
   useEffect(() => {
     console.log(state);
     if (state && state.success) {
@@ -222,10 +252,231 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   }, [state, onClose, queryClient]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="max-h-[70vh] no-scrollbar overflow-y-auto"
+    >
       {/* Add a hidden input for the word ID if it exists */}
       {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
-      <div className="grid gap-3 max-h-[70vh] md:max-h-[600px] custom-scrollbar-y overflow-y-auto">
+      <div className="rounded-lg border border-gray-200">
+        <div className="w-full px-4 py-2 flex items-center justify-between bg-gray-50">
+          <div className="flex gap-2">
+            <Info width={20} height={20} className="text-blue-600 my-auto" />
+            <div>
+              <p className="text-lg font-bold">1. Basic information</p>
+              <p className="text-xs text-muted-foreground">
+                Core details about this word
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              type="button"
+              variant={entryType === "word" ? "default" : "outline"}
+              className="py-1 px-4 rounded-full h-fit"
+              onClick={() => setEntryType("word")}
+            >
+              Word
+            </Button>
+            <Button
+              type="button"
+              variant={entryType === "phrase" ? "default" : "outline"}
+              className="py-1 px-4 rounded-full h-fit"
+              onClick={() => setEntryType("phrase")}
+            >
+              Phrase
+            </Button>
+          </div>
+        </div>
+        <div className="w-full border-t border-gray-200 p-4">
+          <div className="grid grid-cols-12">
+            <div className="col-span-8 pe-4 border-e">
+              <div className="flex gap-2 items-end">
+                <WordSuggest
+                  enteredWord={enteredWord}
+                  setEnteredWord={handleWordChange}
+                  existingWord={word?.word || wordOfTheDay?.word}
+                  entryType={entryType}
+                />
+                <Button
+                  variant={"outline"}
+                  type="button"
+                  onClick={handleClickFillWithAi}
+                  disabled={enteredWord.trim().length === 0}
+                >
+                  <Sparkles width={14} height={14} className="text-blue-600" />
+                  {isFillingWithAi
+                    ? "Generating..."
+                    : generated
+                      ? `Regenerate`
+                      : `Auto-fill details`}
+                </Button>
+              </div>
+            </div>
+            <div className="col-span-4 flex gap-2 ps-4">
+              <div className="grid gap-1 w-full">
+                <Label htmlFor="masteryLevel" className="text-right">
+                  Mastery Level
+                </Label>
+                <Controller
+                  control={control}
+                  name="masteryLevel"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select mastery level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {MASTERY_LEVELS.map((level) => (
+                            <SelectItem key={level} value={level}>
+                              {level}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
+              </div>
+            </div>
+          </div>
+          {wordExistsError && <FieldError error={wordExistsError} />}
+          <div className="flex gap-2 mt-4">
+            <Checkbox
+              id="highlighted"
+              {...register("highlighted")}
+              checked={highlighted}
+              onCheckedChange={(value) => setValue("highlighted", !!value)}
+            />
+            <div>
+              <Label htmlFor="highlighted" className="text-right">
+                Highlighed
+              </Label>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Mark this word as highlighted in your content
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="rounded-lg border border-gray-200 mt-2">
+        <div className="w-full px-4 py-2 flex items-center justify-between bg-gray-50">
+          <div className="flex gap-2">
+            <BookOpen
+              width={20}
+              height={20}
+              className="text-blue-600 my-auto"
+            />
+            <div>
+              <p className="text-lg font-bold">2. Meaning ({fields.length})</p>
+              <p className="text-xs text-muted-foreground">
+                A word can have multiple meanings. Each meaning has its own
+                pronunication and CEFR level.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button
+              variant={"outline"}
+              type="button"
+              size={"sm"}
+              onClick={handleClickAddMeaning}
+            >
+              <Plus width={14} height={14} className="text-blue-600" />
+              Add meaning
+            </Button>
+          </div>
+        </div>
+        <div className="w-full border-t border-gray-200">
+          {fields.map((field, index) => (
+            <Meaning
+              key={field.id}
+              index={index}
+              onRemove={handleRemoveMeaning}
+              register={register}
+              setValue={setValue}
+              getValues={getValues}
+              control={control}
+              errors={state?.errors?.meanings}
+              entryType={entryType}
+              count={fields.length}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="rounded-lg border border-gray-200 mt-2">
+        <div className="w-full px-4 py-2 flex items-center justify-between bg-gray-50">
+          <div className="flex gap-2">
+            <Layers2 width={20} height={20} className="text-blue-600 my-auto" />
+            <div>
+              <p className="text-lg font-bold">3. Additional Infomation</p>
+              <p className="text-xs text-muted-foreground">
+                Related tags for this words
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="w-full border-t border-gray-200 p-4">
+          <div className="grid gap-1">
+            <Label htmlFor="tags" className="text-right">
+              Tags
+            </Label>
+            <Input
+              id="tags"
+              placeholder="Add tags ..."
+              value={currentTagInput}
+              onChange={(e) => setCurrentTagInput(e.target.value)}
+              onKeyDown={handleAddTag}
+            />
+            <FieldError error={state?.errors?.tags?.join(", ")} />
+            <p className="text-xs text-muted-foreground">
+              Press Enter to add a tag
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {parsedTags.map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="flex items-center gap-1"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveTag(tag)}
+                  className="ml-1 text-muted-foreground hover:text-foreground"
+                >
+                  <X width={12} height={12} />
+                </button>
+              </Badge>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border bg-white/80 sticky bottom-0">
+        <Button
+          variant={"secondary"}
+          type="button"
+          onClick={onClose}
+          className="text-red-600"
+        >
+          Delete
+        </Button>
+        <Button
+          variant={"ghost"}
+          type="button"
+          onClick={onClose}
+          className="ms-auto"
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading || !!wordExistsError}>
+          {!isLoading ? "Save changes" : "Saving changes..."}
+        </Button>
+      </div>
+      {/* <div className="grid gap-3 custom-scrollbar-y overflow-y-auto">
         <div className="flex bg-muted p-1 rounded-lg">
           <Button
             type="button"
@@ -359,7 +610,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         <Button type="submit" disabled={isLoading || !!wordExistsError}>
           {!isLoading ? "Save" : "Saving..."}
         </Button>
-      </div>
+      </div> */}
     </form>
   );
 };
