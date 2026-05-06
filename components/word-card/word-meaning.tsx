@@ -53,7 +53,7 @@ const WordMeaning = ({
           {meaning.synonyms && meaning.synonyms.length > 0 && (
             <div className="flex gap-2">
               <IconDisplay icon={ThumbsUp} bgClass="bg-green-700" />
-              <div className="flex-1 min-w-0">
+              <div className="flex-1">
                 <p className="text-md font-bold">Synonyms:</p>
 
                 <div className="flex gap-1 flex-wrap mt-1">
@@ -73,7 +73,7 @@ const WordMeaning = ({
           {meaning.antonyms && meaning.antonyms.length > 0 && (
             <div className="flex gap-2 mt-2">
               <IconDisplay icon={ThumbsDown} bgClass="bg-red-700" />
-              <div className="flex-1 min-w-0">
+              <div className="flex-1">
                 <p className="text-md font-bold">Antonyms:</p>
                 <div className="flex gap-1 flex-wrap mt-1">
                   {meaning.antonyms.split(",").map((antonym, index) => (

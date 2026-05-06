@@ -24,12 +24,21 @@ import AddWord from "../add-word/add-word";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import IconDisplay from "../shared/icon-display";
+import { useMutation } from "@tanstack/react-query";
+import { updateWord } from "@/lib/actions/word.actions";
 
 const WordDetail = ({ word }: { word: WordWithMeanings }) => {
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
   const [current, setCurrent] = useState(0);
+
+  const { mutate: updateWordMutation, isPending: isUpdating } = useMutation({
+    mutationKey: ["update-word"],
+    mutationFn: async (payload: Partial<WordWithMeanings>) => {
+      await updateWord(word.id, payload);
+    },
+  });
 
   // Sync button disabled state when carousel initializes or changes
   useEffect(() => {
@@ -54,7 +63,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
   const currentMeaning = word.meanings[current];
 
   return (
-    <div>
+    <div className="overflow-x-hidden">
       <div className="grid grid-cols-2 gap-2">
         <div className="space-y-2">
           {currentMeaning?.cefrLevel && (
@@ -105,8 +114,13 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
       </Carousel>
 
       <div className="mt-2 flex gap-2 items-center">
-        <button className="me-auto flex gap-2 items-center text-sm py-1 px-2 border rounded-sm bg-white/10 text-white cursor-pointer hover:bg-white/20">
-          <Star width={14} height={14} color="yellow" fill="yellow" /> Favorite
+        <button
+          className={`me-auto flex gap-2 items-center text-sm py-1 px-2 ${word.highlighted ? "bg-yellow-600" : "border bg-white/10 hover:bg-white/20"} rounded-sm text-white cursor-pointer`}
+          onClick={() => updateWordMutation({ highlighted: !word.highlighted })}
+          disabled={isUpdating}
+        >
+          <Star width={14} height={14} color="yellow" fill="yellow" />{" "}
+          {word.highlighted ? "Unfavorite" : "Favorite"}
         </button>
         {word.meanings.length > 1 && (
           <div className="flex gap-1">

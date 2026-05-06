@@ -116,8 +116,8 @@ const Meaning = ({
   };
 
   return (
-    <div className="px-4 py-3 first:border-t-0 border-t border-gray-200">
-      <div className="flex items-center gap-4">
+    <div className="px-2 sm:px-4 py-3 first:border-t-0 border-t border-gray-200">
+      <div className="flex items-center gap-2 sm:p-4">
         {count > 1 && (
           <div className="flex justify-center items-center h-6 w-6 rounded-full bg-blue-600 text-white text-base">
             {index + 1}
@@ -132,7 +132,7 @@ const Meaning = ({
               value={field.value as PartOfSpeech}
             >
               <SelectTrigger className="w-fit" size="sm">
-                <SelectValue placeholder="Select Part of Speech" />
+                <SelectValue placeholder="Part of Speech" />
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -175,8 +175,8 @@ const Meaning = ({
         />
       </div>
       {isOpen && (
-        <div className="border rounded-md p-4 grid grid-cols-12 mt-2">
-          <div className="col-span-7 pe-4 border-e space-y-3">
+        <div className="border rounded-md p-2 sm:p-4 grid grid-cols-1 md:grid-cols-12 mt-2">
+          <div className="col-span-7 pe-0 border-e-0 md:pe-4 md:border-e space-y-3">
             {errors && <FieldError error={errors.join("\n")} />}
             <div className="grid gap-1">
               <Label htmlFor="definition" className="text-right">
@@ -250,7 +250,7 @@ const Meaning = ({
               </div>
             </div>
           </div>
-          <div className="col-span-5 ps-4 space-y-3">
+          <div className="col-span-5  mt-3 md:mt-0 ps-0 md:ps-4 space-y-3">
             <div className="grid gap-1">
               <Label htmlFor="cefrLevel" className="text-right">
                 CEFR Level
