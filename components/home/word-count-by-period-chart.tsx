@@ -32,6 +32,7 @@ import { Flame, Info, MoveDownRight, MoveUpRight, Sigma } from "lucide-react";
 import { MasteryLevelColorCode } from "@/lib/constants/enums";
 import { MasteryLevel } from "@prisma/client";
 import { Skeleton } from "../ui/skeleton";
+import IconDisplay from "../shared/icon-display";
 
 const periodQuantitiesMap: Record<
   Period,
@@ -193,9 +194,12 @@ const WordCountByPeriodChart = () => {
   const statistics = (
     <div className="flex gap-2 md:gap-3 bg-gray-50 rounded-md py-2 md:py-4 border px-3 sm:px-6 justify-around mt-2">
       <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-center">
-        <div className="p-2 sm:p-3 rounded-full bg-purple-100 flex items-center justify-center">
-          <Sigma width={20} height={20} className="text-purple-500" />
-        </div>
+        <IconDisplay
+          size="lg"
+          icon={Sigma}
+          iconColor="text-purple-500"
+          bgClass="bg-purple-100"
+        />
         <div className="text-center md:text-start">
           {isLoadingWordsThisWeek ? (
             <Skeleton className="h-6 w-12" />
@@ -206,13 +210,21 @@ const WordCountByPeriodChart = () => {
         </div>
       </div>
       <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-center">
-        <div className="p-2 sm:p-3 rounded-full bg-blue-100 flex items-center justify-center">
-          {(weekComparison?.percentageChange || 0) < 0 ? (
-            <MoveDownRight width={20} height={20} className="text-red-500" />
-          ) : (
-            <MoveUpRight width={20} height={20} className="text-blue-500" />
-          )}
-        </div>
+        {(weekComparison?.percentageChange || 0) > 0 ? (
+          <IconDisplay
+            size="lg"
+            icon={MoveUpRight}
+            iconColor="text-blue-500"
+            bgClass="bg-blue-100"
+          />
+        ) : (
+          <IconDisplay
+            size="lg"
+            icon={MoveDownRight}
+            iconColor="text-red-500"
+            bgClass="bg-blue-100"
+          />
+        )}
         <div className="text-center md:text-start">
           {isLoadingWeekComparison ? (
             <Skeleton className="h-6 w-12" />
@@ -225,9 +237,12 @@ const WordCountByPeriodChart = () => {
         </div>
       </div>
       <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-center">
-        <div className="p-2 sm:p-3 rounded-full bg-green-100 flex items-center justify-center">
-          <Flame width={20} height={20} className="text-green-500" />
-        </div>
+        <IconDisplay
+          size="lg"
+          icon={Flame}
+          iconColor="text-green-500"
+          bgClass="bg-green-100"
+        />
         <div className="text-center md:text-start">
           {isLoadingBestDay ? (
             <Skeleton className="h-6 w-12" />

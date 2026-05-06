@@ -39,29 +39,15 @@ const WordMasteryLevel = ({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        {/* <button className="hover:bg-gray-200 rounded-[3px] w-4 h-4 cursor-pointer p-0.5 justify-center items-center group-hover:flex hidden">
-            <PenIcon stroke="#4a5566" fill="#99a1af" />
-          </button> */}
         <div
           className="cursor-pointer flex gap-1 items-center"
           title="Click to change"
         >
           <div
-            className={`${mode === "list" ? "w-4 h-4" : "min-w-8 min-h-2 px-2 py-0"} rounded-md`}
+            className={`py-1 px-2 text-white text-sm rounded-sm leading-none tracking-normal`}
             style={demonstratorStyle}
           >
-            {mode === "grid" && (
-              <p
-                className={`leanding-none text-md group-hover:block hidden text-sm text-white`}
-              >
-                {selectedValue}
-              </p>
-            )}
-            {mode === "list" && (
-              <p className={`leanding-none text-black text-md`}>
-                {selectedValue}
-              </p>
-            )}
+            {selectedValue}
           </div>
         </div>
       </PopoverTrigger>

@@ -1,14 +1,19 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useState } from "react";
-import { Bookmark, BookmarkPlus } from "lucide-react";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { Bookmark, EllipsisIcon } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import AddWord from "../add-word/add-word";
 import { CEFRLevel } from "@/lib/constants/enums";
 import { getWordOfTheDay } from "@/lib/actions/word.actions";
+import {
+  enableWordOfTheDay,
+  getWordOfTheDayPreference,
+  stopWordOfTheDay,
+} from "@/lib/actions/user.actions";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
-import { EllipsisIcon } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 export interface WordOfTheDay {
   word: string;
   pronunciation: string;
@@ -21,43 +26,89 @@ export interface WordOfTheDay {
 }
 
 const WordOfTheDay = () => {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const [wordOfTheDay, setWordOfTheDay] = useState<WordOfTheDay | null>(null);
+  const [isStopped, setIsStopped] = useState(false);
+  const [isLoadingWord, setIsLoadingWord] = useState(true);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
-    const loadWordOfTheDay = async () => {
-      if (status !== "authenticated") {
-        setWordOfTheDay(null); // Clear word if session is not active
+  const loadWordOfTheDay = useCallback(async () => {
+    if (status !== "authenticated") {
+      setWordOfTheDay(null);
+      setIsStopped(false);
+      setIsLoadingWord(false);
+      return;
+    }
+
+    setNotification(null);
+    setIsLoadingWord(true);
+
+    const preference = await getWordOfTheDayPreference();
+    if (preference.stopped) {
+      setIsStopped(true);
+      setWordOfTheDay(null);
+      setIsLoadingWord(false);
+      return;
+    }
+
+    setIsStopped(false);
+
+    const cachedWordOfTheDay = localStorage.getItem("wordOfTheDay");
+    if (cachedWordOfTheDay) {
+      const { word, date } = JSON.parse(cachedWordOfTheDay);
+      if (word && new Date(date).toDateString() === new Date().toDateString()) {
+        setWordOfTheDay(word);
+        setIsLoadingWord(false);
         return;
+      } else {
+        localStorage.removeItem("wordOfTheDay");
       }
-      const cachedWordOfTheDay = localStorage.getItem("wordOfTheDay");
-      if (cachedWordOfTheDay) {
-        const { word, date } = JSON.parse(cachedWordOfTheDay);
-        if (
-          word &&
-          new Date(date).toDateString() === new Date().toDateString()
-        ) {
-          setWordOfTheDay(word);
-          return;
-        } else {
-          localStorage.removeItem("wordOfTheDay");
-        }
-      }
-      try {
-        const result = await getWordOfTheDay();
-        setWordOfTheDay(result);
+    }
+
+    try {
+      const result = await getWordOfTheDay();
+      setWordOfTheDay(result);
+      if (result) {
         localStorage.setItem(
           "wordOfTheDay",
           JSON.stringify({ word: result, date: new Date().toISOString() }),
         );
-      } catch (error) {
-        console.error("Failed to fetch word of the day:", error); // Use console.error for errors
       }
-    };
-    loadWordOfTheDay();
+    } catch (error) {
+      console.error("Failed to fetch word of the day:", error);
+      setNotification(
+        "Failed to load Word of the Day. Please try again later.",
+      );
+    } finally {
+      setIsLoadingWord(false);
+    }
   }, [status]);
 
-  console.log({ status, wordOfTheDay });
+  useEffect(() => {
+    loadWordOfTheDay();
+  }, [loadWordOfTheDay]);
+
+  const handleStop = useCallback(async () => {
+    setNotification(null);
+    const result = await stopWordOfTheDay();
+    if (result.success) {
+      localStorage.removeItem("wordOfTheDay");
+      setIsStopped(true);
+      setWordOfTheDay(null);
+    }
+    setNotification(result.message);
+  }, []);
+
+  const handleEnable = useCallback(async () => {
+    setNotification(null);
+    const result = await enableWordOfTheDay();
+    if (result.success) {
+      setIsStopped(false);
+      await loadWordOfTheDay();
+    }
+    setNotification(result.message);
+  }, [loadWordOfTheDay]);
 
   // 1. Handle Session Loading
   if (status === "loading") {
@@ -69,9 +120,65 @@ const WordOfTheDay = () => {
     return null;
   }
 
-  // 3. Handle Data Loading (Fetching word from API/LocalDB)
-  if (!wordOfTheDay) {
+  // 3. Handle Stopped Mode
+  if (isStopped) {
+    return (
+      <div className="py-6 px-4 rounded-2xl bg-purple-50 h-full border border-purple-300">
+        <div className="flex gap-2 justify-between">
+          <p className="text-xl font-bold">✨ Word of the day ✨</p>
+        </div>
+        <Alert className="mt-4">
+          <AlertTitle>Word of the day stopped</AlertTitle>
+          <AlertDescription>
+            You have stopped the Word of the Day feature. Re-enable it anytime
+            to receive daily word suggestions again.
+          </AlertDescription>
+        </Alert>
+        {notification ? (
+          <Alert className="mt-4" variant="default">
+            <AlertDescription>{notification}</AlertDescription>
+          </Alert>
+        ) : null}
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={() => startTransition(() => void handleEnable())}
+            disabled={isPending}
+          >
+            Enable Word of the Day
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Handle Data Loading (Fetching word from API/LocalDB)
+  if (isLoadingWord) {
     return <WordOfTheDaySkeleton />;
+  }
+
+  if (!wordOfTheDay) {
+    return (
+      <div className="py-6 px-4 rounded-2xl bg-purple-50 h-full border border-purple-300">
+        <div className="flex gap-2 justify-between">
+          <p className="text-xl font-bold">✨ Word of the day ✨</p>
+        </div>
+        <Alert className="mt-4" variant="destructive">
+          <AlertTitle>Word of the Day unavailable</AlertTitle>
+          <AlertDescription>
+            {notification ||
+              "Unable to fetch Word of the Day right now. Please try again later."}
+          </AlertDescription>
+        </Alert>
+        <div className="mt-4 flex justify-end">
+          <Button
+            onClick={() => startTransition(() => void loadWordOfTheDay())}
+            disabled={isPending}
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -84,11 +191,22 @@ const WordOfTheDay = () => {
           </PopoverTrigger>
           <PopoverContent className="w-fit p-0">
             <div>
-              <Button variant={"outline"}>Stop</Button>
+              <Button
+                variant={"outline"}
+                onClick={() => startTransition(() => void handleStop())}
+                disabled={isPending}
+              >
+                Stop
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
       </div>
+      {notification ? (
+        <Alert className="mt-4" variant="default">
+          <AlertDescription>{notification}</AlertDescription>
+        </Alert>
+      ) : null}
       <div className="flex flex-col gap-3 mt-3">
         <div className="flex flex-col justify-center items-center p-3 bg-purple-100 rounded-xl">
           <p className="text-2xl text-purple-600 font-bold">

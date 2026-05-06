@@ -1,6 +1,5 @@
 "use client";
 import { SquareArrowOutUpRightIcon } from "lucide-react";
-import React from "react";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { useLayout } from "../layout/layout-context";
 
@@ -17,7 +16,7 @@ const WordTitle = ({ word, onClick, disabled }: WordTitleProps) => {
     <button
       type="button"
       disabled={disabled}
-      className={`flex-1 min-w-0 cursor-pointer ${mode === "list" ? "text-primary" : "text-white"} group outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md transition text-left ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+      className={`min-w-0 cursor-pointer ${mode === "list" ? "text-primary" : "text-white"} group outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md transition text-left ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       onClick={onClick}
     >
       <div className="flex gap-1 items-center min-w-0">

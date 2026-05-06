@@ -14,6 +14,7 @@ import React, { useMemo } from "react";
 import { signOutUser } from "@/lib/actions/user.actions";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import IconDisplay from "../icon-display";
 
 type SidebarItem = {
   title: string;
@@ -86,19 +87,11 @@ const Sidebar = () => {
   return (
     <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
       <div className="hidden md:flex justify-end px-2">
-        <button
-          onClick={() => setOpen((prev) => !prev)}
-          className={cn(
-            "w-fit p-2 rounded-md bg-gray-200 flex justify-center items-center hover:bg-gray-300 text-gray-500 transition-opacity duration-300",
-            !open && "opacity-0 group-hover:opacity-100",
-          )}
-        >
-          {open ? (
-            <ArrowLeftToLine height={16} width={16} />
-          ) : (
-            <ArrowRightToLine height={16} width={16} />
-          )}
-        </button>
+        <IconDisplay
+          asButton
+          icon={open ? ArrowLeftToLine : ArrowRightToLine}
+          onClick={() => setOpen(!open)}
+        />
       </div>
       <ul className="flex flex-row md:flex-col flex-1 md:flex-none w-full md:w-auto justify-around md:justify-start gap-1">
         {sidebarItems.map((item) => (

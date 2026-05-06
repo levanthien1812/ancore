@@ -33,6 +33,7 @@ import {
 import { DifficultyLevel } from "@prisma/client";
 import TagList from "../shared/tag-list";
 import { Volume2Icon, VolumeIcon } from "lucide-react";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 interface MeaningProps {
   index: number;
@@ -84,15 +85,6 @@ const Meaning = ({
     }
   };
 
-  const handlePlayAudio = () => {
-    const utterance = new SpeechSynthesisUtterance(getValues("word"));
-    utterance.lang = "en-US";
-    utterance.volume = 1;
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    speechSynthesis.speak(utterance);
-  };
-
   return (
     <div className="border border-border-2 border-dashed rounded-lg p-4 grid gap-3">
       {count > 1 && (
@@ -131,7 +123,7 @@ const Meaning = ({
               className="col-span-5"
             />
             <button
-              onClick={handlePlayAudio}
+              onClick={() => handlePlayAudio(getValues("word"))}
               type="button"
               className=" h-full flex items-center justify-center rounded-sm border border-secondary disabled:opacity-50 px-2 py-1"
               disabled={!getValues("word")}
