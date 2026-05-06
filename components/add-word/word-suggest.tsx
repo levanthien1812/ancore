@@ -9,6 +9,8 @@ import {
   CommandList,
 } from "../ui/command";
 import { debounce } from "@/lib/utils/debounce";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 interface WordSuggestProps {
   enteredWord: string;
@@ -25,6 +27,7 @@ const WordSuggest = ({
 }: WordSuggestProps) => {
   const [suggestedWordList, setSuggestedWordList] = useState<string[]>([]);
   const [isChosen, setIsChosen] = useState(existingWord ? true : false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const handleSuggest = async (value: string) => {
     if (entryType === "phrase") {
@@ -45,9 +48,11 @@ const WordSuggest = ({
     setEnteredWord(value);
     setIsChosen(false);
     if (value.trim().length > 0) {
+      setShowSuggestions(true);
       debouncedSuggest(value);
     } else {
       setSuggestedWordList([]);
+      setShowSuggestions(false);
     }
   };
 
@@ -55,36 +60,44 @@ const WordSuggest = ({
     setEnteredWord(word);
     setSuggestedWordList([]);
     setIsChosen(true);
+    setShowSuggestions(false);
   };
 
   return (
-    <Command className="w-full">
-      <CommandInput
+    <div className="relative flex-1">
+      <Label htmlFor="word" className="text-right">
+        Word
+      </Label>
+      <Input
         placeholder={entryType === "phrase" ? "Type a phrase" : "Type a word"}
         value={enteredWord}
-        onValueChange={handleWordChange}
+        onChange={(e) => handleWordChange(e.target.value)}
+        className="mt-1"
       />
-      {enteredWord.trim().length > 0 && entryType === "word" && (
-        <CommandList>
-          {!isChosen && <CommandEmpty>No word found</CommandEmpty>}
-          <CommandGroup heading="Suggestions">
+      {showSuggestions && (
+        <div className="absolute w-full top-14 left-0 bg-white border p-2 rounded-md">
+          <p className="text-gray-600 text-xs ">Suggestions</p>
+          {suggestedWordList.length === 0 && (
+            <p className="text-center text-muted-foreground">No word found</p>
+          )}
+          <div className="flex flex-col max-h-[200px] custom-scrollbar-y mt-1">
             {suggestedWordList
               .filter((item) =>
                 item.toLowerCase().includes(enteredWord.toLowerCase()),
               )
               .map((word) => (
-                <CommandItem
+                <button
                   key={word}
-                  className="text-blue"
-                  onSelect={handleWordSelect}
+                  className="text-blue w-full cursor-pointer hover:bg-gray-50 text-start py-1 px-2 rounded-sm"
+                  onClick={() => handleWordSelect(word)}
                 >
                   {word}
-                </CommandItem>
+                </button>
               ))}
-          </CommandGroup>
-        </CommandList>
+          </div>
+        </div>
       )}
-    </Command>
+    </div>
   );
 };
 

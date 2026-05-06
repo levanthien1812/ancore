@@ -36,7 +36,7 @@ const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
       <DialogTrigger asChild>
         {triggerButton || defaultTriggerBtn}
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{word ? "Edit word" : "Add new word"}</DialogTitle>
         </DialogHeader>

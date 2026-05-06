@@ -102,12 +102,14 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
             </CarouselItem>
           ))}
         </CarouselContent>
+      </Carousel>
+
+      <div className="mt-2 flex gap-2 items-center">
+        <button className="me-auto flex gap-2 items-center text-sm py-1 px-2 border rounded-sm bg-white/10 text-white cursor-pointer hover:bg-white/20">
+          <Star width={14} height={14} color="yellow" fill="yellow" /> Favorite
+        </button>
         {word.meanings.length > 1 && (
-          <div className="flex gap-1 mt-2">
-            <button className="me-auto flex gap-2 items-center text-sm py-1 px-2 border rounded-sm bg-white/10 text-white cursor-pointer hover:bg-white/20">
-              <Star width={14} height={14} color="yellow" fill="yellow" />{" "}
-              Favorite
-            </button>
+          <div className="flex gap-1">
             <IconDisplay
               asButton
               icon={ArrowLeft}
@@ -122,9 +124,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
             />
           </div>
         )}
-      </Carousel>
-
-      <div className="mt-2"></div>
+      </div>
     </div>
   );
 };
