@@ -604,7 +604,7 @@ export const getWordOfTheDay = async () =>
       where: { id: userId },
     });
 
-    if (!user || user.stopWordOfTheDay) return null;
+    if (!user || user.wordOfTheDayStopped) return null;
 
     const prompt = buildWordOfTheDayPrompt(user);
     const data = await generateWordOfTheDayWithAI(prompt);
