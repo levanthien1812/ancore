@@ -1,6 +1,6 @@
 "use client";
 import { getRecentWords } from "@/lib/actions/word.actions";
-import React, { useMemo } from "react";
+import React, { useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -14,12 +14,12 @@ import { format } from "date-fns";
 import { MasteryLevel } from "@/lib/constants/enums";
 import { Button } from "../ui/button";
 import WordDialog from "../word-card/word-dialog";
-import WordOfTheDay from "./word-of-the-day";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
 import { RefreshCcw } from "lucide-react";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
@@ -38,6 +38,12 @@ const RecentWords = () => {
   const handleRefresh = () => {
     refetch();
   };
+
+  useEffect(() => {
+    if (selectedIndex !== null && words[selectedIndex]) {
+      handlePlayAudio(words[selectedIndex].word);
+    }
+  }, [selectedIndex, words]);
 
   return (
     <div className=" flex flex-col bg-white p-4 rounded-2xl gap-2 h-full">
