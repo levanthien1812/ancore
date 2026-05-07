@@ -10,6 +10,7 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { useEffect, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { logReviewSession } from "@/lib/actions/review.actions";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
 
@@ -59,6 +60,13 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
       api.off("select", onSelect);
     };
   }, [api]);
+
+  // Play pronunciation audio whenever the current word changes
+  useEffect(() => {
+    if (words[current] && !sessionFinished) {
+      handlePlayAudio(words[current].word);
+    }
+  }, [current, words, sessionFinished]);
 
   const handlePerformanceUpdate = (performance: keyof PerformanceSummary) => {
     const currentWord = words[current];

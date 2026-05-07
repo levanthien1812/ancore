@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, memo } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -47,7 +47,7 @@ interface MeaningProps {
   count: number;
 }
 
-const Meaning = ({
+const Meaning = memo(function Meaning({
   index,
   onRemove,
   register,
@@ -57,7 +57,7 @@ const Meaning = ({
   errors,
   entryType,
   count,
-}: MeaningProps) => {
+}: MeaningProps) {
   const [isOpen, setIsOpen] = useState(true);
 
   const watchedExamples =
@@ -117,7 +117,7 @@ const Meaning = ({
 
   return (
     <div className="px-2 sm:px-4 py-3 first:border-t-0 border-t border-gray-200">
-      <div className="flex items-center gap-2 sm:p-4">
+      <div className="flex items-center gap-2">
         {count > 1 && (
           <div className="flex justify-center items-center h-6 w-6 rounded-full bg-blue-600 text-white text-base">
             {index + 1}
@@ -209,6 +209,7 @@ const Meaning = ({
                   />
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground"></p>
             </div>
             <div className="grid gap-1">
               <Label className="text-right">
@@ -317,6 +318,6 @@ const Meaning = ({
       )}
     </div>
   );
-};
+});
 
 export default Meaning;
