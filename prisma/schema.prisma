@@ -217,7 +217,7 @@ model ReviewSession {
   createdAt DateTime @default(now())
 
   scheduledAt  DateTime
-  completedAt  DateTime
+  completedAt  DateTime?
   intervalDays Int
 }
 

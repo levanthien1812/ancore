@@ -150,7 +150,7 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
             data: {
               userId: word.userId,
               wordId: word.id,
-              completedAt: now,
+              completedAt: null, // Initial session is pending, not completed
               intervalDays: initialInterval,
               scheduledAt: new Date(
                 now.setDate(now.getDate() + initialInterval),
@@ -473,43 +473,67 @@ export const getBestDay = async () =>
 
 export const getWordsToReview = async (limit: number = 10) =>
   authenticationAction(async (userId) => {
-    const dueReviews = await prisma.reviewSession.findMany({
+    // 1. Find unique wordIds that have a review session due,
+    //    ordered by the earliest scheduledAt of their due sessions.
+    const earliestDueReviews = await prisma.reviewSession.groupBy({
+      by: ["wordId"],
       where: {
         userId,
         scheduledAt: {
           lte: new Date(), // Get all words due today or in the past
         },
+        completedAt: null, // Exclude completed sessions
       },
-      take: limit, // Limit the number of words per session
-      include: {
-        word: {
-          // Include the full word details
-          include: {
-            meanings: true, // And its meanings
-          },
-        },
+      _min: {
+        scheduledAt: true,
       },
       orderBy: {
-        scheduledAt: "asc", // Show the most overdue words first
+        _min: {
+          scheduledAt: "asc", // Prioritize words with earlier scheduled reviews
+        },
       },
+      take: limit, // Limit the number of words per session
     });
 
-    // Extract the word data from the review session objects
-    return dueReviews.map((review) => review.word);
+    console.log(earliestDueReviews);
+
+    const uniqueWordIds = earliestDueReviews.map((item) => item.wordId);
+
+    if (uniqueWordIds.length === 0) {
+      return [];
+    }
+
+    // 2. Fetch the actual word details for these unique wordIds
+    const words = await prisma.word.findMany({
+      where: {
+        id: {
+          in: uniqueWordIds,
+        },
+      },
+      include: { meanings: true },
+    });
+
+    // Reorder the fetched words based on the `uniqueWordIds` order
+    const orderedWords = uniqueWordIds
+      .map((wordId) => words.find((word) => word.id === wordId))
+      .filter(Boolean) as WordWithMeanings[]; // Filter out any potential undefineds
+
+    return orderedWords;
   });
 
 export const getWordsToReviewCount = async () =>
   authenticationAction(async (userId) => {
-    const count = await prisma.reviewSession.count({
+    const reviews = await prisma.reviewSession.findMany({
       where: {
         userId,
         scheduledAt: {
           lte: new Date(), // Count all words due today or in the past
         },
       },
+      distinct: ["wordId"],
     });
 
-    return count;
+    return reviews.length;
   });
 
 export const deleteWords = async (prevState: unknown, formData: FormData) =>
@@ -576,7 +600,7 @@ export const checkWordExists = async (word: string) =>
       },
     });
 
-    return !!existingWord;
+    return existingWord !== null;
   });
 
 export const fillWithAI = async (word: string) =>

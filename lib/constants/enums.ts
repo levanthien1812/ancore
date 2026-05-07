@@ -144,3 +144,10 @@ export const MasteryLevelColorCode: Record<
     dark: "#15803D",
   },
 };
+
+export type WordReviewInfo = {
+  nextReviewAt: Date | null;
+  nextReviewIn: number | null;
+  lastReviewAt: Date | null;
+  reviewedTimes: number;
+};

@@ -4,10 +4,10 @@ import WordTitle from "./word-title";
 import WordDefinition from "./word-definition";
 import WordMasteryLevel from "./word-mastery-level";
 import { MasteryLevel } from "@/lib/constants/enums";
-import { shorten } from "@/lib/utils/shorten";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
 import IconDisplay from "../shared/icon-display";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { WordType } from "@prisma/client";
 
 const WordCard = ({
   word,
@@ -73,7 +73,9 @@ const WordCard = ({
                 <Dot width={16} height={16} color="white" opacity={0.5} />
               )}
             <p className="font-bold text-sm text-blue-300">
-              {word.meanings[0].partOfSpeech}
+              {word.type === WordType.Word
+                ? word.meanings[0].partOfSpeech
+                : word.type}
             </p>
           </div>
         </div>

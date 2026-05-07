@@ -1,13 +1,5 @@
 "use client";
-import { useState } from "react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "../ui/command";
+import { useCallback, useMemo, useState, memo } from "react";
 import { debounce } from "@/lib/utils/debounce";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -19,35 +11,39 @@ interface WordSuggestProps {
   entryType?: "word" | "phrase";
 }
 
-const WordSuggest = ({
+const WordSuggest = memo(function WordSuggest({
   enteredWord,
   setEnteredWord,
   existingWord,
   entryType = "word",
-}: WordSuggestProps) => {
+}: WordSuggestProps) {
   const [suggestedWordList, setSuggestedWordList] = useState<string[]>([]);
-  const [isChosen, setIsChosen] = useState(existingWord ? true : false);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const handleSuggest = async (value: string) => {
-    if (entryType === "phrase") {
-      return;
-    }
-    const response = await fetch(`/api/datamuse?w=${value}`);
-    if (response.ok) {
-      const data = await response.json();
-      setSuggestedWordList(data);
-    } else {
-      setSuggestedWordList([]);
-    }
-  };
+  const handleSuggest = useCallback(
+    async (value: string) => {
+      if (entryType === "phrase") {
+        return;
+      }
+      const response = await fetch(`/api/datamuse?w=${value}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSuggestedWordList(data);
+      } else {
+        setSuggestedWordList([]);
+      }
+    },
+    [entryType],
+  );
 
-  const debouncedSuggest = debounce(handleSuggest, 500);
+  const debouncedSuggest = useMemo(
+    () => debounce(handleSuggest, 500),
+    [handleSuggest],
+  );
 
   const handleWordChange = async (value: string) => {
     setEnteredWord(value);
-    setIsChosen(false);
-    if (value.trim().length > 0) {
+    if (value.trim().length > 0 && entryType === "word") {
       setShowSuggestions(true);
       debouncedSuggest(value);
     } else {
@@ -59,7 +55,6 @@ const WordSuggest = ({
   const handleWordSelect = (word: string) => {
     setEnteredWord(word);
     setSuggestedWordList([]);
-    setIsChosen(true);
     setShowSuggestions(false);
   };
 
@@ -74,7 +69,7 @@ const WordSuggest = ({
         onChange={(e) => handleWordChange(e.target.value)}
         className="mt-1"
       />
-      {showSuggestions && (
+      {showSuggestions && entryType === "word" && (
         <div className="absolute w-full top-14 left-0 bg-white border p-2 rounded-md">
           <p className="text-gray-600 text-xs ">Suggestions</p>
           {suggestedWordList.length === 0 && (
@@ -99,6 +94,6 @@ const WordSuggest = ({
       )}
     </div>
   );
-};
+});
 
 export default WordSuggest;

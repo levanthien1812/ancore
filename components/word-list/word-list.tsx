@@ -1,11 +1,12 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import WordTable from "./word-table";
 import WordDialog from "../word-card/word-dialog";
 import { LayoutGrid, Rows4 } from "lucide-react";
 import WordGrid from "./word-grid";
 import { useLayout } from "../layout/layout-context";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const WordList = ({ words }: { words: WordWithMeanings[] }) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
@@ -14,6 +15,12 @@ const WordList = ({ words }: { words: WordWithMeanings[] }) => {
   const handleTitleClick = React.useCallback((index: number) => {
     setSelectedIndex(index);
   }, []);
+
+  useEffect(() => {
+    if (selectedIndex !== null && words[selectedIndex]) {
+      handlePlayAudio(words[selectedIndex].word);
+    }
+  }, [selectedIndex, words]);
 
   return (
     <div>
