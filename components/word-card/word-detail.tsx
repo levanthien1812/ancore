@@ -79,27 +79,33 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
 
   return (
     <div className="overflow-x-hidden">
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-2">
+      <div className="flex gap-2">
+        <div className="space-y-1 flex-1">
           {currentMeaning?.cefrLevel && (
             <Badge className="bg-primary-2 text-white">
               {currentMeaning?.cefrLevel}
             </Badge>
           )}
-          <div className="text-4xl font-bold text-white whitespace-nowrap">
-            {word.word}
-          </div>
+          <div className="text-4xl font-bold text-white">{word.word}</div>
+          {currentMeaning?.pronunciation && (
+            <p className="text-sm text-white">
+              {formatPronunciation(currentMeaning?.pronunciation)}
+            </p>
+          )}
         </div>
         <div className="flex gap-1 justify-end">
           <IconDisplay
             icon={Volume2Icon}
             asButton
             onClick={() => handlePlayAudio(word.word)}
+            additionalClasses="hidden md:block"
           />
-          <AddWord
-            word={word}
-            triggerButton={<IconDisplay icon={PenIcon} asButton />}
-          />
+          <div className="hidden md:block">
+            <AddWord
+              word={word}
+              triggerButton={<IconDisplay icon={PenIcon} asButton />}
+            />
+          </div>
 
           <Popover>
             <PopoverTrigger asChild>
@@ -107,18 +113,41 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
             </PopoverTrigger>
             <PopoverContent className="w-fit p-0">
               <div>
-                <Button variant={"link"}>Delete</Button>
+                <Button
+                  variant={"link"}
+                  onClick={() =>
+                    updateWordMutation({ highlighted: !word.highlighted })
+                  }
+                  disabled={isUpdating}
+                >
+                  {word.highlighted ? "Unfavorite" : "Add to Favorite"}
+                </Button>
+              </div>
+              <div className="border-t block md:hidden">
+                <AddWord
+                  word={word}
+                  triggerButton={<Button variant={"link"}>Edit</Button>}
+                />
+              </div>
+              <div className="border-t block md:hidden">
+                <Button
+                  variant={"link"}
+                  onClick={() => handlePlayAudio(word.word)}
+                >
+                  Play audio
+                </Button>
+              </div>
+              <div className="border-t">
+                <Button variant={"link"} className="text-red-600">
+                  Delete
+                </Button>
               </div>
             </PopoverContent>
           </Popover>
         </div>
       </div>
 
-      <p className="text-sm text-white">
-        {formatPronunciation(currentMeaning?.pronunciation)}
-      </p>
-
-      <Carousel setApi={setApi} className="w-full mt-4">
+      <Carousel setApi={setApi} className="w-full mt-2 md:mt-4 relative">
         <CarouselContent>
           {word.meanings.map((meaning) => (
             <CarouselItem key={meaning.id}>
@@ -126,67 +155,8 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
             </CarouselItem>
           ))}
         </CarouselContent>
-      </Carousel>
-
-      {/* Skeleton */}
-
-      <div className="mt-2 p-2 rounded-lg bg-blue-950 flex gap-2 justify-around">
-        <div className="flex gap-2 md:gap-3 items-center">
-          <Calendar width={24} height={24} className="text-blue-500" />
-          <div className="space-y-1">
-            <p className="text-white text-sm">Review in</p>
-            {isLoading ? (
-              <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
-            ) : (
-              <p className="font-bold text-base text-white">
-                {reviewInfo?.nextReviewIn} days
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex gap-2 md:gap-3 items-center">
-          <RefreshCcw width={24} height={24} className="text-blue-500" />
-          <div className="space-y-1">
-            <p className="text-white text-sm">Reviewed</p>
-            {isLoading ? (
-              <Skeleton className="h-6 w-[50px] bg-blue-800/50" />
-            ) : (
-              <p className="font-bold text-base text-white">
-                {reviewInfo?.reviewedTimes} times
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="flex gap-2 md:gap-3 items-center">
-          <Clock width={24} height={24} className="text-blue-500" />
-          <div className="space-y-1">
-            <p className="text-white text-sm">Last Review</p>
-            {isLoading ? (
-              <Skeleton className="h-6 w-[80px] bg-blue-800/50" />
-            ) : (
-              <p className="font-bold text-base text-white">
-                {reviewInfo?.lastReviewAt
-                  ? format(reviewInfo.lastReviewAt, "dd/MM/yyyy")
-                  : "--"}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-2 flex gap-2 items-center">
-        <button
-          className={`me-auto flex gap-2 items-center text-sm py-1 px-2 ${word.highlighted ? "bg-yellow-600" : "border bg-white/10 hover:bg-white/20"} rounded-sm text-white cursor-pointer`}
-          onClick={() => updateWordMutation({ highlighted: !word.highlighted })}
-          disabled={isUpdating}
-        >
-          <Star width={14} height={14} color="yellow" fill="yellow" />{" "}
-          {word.highlighted ? "Unfavorite" : "Favorite"}
-        </button>
         {word.meanings.length > 1 && (
-          <div className="flex gap-1">
+          <div className="flex gap-1 absolute bottom-1 right-1">
             <IconDisplay
               asButton
               icon={ArrowLeft}
@@ -201,6 +171,54 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
             />
           </div>
         )}
+      </Carousel>
+
+      {/* Skeleton */}
+
+      <div className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around">
+        <div className="flex gap-2 md:gap-3 items-center">
+          <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
+          <div className="space-y-1">
+            <p className="text-white text-xs sm:text-sm">Review in</p>
+            {isLoading ? (
+              <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
+            ) : (
+              <p className="font-bold leading-none text-base text-white">
+                {reviewInfo?.nextReviewIn} days
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2 md:gap-3 items-center">
+          <RefreshCcw className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
+          <div className="space-y-1">
+            <p className="text-white text-xs sm:text-sm">Reviewed</p>
+            {isLoading ? (
+              <Skeleton className="h-6 w-[50px] bg-blue-800/50" />
+            ) : (
+              <p className="font-bold leading-none text-base text-white">
+                {reviewInfo?.reviewedTimes} times
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2 md:gap-3 items-center">
+          <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
+          <div className="space-y-1">
+            <p className="text-white text-xs sm:text-sm">Last Review</p>
+            {isLoading ? (
+              <Skeleton className="h-6 w-20 bg-blue-800/50" />
+            ) : (
+              <p className="font-bold leading-none text-base text-white">
+                {reviewInfo?.lastReviewAt
+                  ? format(reviewInfo.lastReviewAt, "dd/MM/yyyy")
+                  : "--"}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

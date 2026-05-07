@@ -37,7 +37,9 @@ const WordDialog = ({
           <DialogTitle className="text-white">Word details</DialogTitle>
           <WordDetailDialog word={word} />
           <DialogFooter>
-            <Button onClick={handleClose}>Close</Button>
+            <Button onClick={handleClose} className="hidden md:block">
+              Close
+            </Button>
             <div className="flex gap-2 items-center">
               <Button
                 variant={"outline"}
