@@ -12,7 +12,6 @@ export const INITIAL_MEANING: WordMeaning = {
   exampleSentences: "",
   synonyms: "",
   antonyms: "",
-  whenToUse: "",
   usageNotes: "",
 };
 

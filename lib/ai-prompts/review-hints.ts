@@ -14,14 +14,12 @@ export function buildReviewHintsPrompt(word: string, user: User): string {
     {
       "tags": "",
       "synonyms": "",
-      "whenToUse": "",
       "exampleSentence": ""
     }
 
     Rules for each field:
     - "tags": Provide comma-separated topics or related words.
     - "synonyms": Provide a comma-separated string of synonyms.
-    - "whenToUse": Provide a short, concise description of when to use the word.
     - "exampleSentence": Provide an example sentence using the word, but replace the word itself with '_____' (five underscores).
     - Keep the language and complexity of the hints appropriate for the user's learning level.
     - Do not include any explanations or text outside of the JSON object.

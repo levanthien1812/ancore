@@ -415,7 +415,6 @@ export async function updateQuizAnswer(
   userAnswer: string | null,
   isSkipped: boolean = false,
 ) {
-  console.log({ answerId, userAnswer, isSkipped });
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Authentication required.");
@@ -567,7 +566,6 @@ export async function logQuizResult(
       },
     });
 
-    console.log("Updated quiz log:", updatedLog);
     return updatedLog as QuizLogWithAnswers;
   } catch (error) {
     console.error("Failed to log quiz result:", error);

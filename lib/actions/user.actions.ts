@@ -38,7 +38,6 @@ export async function signInWithCredentials(
     }
 
     if (error instanceof AuthError) {
-      console.log(error.type);
       switch (error.type) {
         case "CredentialsSignin":
           return {
@@ -131,8 +130,6 @@ export async function updateUserOnboarding(
     topics: formData.get("topics"),
     dailyGoal: parseInt(formData.get("dailyGoal") as string),
   });
-
-  console.log(validatedFields);
 
   if (!validatedFields.success) {
     return {

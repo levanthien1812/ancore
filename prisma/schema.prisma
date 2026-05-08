@@ -129,7 +129,6 @@ model WordMeaning {
   exampleSentences String?
   synonyms         String?
   antonyms         String?
-  whenToUse        String?
   usageNotes       String?
 }
 

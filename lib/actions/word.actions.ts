@@ -164,7 +164,6 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
 
       return { success: true, message: "Word saved successfully." };
     } catch (error) {
-      console.log(error);
       return {
         success: false,
         message: "Database error: Failed to save word.",
@@ -299,7 +298,6 @@ const getStartOfPeriod = (
       date.setUTCDate(1);
       break;
   }
-  date.setUTCHours(0, 0, 0, 0);
   return date;
 };
 
@@ -334,14 +332,12 @@ export const getWordsCountByPeriod: (
 
     // 2. Generate the full date range and merge with DB results
     const finalData: WordsCountByPeriod[] = [];
-    const today = new Date();
-    today.setUTCHours(0, 0, 0, 0);
 
     for (let i = 0; i < periodCount; i++) {
+      const today = new Date();
       const startOfPeriod = getStartOfPeriod(period, today, i + 1);
       const dateKey = startOfPeriod.toISOString().split("T")[0];
       const countsForDate = dbResultsMap.get(dateKey) || {};
-      console.log(dateKey, countsForDate);
 
       finalData.push({
         periodStart: startOfPeriod,
@@ -349,10 +345,6 @@ export const getWordsCountByPeriod: (
         ...countsForDate,
       });
     }
-
-    // console.log(wordsCount);
-    console.log(dbResultsMap);
-    // console.log(finalData);
 
     return finalData.reverse(); // Return in chronological order
   });
@@ -494,8 +486,6 @@ export const getWordsToReview = async (limit: number = 10) =>
       },
       take: limit, // Limit the number of words per session
     });
-
-    console.log(earliestDueReviews);
 
     const uniqueWordIds = earliestDueReviews.map((item) => item.wordId);
 

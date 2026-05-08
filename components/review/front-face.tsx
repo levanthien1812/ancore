@@ -14,8 +14,7 @@ import { useCarousel } from "../ui/carousel";
 import { PerformanceSummary } from "./review-carousel";
 
 type Hint = Partial<
-  Pick<Word, "tags"> &
-    Pick<WordMeaning, "whenToUse" | "synonyms" | "exampleSentences">
+  Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "exampleSentences">
 >;
 type HintLevel = keyof Hint;
 type HintList = {
@@ -26,14 +25,12 @@ type HintList = {
 
 const FieldLabelMap: Record<HintLevel, string> = {
   tags: "Tags/Topics",
-  whenToUse: "When to use",
   exampleSentences: "Example",
   synonyms: "Synonyms",
 };
 
 const INITIAL_HINT_LIST: HintList = [
   { field: "tags", value: "" },
-  { field: "whenToUse", value: "" },
   { field: "exampleSentences", value: "" },
   { field: "synonyms", value: "" },
 ];
@@ -56,8 +53,6 @@ const FrontFace = ({
   const availableHints = useMemo(() => {
     const availableHints: Hint = {};
     if (word.tags) availableHints.tags = word.tags;
-    if (word.meanings[0]?.whenToUse)
-      availableHints.whenToUse = word.meanings[0]?.whenToUse;
     if (word.meanings[0]?.exampleSentences)
       availableHints.exampleSentences =
         word.meanings[0]?.exampleSentences.split("|")[0];
@@ -166,12 +161,11 @@ const FrontFace = ({
         reviewSessionMutate(ReviewPerformance.GOOD);
         onPerformanceUpdate("Good");
         break;
-      case "whenToUse":
+      case "synonyms":
         reviewSessionMutate(ReviewPerformance.MEDIUM);
         onPerformanceUpdate("Medium");
         break;
       case "exampleSentences":
-      case "synonyms":
         reviewSessionMutate(ReviewPerformance.HARD);
         onPerformanceUpdate("Hard");
         break;
