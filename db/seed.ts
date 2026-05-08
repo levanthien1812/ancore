@@ -58,7 +58,6 @@ async function main() {
                 .words(faker.number.int({ min: 0, max: 5 }))
                 .split(" ")
                 .join(", "),
-              whenToUse: faker.lorem.sentence(),
               usageNotes: faker.lorem.sentence(),
             })),
           },

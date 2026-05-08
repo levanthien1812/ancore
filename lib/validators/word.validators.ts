@@ -9,7 +9,6 @@ export const saveWordMeaningSchema = z.object({
   exampleSentences: z.string().trim().optional().nullable(),
   synonyms: z.string().trim().optional().nullable(),
   antonyms: z.string().trim().optional().nullable(),
-  whenToUse: z.string().trim().optional().nullable(),
   usageNotes: z.string().trim().optional().nullable(),
 });
 

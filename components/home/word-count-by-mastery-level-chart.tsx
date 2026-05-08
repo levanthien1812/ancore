@@ -5,6 +5,7 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartConfig,
 } from "@/components/ui/chart";
 import { getWordsCountPerMasteryLevel } from "@/lib/actions/word.actions";
 import { WordsCountByMasteryLevel } from "@/lib/type";
@@ -32,11 +33,23 @@ const WordCountByMasteryLevelChart = () => {
     : [];
 
   const chartConfig = {
-    count: {
-      label: "Word Count",
-      color: "#2563eb",
+    New: {
+      label: "New",
+      color: MasteryLevelColorCode.New.primary,
     },
-  };
+    Learning: {
+      label: "Learning",
+      color: MasteryLevelColorCode.Learning.primary,
+    },
+    Familiar: {
+      label: "Familiar",
+      color: MasteryLevelColorCode.Familiar.primary,
+    },
+    Mastered: {
+      label: "Mastered",
+      color: MasteryLevelColorCode.Mastered.primary,
+    },
+  } satisfies ChartConfig;
 
   const total = chartData.reduce((acc, { count }) => acc + count, 0);
 
@@ -49,7 +62,7 @@ const WordCountByMasteryLevelChart = () => {
   );
 
   const chart = (
-    <ChartContainer config={chartConfig} className="min-h-40 w-full">
+    <ChartContainer config={chartConfig} className="min-h-40 max-h-64 w-full">
       <BarChart accessibilityLayer data={chartData}>
         <defs>
           {Object.entries(MasteryLevelColorCode).map(([level, color]) => (
@@ -66,7 +79,7 @@ const WordCountByMasteryLevelChart = () => {
             </linearGradient>
           ))}
         </defs>
-        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartTooltip content={<ChartTooltipContent nameKey="level" />} />
         <XAxis
           dataKey="level"
           tickLine={false}
@@ -91,7 +104,7 @@ const WordCountByMasteryLevelChart = () => {
   );
 
   const statistics = (
-    <div className="mt-2 bg-gray-50 p-3 rounded-md flex border">
+    <div className="bg-gray-50 p-2 sm:p-3 rounded-md flex border">
       <div className="border-r px-2 md:px-4">
         <p className="text-sm">Total words</p>
         <p className="text-xl font-bold">{total}</p>
@@ -102,7 +115,7 @@ const WordCountByMasteryLevelChart = () => {
             <div>
               <div className="texl-lg sm:text-xl font-bold flex gap-1 items-center">
                 <div
-                  className="w-2 h-2 rounded-full"
+                  className="w-2 h-2 rounded-[2px]"
                   style={{
                     backgroundColor:
                       MasteryLevelColorCode[level as MasteryLevel].primary,
@@ -119,16 +132,10 @@ const WordCountByMasteryLevelChart = () => {
   );
 
   return (
-    <div className="bg-white p-4 rounded-2xl gap-2 h-full">
-      <p className="text-2xl font-bold text-primary">
+    <div className="bg-white p-4 rounded-2xl space-y-2 h-full">
+      <p className="text-xl sm:text-2xl font-bold text-primary">
         Word counts by mastery level{" "}
-        <span>
-          <Info
-            width={18}
-            height={18}
-            className="inline text-muted-foreground"
-          />
-        </span>
+        <Info width={16} height={16} className="inline text-muted-foreground" />
       </p>
 
       {isLoading || !wordCounts ? (
@@ -155,7 +162,7 @@ const LoadingSkeleton = () => (
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex-1">
             <div className="flex items-center gap-1 mb-1">
-              <Skeleton className="w-2 h-2 rounded-full" />
+              <Skeleton className="w-2 h-2 rounded-[2px]" />
               <Skeleton className="h-6 w-12" />
             </div>
             <Skeleton className="h-3 w-16" />

@@ -56,7 +56,6 @@ const WordCountByPeriodChart = () => {
     queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_PERIOD, period, quantity],
     queryFn: async () => {
       const fetchedWordCounts = await getWordsCountByPeriod(period, quantity);
-      console.log({ fetchedWordCounts });
       return fetchedWordCounts;
     },
   });
@@ -132,7 +131,7 @@ const WordCountByPeriodChart = () => {
           value={quantity.toString()}
         >
           <SelectTrigger className="bg-white min-w-40" name="quantity">
-            <SelectValue placeholder="Select CEFR level" />
+            <SelectValue placeholder="Select quantity" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -149,7 +148,7 @@ const WordCountByPeriodChart = () => {
   );
 
   const chart = (
-    <ChartContainer config={chartConfig} className="h-[260px] w-full">
+    <ChartContainer config={chartConfig} className="min-h-36 max-h-64 w-full">
       <BarChart accessibilityLayer data={chartData}>
         <defs>
           {Object.entries(MasteryLevelColorCode).map(([level, color]) => (
@@ -192,7 +191,7 @@ const WordCountByPeriodChart = () => {
   );
 
   const statistics = (
-    <div className="flex gap-2 md:gap-3 bg-gray-50 rounded-md py-2 md:py-4 border px-3 sm:px-6 justify-around mt-2">
+    <div className="flex gap-2 md:gap-3 bg-gray-50 rounded-md py-2 md:py-4 border px-3 sm:px-6 *:flex-1">
       <div className="flex flex-col md:flex-row gap-2 md:gap-3 items-center">
         <IconDisplay
           size="lg"
@@ -258,16 +257,10 @@ const WordCountByPeriodChart = () => {
   );
 
   return (
-    <div className="bg-white p-4 rounded-2xl gap-2 h-full">
-      <p className="text-2xl font-bold text-primary">
+    <div className="bg-white p-4 rounded-2xl space-y-2 h-full">
+      <p className="text-xl sm:text-2xl font-bold text-primary">
         Word counts by periods{" "}
-        <span>
-          <Info
-            width={18}
-            height={18}
-            className="inline text-muted-foreground"
-          />
-        </span>
+        <Info width={16} height={16} className="inline text-muted-foreground" />
       </p>
 
       {isLoading || !wordCounts ? (

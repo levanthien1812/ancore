@@ -172,7 +172,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         exampleSentences: meaning.exampleSentences ?? null,
         synonyms: meaning.synonyms ?? null,
         antonyms: meaning.antonyms ?? null,
-        whenToUse: null,
         usageNotes: data.usageNotes ?? null,
       }));
 
@@ -252,7 +251,6 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   };
 
   useEffect(() => {
-    console.log(state);
     if (state && state.success) {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });

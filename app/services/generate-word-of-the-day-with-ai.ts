@@ -41,7 +41,6 @@ export const generateWordOfTheDayWithAI = async (
     });
 
     const result = completion.choices[0].message.content;
-    console.log("AI Word of the Day Result:", result);
     return result ? JSON.parse(result) : null;
   } catch (error) {
     console.error("Failed to generate Word of the Day with AI:", error);

@@ -20,6 +20,7 @@ import { Skeleton } from "../ui/skeleton";
 import { RefreshCcw } from "lucide-react";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { shorten } from "@/lib/utils/shorten";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
@@ -48,7 +49,7 @@ const RecentWords = () => {
   return (
     <div className=" flex flex-col bg-white p-4 rounded-2xl gap-2 h-full">
       <div className="">
-        <span className="text-2xl font-bold text-primary">
+        <span className="text-xl sm:text-2xl font-bold text-primary">
           📋 Recent words!
         </span>
 
@@ -56,7 +57,7 @@ const RecentWords = () => {
           onClick={handleRefresh}
           className="ms-2 active:rotate-180 transition-all ease-in duration-500 cursor-pointer"
         >
-          <RefreshCcw className="text-primary" height={20} />
+          <RefreshCcw className="text-primary" height={16} />
         </button>
       </div>
       <div className="border border-primary rounded-xl">
@@ -80,7 +81,7 @@ const RecentWords = () => {
                       index % 2 === 0 ? "text-primary-2" : "text-primary"
                     }`}
                   >
-                    {word.word}
+                    {shorten(word.word, 20)}
                   </TableCell>
                   <TableCell>
                     <WordMasteryLevel
@@ -94,7 +95,7 @@ const RecentWords = () => {
                   <TableCell>
                     <Button
                       size={"sm"}
-                      variant={"outline"}
+                      variant={"link"}
                       className="bg-transparent py-1 h-fit"
                       onClick={() => setSelectedIndex(index)}
                     >

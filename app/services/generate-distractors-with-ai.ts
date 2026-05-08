@@ -36,7 +36,6 @@ export const generateDistractorsWithAi = async (
     });
 
     const result = completion.choices[0].message.content;
-    console.log("AI Distractors Result:", result);
     return result ? JSON.parse(result) : null;
   } catch (error) {
     console.error("Failed to generate distractors with AI:", error);

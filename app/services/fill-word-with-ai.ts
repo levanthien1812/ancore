@@ -9,7 +9,6 @@ export interface WordDefinitionOutput {
     exampleSentences?: string;
     synonyms?: string;
     antonyms?: string;
-    // whenToUse?: string;
   }>;
   usageNotes?: string;
 }
@@ -43,7 +42,6 @@ export const fillWordWithAi = async (
                     exampleSentences: { type: "string" },
                     synonyms: { type: "string" },
                     antonyms: { type: "string" },
-                    // whenToUse: { type: "string" },
                   },
                   required: ["definition", "partOfSpeech"],
                 },
@@ -58,7 +56,6 @@ export const fillWordWithAi = async (
     });
 
     const result = completion.choices[0].message.content;
-    console.log(result);
     return result ? JSON.parse(result) : null;
   } catch (error) {
     throw error;
