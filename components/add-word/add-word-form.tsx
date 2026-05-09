@@ -272,8 +272,8 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     >
       {/* Add a hidden input for the word ID if it exists */}
       {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
-      <div className="rounded-lg border border-gray-200">
-        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between bg-gray-50">
+      <div className="rounded-lg border border-gray-200 overflow-hidden">
+        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
           <div className="flex gap-2">
             <Info
               width={20}
@@ -379,8 +379,8 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
           </div>
         </div>
       </div>
-      <div className="rounded-lg border border-gray-200 mt-2">
-        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between bg-gray-50">
+      <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
+        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
           <div className="flex gap-2">
             <BookOpen
               width={20}
@@ -424,8 +424,8 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
           ))}
         </div>
       </div>
-      <div className="rounded-lg border border-gray-200 mt-2">
-        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between bg-gray-50">
+      <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
+        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
           <div className="flex gap-2">
             <Layers2
               width={20}
