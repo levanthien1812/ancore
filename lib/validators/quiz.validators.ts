@@ -12,9 +12,10 @@ export const quizQuestionSchema = z.object({
   options: z.array(z.string()).default([]),
   leftItems: z.array(z.string()).optional(),
   rightItems: z.array(z.string()).optional(),
+  gapHint: z.string().optional(),
   // The answer is always a string, sometimes stringified JSON.
   answer: z.string(),
   // These will be added just before saving to the DB
   userId: z.string().optional(),
-  quizzesLogId: z.string().optional(),
+  quizId: z.string().optional(),
 });

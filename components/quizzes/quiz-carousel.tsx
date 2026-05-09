@@ -12,9 +12,9 @@ import { logQuizResult, updateQuizAnswer } from "@/lib/actions/quiz.actions";
 import QuizSummary from "./quiz-summary";
 import { toast } from "sonner";
 import { useBeforeUnload } from "@/lib/hooks/use-before-unload";
-import { QuizAnswerWithQuestion, QuizLogWithAnswers } from "@/lib/type";
+import { QuizAnswerWithQuestion, QuizWithAnswers } from "@/lib/type";
 
-const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
+const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [startTime] = useState(new Date());
@@ -23,13 +23,11 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
   // State to hold the questions with user answers
   const [currentAnswers, setCurrentAnswers] = useState<
     QuizAnswerWithQuestion[]
-  >(quizzesLog.quizAnswers);
-  const [finalQuizLog, setFinalQuizLog] = useState<QuizLogWithAnswers | null>(
-    null,
-  );
+  >(quiz.quizAnswers);
+  const [finalQuiz, setFinalQuiz] = useState<QuizWithAnswers | null>(null);
 
   // Hook to prevent accidental navigation away from the quiz
-  useBeforeUnload(!finalQuizLog);
+  useBeforeUnload(!finalQuiz);
 
   useEffect(() => {
     if (!api) {
@@ -50,14 +48,18 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
     };
   }, [api]);
 
-  const handleAnswered = (
-    answerId: string,
-    userAnswer: string | null,
-    isSkipped: boolean = false,
-  ) => {
+  // Find the first unanswered question to set as the starting point for resumed sessions
+  const [initialIndex] = useState(() => {
+    const start = currentAnswers.findIndex(
+      (a) => a.userAnswer === null && !a.isSkipped,
+    );
+    return start === -1 ? 0 : start;
+  });
+
+  const handleAnswered = (answerId: string, userAnswer: string | null) => {
     // Call the server action to update the database in the background
     startTransition(async () => {
-      const result = await updateQuizAnswer(answerId, userAnswer, isSkipped);
+      const result = await updateQuizAnswer(answerId, userAnswer);
       if (result) {
         setCurrentAnswers((prev) =>
           prev.map((a) =>
@@ -66,7 +68,10 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
                   ...a,
                   userAnswer,
                   isCorrect: result.isCorrect,
-                  isSkipped,
+                  quizQuestion: {
+                    ...a.quizQuestion,
+                    answer: result.correctAnswer,
+                  },
                 }
               : a,
           ),
@@ -76,13 +81,6 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
   };
 
   const handleNext = () => {
-    const currentAnswer = currentAnswers[current];
-
-    // If user clicks next/skip without answering, mark it as an explicit skip in the DB
-    if (currentAnswer.userAnswer === null && !currentAnswer.isSkipped) {
-      handleAnswered(currentAnswer.id, null, true);
-    }
-
     if (api?.canScrollNext()) {
       api.scrollNext();
     } else {
@@ -90,13 +88,13 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
       const durationSeconds = Math.floor(
         (new Date().getTime() - startTime.getTime()) / 1000,
       );
-      const quizLogId = currentAnswers[0]?.quizzesLogId;
+      const quizId = currentAnswers[0]?.quizId;
 
-      if (quizLogId) {
+      if (quizId) {
         startTransition(async () => {
-          const updatedResult = await logQuizResult(quizLogId, durationSeconds);
+          const updatedResult = await logQuizResult(quizId, durationSeconds);
           if (updatedResult) {
-            setFinalQuizLog(updatedResult);
+            setFinalQuiz(updatedResult);
           }
         });
       } else {
@@ -105,8 +103,8 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
     }
   };
 
-  if (finalQuizLog) {
-    return <QuizSummary quizzesLog={finalQuizLog} />;
+  if (finalQuiz) {
+    return <QuizSummary quiz={finalQuiz} />;
   }
 
   if (currentAnswers.length === 0) return null;
@@ -127,16 +125,14 @@ const QuizCarousel = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
       <Carousel
         className="flex-1 h-full"
         setApi={setApi}
-        opts={{ watchDrag: false }}
+        opts={{ watchDrag: false, startIndex: initialIndex }}
       >
         <CarouselContent className="h-full">
           {currentAnswers.map((answer, index) => (
             <CarouselItem key={answer.id} className="h-full">
               <QuestionCard
                 question={answer.quizQuestion}
-                onAnswer={(userAnswer, isSkipped) =>
-                  handleAnswered(answer.id, userAnswer, isSkipped)
-                }
+                onAnswer={(userAnswer) => handleAnswered(answer.id, userAnswer)}
                 isCorrect={answer.isCorrect}
                 onNext={handleNext}
                 currentIndex={index}

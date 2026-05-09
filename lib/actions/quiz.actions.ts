@@ -7,12 +7,12 @@ import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel, QuestionType, QuizStatus } from "@prisma/client";
 import { generateDistractorsWithAi } from "@/app/services/generate-distractors-with-ai";
-import { QuizLogWithAnswers } from "../type";
+import { QuizAnswerWithQuestion, QuizWithAnswers } from "../type";
 
 export async function createQuizSession(
   wordCount: number = 5,
   specificWords?: string[],
-): Promise<{ success: boolean; quizLogId?: string; message?: string }> {
+): Promise<{ success: boolean; quizId?: string; message?: string }> {
   const session = await auth();
   if (!session?.user?.id || !session.user) {
     throw new Error("Authentication required.");
@@ -25,7 +25,7 @@ export async function createQuizSession(
     : await getWordsToQuiz({ wordCount });
 
   if (wordsToQuiz.length === 0) {
-    return { success: true, quizLogId: undefined };
+    return { success: true, quizId: undefined };
   }
 
   // 2. Get all user's words to use as a distractor pool
@@ -37,7 +37,7 @@ export async function createQuizSession(
   const distractorPool = allUserWords.map((w) => w.word);
 
   // Create a quizzes log first
-  const quizzesLog = await prisma.quizzesLog.create({
+  const quiz = await prisma.quiz.create({
     data: {
       userId: user.id!,
       durationSeconds: 0,
@@ -86,7 +86,13 @@ export async function createQuizSession(
               );
 
               const object = await generateDistractorsWithAi(prompt);
-              if (!object) continue;
+              if (!object) break;
+              let distractors = object.distractors.map((d) => d.trim());
+              if (distractors.includes(word.word)) {
+                distractors = distractors.filter(
+                  (d) => d.toLowerCase() !== word.word.toLowerCase(),
+                );
+              }
 
               questionsToLink.push({
                 newData: quizQuestionSchema.parse({
@@ -95,7 +101,7 @@ export async function createQuizSession(
                     "Choose the correct word for the following definition:",
                   question: mainMeaning.definition,
                   type: QuestionType.MultipleChoice_DefinitionToWord,
-                  options: [...object.distractors, word.word], // Combine and shuffle on client
+                  options: [...distractors, word.word], // Combine and shuffle on client
                   answer: word.word,
                 }),
               });
@@ -129,6 +135,8 @@ export async function createQuizSession(
             questionType = "synonym";
           } else if (canCreateAntonym) {
             questionType = "antonym";
+          } else {
+            break;
           }
 
           if (questionType) {
@@ -155,7 +163,7 @@ export async function createQuizSession(
               );
 
               const object = await generateDistractorsWithAi(prompt);
-              if (!object) continue;
+              if (!object) break;
 
               questionsToLink.push({
                 newData: quizQuestionSchema.parse({
@@ -178,25 +186,60 @@ export async function createQuizSession(
         // --- Question Type 3: Fill in the Blank ---
         case QuestionType.FillInTheBlank:
           // const example = mainMeaning.exampleSentences?.split("|")[0];
-          const example = mainMeaning.exampleSentences?.split("|")[0];
-          if (example) {
-            const questionText = example.replace(
-              new RegExp(`\\b${word.word}\\b`, "gi"),
-              "_____",
-            );
-            if (questionText !== example) {
-              // Ensure the word was actually in the sentence
-              questionsToLink.push({
-                newData: quizQuestionSchema.parse({
-                  wordIds: [word.id],
-                  direction: "Fill in the blank with the correct word.",
-                  question: questionText,
-                  type: QuestionType.FillInTheBlank,
-                  answer: word.word,
-                }),
-              });
+          if (
+            !mainMeaning.exampleSentences ||
+            mainMeaning.exampleSentences.trim().length === 0
+          ) {
+            break;
+          }
+          const example = mainMeaning.exampleSentences.split("|")[0];
+          if (!example.includes(word.word)) {
+            break;
+          }
+          const questionText = example.replace(
+            new RegExp(`\\b${word.word}\\b`, "gi"),
+            "_____",
+          );
+
+          const wordLength = word.word.length;
+          const generatedGapHintArray = Array(wordLength).fill("_");
+
+          if (wordLength > 0) {
+            // Always show the first letter
+            generatedGapHintArray[0] = word.word[0];
+
+            // Determine how many additional hints to show (e.g., 30% of the word length)
+            const additionalHintCount = Math.floor(wordLength * 0.3);
+            let hintsAdded = 0;
+
+            // Add random hints, ensuring they are not the first letter and not duplicates
+            while (hintsAdded < additionalHintCount) {
+              const randomIndex = Math.floor(Math.random() * wordLength);
+              if (
+                randomIndex !== 0 &&
+                generatedGapHintArray[randomIndex] === "_"
+              ) {
+                generatedGapHintArray[randomIndex] = word.word[randomIndex];
+                hintsAdded++;
+              }
             }
           }
+          const gapHint = generatedGapHintArray.join("");
+
+          if (questionText !== example) {
+            // Ensure the word was actually in the sentence
+            questionsToLink.push({
+              newData: quizQuestionSchema.parse({
+                wordIds: [word.id],
+                direction: "Fill in the blank with the correct word.",
+                question: questionText,
+                type: QuestionType.FillInTheBlank,
+                answer: word.word,
+                gapHint,
+              }),
+            });
+          }
+
           break;
       }
     }
@@ -249,7 +292,7 @@ export async function createQuizSession(
             // Link existing question
             return prisma.quizAnswer.create({
               data: {
-                quizzesLog: { connect: { id: quizzesLog.id } },
+                quiz: { connect: { id: quiz.id } },
                 quizQuestion: { connect: { id: q.questionId } },
               },
             });
@@ -258,7 +301,7 @@ export async function createQuizSession(
           const { wordIds, ...questionData } = q.newData;
           return prisma.quizAnswer.create({
             data: {
-              quizzesLog: { connect: { id: quizzesLog.id } },
+              quiz: { connect: { id: quiz.id } },
               quizQuestion: {
                 create: {
                   ...questionData,
@@ -271,13 +314,13 @@ export async function createQuizSession(
         }),
       );
     } catch (error) {
-      await prisma.quizzesLog.delete({ where: { id: quizzesLog.id } });
+      await prisma.quiz.delete({ where: { id: quiz.id } });
       console.error("Failed to save quiz questions:", error);
       return { success: false, message: "Could not create quiz session." };
     }
   }
 
-  return { success: true, quizLogId: quizzesLog.id };
+  return { success: true, quizId: quiz.id };
 }
 
 export const getWordsToQuiz = async ({
@@ -379,7 +422,7 @@ export async function cleanupAbandonedQuizzes() {
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
   try {
-    const abandonedQuizzes = await prisma.quizzesLog.findMany({
+    const abandonedQuizzes = await prisma.quiz.findMany({
       where: {
         completedAt: null, // The quiz was never finished
         createdAt: {
@@ -395,7 +438,7 @@ export async function cleanupAbandonedQuizzes() {
       return { success: true, message: "No abandoned quizzes to clean up." };
     }
 
-    const { count } = await prisma.quizzesLog.deleteMany({
+    const { count } = await prisma.quiz.deleteMany({
       where: {
         id: {
           in: abandonedQuizzes.map((q) => q.id),
@@ -413,7 +456,6 @@ export async function cleanupAbandonedQuizzes() {
 export async function updateQuizAnswer(
   answerId: string,
   userAnswer: string | null,
-  isSkipped: boolean = false,
 ) {
   const session = await auth();
   if (!session?.user?.id) {
@@ -422,7 +464,7 @@ export async function updateQuizAnswer(
 
   try {
     const quizAnswer = await prisma.quizAnswer.findFirst({
-      where: { id: answerId, quizzesLog: { userId: session.user.id } },
+      where: { id: answerId, quiz: { userId: session.user.id } },
       include: { quizQuestion: true },
     });
 
@@ -431,29 +473,38 @@ export async function updateQuizAnswer(
     }
 
     let isCorrect = false;
+    let isSkipped = false;
 
-    if (isSkipped || userAnswer === null) {
-      isCorrect = false;
-    } else if (quizAnswer.quizQuestion.type === QuestionType.Matching) {
-      try {
-        const userObj = JSON.parse(userAnswer);
-        const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
-        const correctKeys = Object.keys(correctObj);
-        isCorrect =
-          correctKeys.length === Object.keys(userObj).length &&
-          correctKeys.every((key) => userObj[key] === correctObj[key]);
-      } catch (e) {
-        isCorrect = false;
-      }
+    if (userAnswer === null || !quizAnswer.quizQuestion.answer) {
+      isSkipped = true;
     } else {
-      isCorrect =
-        userAnswer.trim().toLowerCase() ===
-        quizAnswer.quizQuestion.answer.trim().toLowerCase();
+      if (quizAnswer.quizQuestion.type === QuestionType.Matching) {
+        try {
+          const userObj = JSON.parse(userAnswer);
+          const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
+          const correctKeys = Object.keys(correctObj);
+          isCorrect =
+            correctKeys.length === Object.keys(userObj).length &&
+            correctKeys.every((key) => userObj[key] === correctObj[key]);
+        } catch (e) {
+          isCorrect = false;
+        }
+      } else {
+        isCorrect =
+          userAnswer.trim().toLowerCase() ===
+          quizAnswer.quizQuestion.answer.trim().toLowerCase();
+      }
     }
 
     const answer = await prisma.quizAnswer.update({
       where: { id: answerId },
-      data: { userAnswer, isCorrect, isSkipped },
+      data: {
+        userAnswer,
+        isCorrect,
+        isWrong: isSkipped ? false : !isCorrect,
+        isSkipped,
+        isUnreached: false,
+      },
       include: {
         quizQuestion: { include: { words: true } },
       },
@@ -492,7 +543,7 @@ export async function updateQuizAnswer(
       }
     }
 
-    return { isCorrect };
+    return { isCorrect, correctAnswer: quizAnswer.quizQuestion.answer };
   } catch (error) {
     console.error("Failed to update quiz question:", error);
     // Optionally return a value to indicate failure
@@ -500,9 +551,9 @@ export async function updateQuizAnswer(
 }
 
 export async function logQuizResult(
-  quizLogId: string,
+  quizId: string,
   durationSeconds: number,
-): Promise<QuizLogWithAnswers | undefined> {
+): Promise<QuizWithAnswers | undefined> {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Authentication required.");
@@ -513,27 +564,30 @@ export async function logQuizResult(
 
     const answersInLog = await prisma.quizAnswer.findMany({
       where: {
-        quizzesLogId: quizLogId,
-        quizzesLog: { userId: session.user.id },
+        quizId: quizId,
+        quiz: { userId: session.user.id },
       },
-      select: { isCorrect: true, userAnswer: true, isSkipped: true },
+      select: {
+        isCorrect: true,
+        userAnswer: true,
+        isSkipped: true,
+        isUnreached: true,
+        isWrong: true,
+      },
     });
 
     const totalQuestions = answersInLog.length;
-    const correctAnswers = answersInLog.filter((q) => q.isCorrect).length;
-    const skippedQuestions = answersInLog.filter((q) => q.isSkipped).length;
-    const wrongAnswers = answersInLog.filter(
-      (q) => !q.isSkipped && q.userAnswer !== null && !q.isCorrect,
-    ).length;
+    const correctAnswers = answersInLog.filter((a) => a.isCorrect).length;
+    const skippedQuestions = answersInLog.filter((a) => a.isSkipped).length;
+    const wrongAnswers = answersInLog.filter((a) => a.isWrong).length;
+    const unreachedQuestions = answersInLog.filter((a) => a.isUnreached).length;
 
-    const unreachedQuestions = answersInLog.filter(
-      (q) => !q.isSkipped && q.userAnswer === null,
-    ).length;
+    const completedQuestions = totalQuestions - unreachedQuestions;
 
     // Calculate quiz status based on performance
     let status: QuizStatus;
     // If there are unreached questions, the user quit early
-    if (unreachedQuestions > 0) {
+    if (completedQuestions < totalQuestions) {
       status = QuizStatus.InProgress;
     } else {
       if (correctAnswers === totalQuestions) {
@@ -545,8 +599,8 @@ export async function logQuizResult(
       }
     }
     // Update the main quiz log with the final details
-    const updatedLog = await prisma.quizzesLog.update({
-      where: { id: quizLogId, userId: session.user.id },
+    const updatedLog = await prisma.quiz.update({
+      where: { id: quizId, userId: session.user.id },
       data: {
         completedAt: new Date(),
         durationSeconds,
@@ -554,6 +608,8 @@ export async function logQuizResult(
         totalQuestions,
         wrongAnswers,
         skippedQuestions,
+        completedQuestions,
+        unreachedQuestions,
         status,
       },
       include: {
@@ -566,15 +622,15 @@ export async function logQuizResult(
       },
     });
 
-    return updatedLog as QuizLogWithAnswers;
+    return updatedLog as QuizWithAnswers;
   } catch (error) {
     console.error("Failed to log quiz result:", error);
   }
 }
 
-export async function getQuizLog(quizLogId: string) {
-  const quizLog = await prisma.quizzesLog.findUnique({
-    where: { id: quizLogId },
+export async function getQuiz(quizId: string) {
+  const quiz = await prisma.quiz.findFirst({
+    where: { id: quizId },
     include: {
       quizAnswers: {
         include: { quizQuestion: { include: { words: true } } },
@@ -585,11 +641,31 @@ export async function getQuizLog(quizLogId: string) {
     },
   });
 
-  if (quizLog?.quizAnswers) {
-    quizLog.quizAnswers = shuffleArray(quizLog.quizAnswers);
+  // console.log(quiz);
+
+  if (quiz?.quizAnswers) {
+    const isCompleted = quiz.status !== QuizStatus.InProgress;
+
+    const shuffled = shuffleArray(quiz.quizAnswers);
+    // Move completed questions (answered or skipped) to the start of the array
+    const sortedAnswers = [
+      ...shuffled.filter((a) => a.userAnswer !== null || a.isSkipped),
+      ...shuffled.filter((a) => a.userAnswer === null && !a.isSkipped),
+    ];
+
+    quiz.quizAnswers = sortedAnswers.map((ans) => {
+      if (!isCompleted) {
+        // Strip the answer field if the quiz is not completed
+        return {
+          ...ans,
+          quizQuestion: { ...ans.quizQuestion, answer: null },
+        };
+      }
+      return ans;
+    }) as QuizAnswerWithQuestion[];
   }
 
-  return quizLog;
+  return quiz;
 }
 
 export const getRecentQuizzes = async () => {
@@ -598,7 +674,7 @@ export const getRecentQuizzes = async () => {
     return [];
   }
 
-  const quizzes = await prisma.quizzesLog.findMany({
+  const quizzes = await prisma.quiz.findMany({
     where: { userId: session.user.id },
     orderBy: { createdAt: "desc" },
   });
@@ -609,11 +685,11 @@ export const getRecentQuizzes = async () => {
 /**
  * Creates a new quiz session using the exact same questions from an existing one.
  */
-export async function retryQuizSession(quizLogId: string) {
+export async function retryQuizSession(quizId: string) {
   try {
     // 1. Find the original quiz log and its associated questions
-    const originalLog = await prisma.quizzesLog.findUnique({
-      where: { id: quizLogId },
+    const originalLog = await prisma.quiz.findUnique({
+      where: { id: quizId },
       include: { quizAnswers: true },
     });
 
@@ -624,7 +700,7 @@ export async function retryQuizSession(quizLogId: string) {
     // 2. Create the new session and answers in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create a new InProgress session
-      const newLog = await tx.quizzesLog.create({
+      const newLog = await tx.quiz.create({
         data: {
           userId: originalLog.userId,
           totalQuestions: originalLog.totalQuestions,
@@ -636,7 +712,7 @@ export async function retryQuizSession(quizLogId: string) {
 
       // Create new answer placeholders linked to the original questions
       const newAnswersData = originalLog.quizAnswers.map((ans) => ({
-        quizzesLogId: newLog.id,
+        quizId: newLog.id,
         quizQuestionId: ans.quizQuestionId,
       }));
 
@@ -647,7 +723,7 @@ export async function retryQuizSession(quizLogId: string) {
       return newLog;
     });
 
-    return { success: true, quizLogId: result.id };
+    return { success: true, quizId: result.id };
   } catch (error) {
     console.error("Retry quiz error:", error);
     return { success: false, message: "Failed to create retry session." };

@@ -1,11 +1,12 @@
-import { getQuizLog } from "@/lib/actions/quiz.actions";
+import { getQuiz } from "@/lib/actions/quiz.actions";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import QuizCarousel from "@/components/quizzes/quiz-carousel";
 import QuizSummary from "@/components/quizzes/quiz-summary";
+import IncompleteQuiz from "@/components/quizzes/incomplete-quiz";
 
 type Props = {
-  params: Promise<{ quizLogId: string }>;
+  params: Promise<{ quizId: string }>;
 };
 
 // This function sets the page title
@@ -18,21 +19,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const QuizSessionPage = async (props: Props) => {
   const params = await props.params;
 
-  const quizLog = await getQuizLog(params.quizLogId);
+  const quiz = await getQuiz(params.quizId);
 
-  if (!quizLog || !quizLog.quizAnswers || quizLog.quizAnswers.length === 0) {
+  if (!quiz || !quiz.quizAnswers || quiz.quizAnswers.length === 0) {
     notFound();
   }
 
-  // Determine if the quiz has been started (at least one question answered)
-  const isQuizStarted = quizLog.quizAnswers.some((q) => q.userAnswer !== null);
-
   return (
     <div className={`w-full max-w-[500px] mx-auto py-2 px-2 h-full`}>
-      {quizLog.completedAt || isQuizStarted ? (
-        <QuizSummary quizzesLog={quizLog} />
+      {quiz.completedAt ? (
+        <QuizSummary quiz={quiz} />
+      ) : quiz.unreachedQuestions ? (
+        <IncompleteQuiz quiz={quiz} />
       ) : (
-        <QuizCarousel quizzesLog={quizLog} />
+        <QuizCarousel quiz={quiz} />
       )}
     </div>
   );

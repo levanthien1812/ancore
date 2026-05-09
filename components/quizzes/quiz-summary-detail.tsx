@@ -8,25 +8,21 @@ import {
   Star,
   CircleX,
 } from "lucide-react";
-import { QuizLogWithAnswers } from "@/lib/type";
+import { QuizWithAnswers } from "@/lib/type";
 import Image from "next/image";
 import Medal from "@/public/images/medal.png";
 import AnswerCard from "./answer-card";
 
-const QuizSummaryDetail = ({
-  quizzesLog,
-}: {
-  quizzesLog: QuizLogWithAnswers;
-}) => {
+const QuizSummaryDetail = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const [showDetails, setShowDetails] = useState(false);
 
   // Randomize questions once on component mount
   // const shuffledAnswers = useMemo(
-  //   () => shuffleArray(quizzesLog.quizAnswers),
+  //   () => shuffleArray(quiz.quizAnswers),
   //   [quizAnswers],
   // );
 
-  const correctCount = quizzesLog.quizAnswers.filter((a) => a.isCorrect).length;
+  const correctCount = quiz.quizAnswers.filter((a) => a.isCorrect).length;
 
   return (
     <div className="space-y-2 flex-1">
@@ -38,7 +34,7 @@ const QuizSummaryDetail = ({
           <p className="text-xl font-bold">
             You got{" "}
             <span className="text-green-500 text-2xl">{correctCount}</span> out
-            of {quizzesLog.quizAnswers.length} correct!
+            of {quiz.quizAnswers.length} correct!
           </p>
           <p className="text-sm text-muted-foreground">
             Good effort! Keep it up!
@@ -65,8 +61,7 @@ const QuizSummaryDetail = ({
           </div>
           <div>
             <p className="text-lg font-bold leading-none">
-              {Math.round((correctCount / quizzesLog.quizAnswers.length) * 100)}
-              %
+              {Math.round((correctCount / quiz.quizAnswers.length) * 100)}%
             </p>
             <p className="text-xs text-muted-foreground">Score</p>
           </div>
@@ -77,7 +72,7 @@ const QuizSummaryDetail = ({
           </div>
           <div>
             <p className="text-lg font-bold leading-none">
-              {quizzesLog.totalQuestions}
+              {quiz.totalQuestions}
             </p>
             <p className="text-xs text-muted-foreground">Questions</p>
           </div>
@@ -88,7 +83,7 @@ const QuizSummaryDetail = ({
           </div>
           <div>
             <p className="text-lg font-bold leading-none">
-              {quizzesLog.correctAnswers}
+              {quiz.correctAnswers}
             </p>
             <p className="text-xs text-muted-foreground">Correct</p>
           </div>
@@ -99,7 +94,7 @@ const QuizSummaryDetail = ({
           </div>
           <div>
             <p className="text-lg font-bold leading-none">
-              {quizzesLog.wrongAnswers}
+              {quiz.wrongAnswers}
             </p>
             <p className="text-xs text-muted-foreground">Incorrect</p>
           </div>
@@ -107,7 +102,7 @@ const QuizSummaryDetail = ({
       </div>
 
       <div className="space-y-2">
-        {quizzesLog.quizAnswers.map((a, index) => (
+        {quiz.quizAnswers.map((a, index) => (
           <AnswerCard
             key={a.id}
             answer={a}

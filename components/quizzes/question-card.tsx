@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ import MultipleChoiceBody from "@/components/quizzes/multiple-choice-body";
 import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
 import { Separator } from "../ui/separator";
-import { QuizQuestion } from "@prisma/client";
+import { QuizQuestionWithWords } from "@/lib/type";
 
 const QuestionCard = ({
   question,
@@ -19,8 +19,8 @@ const QuestionCard = ({
   totalQuestions,
   isSubmitting,
 }: {
-  question: QuizQuestion;
-  onAnswer: (userAnswer: string | null, isSkipped?: boolean) => void;
+  question: QuizQuestionWithWords;
+  onAnswer: (userAnswer: string | null) => void;
   isCorrect: boolean | null;
   onNext: () => void;
   currentIndex: number;
@@ -34,13 +34,15 @@ const QuestionCard = ({
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
       setIsAnswered(true);
-      onAnswer(selectedAnswer, false);
+      onAnswer(selectedAnswer);
     }
   };
 
   const handleSkip = () => {
+    setSelectedAnswer(null);
     setIsAnswered(true);
-    onAnswer(null, true);
+    onAnswer(null);
+    onNext();
   };
 
   const renderQuestionBody = () => {
@@ -52,7 +54,6 @@ const QuestionCard = ({
             question={question}
             selectedAnswer={selectedAnswer}
             setSelectedAnswer={setSelectedAnswer}
-            isAnswered={isAnswered}
           />
         );
       case QuizQuestionType.FillInTheBlank:
@@ -81,6 +82,7 @@ const QuestionCard = ({
       case QuizQuestionType.FillInTheBlank:
         return <p className="text-center">{question.answer}</p>;
       case QuizQuestionType.Matching:
+        if (!question.answer) return null;
         const correctAnswerMap = JSON.parse(question.answer) as Record<
           string,
           string
@@ -135,7 +137,7 @@ const QuestionCard = ({
           {renderQuestionBody()}
         </div>
         <div className="mt-4 space-y-2">
-          {isAnswered && isCorrect !== null && (
+          {isAnswered && !isSubmitting && isCorrect !== null && (
             <div
               className={cn(
                 "p-4 rounded-md font-bold",
@@ -167,11 +169,11 @@ const QuestionCard = ({
           )}
           {isAnswered && (
             <Button onClick={onNext} className="w-full" disabled={isSubmitting}>
-              {isLastQuestion
+              {!isLastQuestion
                 ? isSubmitting
-                  ? "Saving..."
-                  : "Finish Quiz"
-                : "Next"}
+                  ? "Checking answer..."
+                  : "Next"
+                : "Finish Quiz"}
             </Button>
           )}
         </div>

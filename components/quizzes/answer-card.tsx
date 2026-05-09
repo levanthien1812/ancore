@@ -3,7 +3,6 @@ import { CheckCircle, XCircle, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuizQuestionType, QuizQuestionTypeLabel } from "@/lib/constants/enums";
 import { QuizAnswerWithQuestion } from "@/lib/type";
-import { Badge } from "../ui/badge";
 
 const AnswerCard = ({
   answer,
@@ -25,14 +24,17 @@ const AnswerCard = ({
         const correctAnswers = Object.entries(correctAnswerMap).map(
           ([leftId, rightId]) => {
             return (
-              <div key={leftId} className="grid grid-cols-3 gap-x-4">
+              <div
+                key={leftId}
+                className="grid grid-cols-3 gap-x-4 p-2 not-last:border-b"
+              >
                 <div>{leftId}</div>
                 <div className="col-span-2">{rightId}</div>
               </div>
             );
           },
         );
-        return <div className="border rounded-md p-4">{correctAnswers}</div>;
+        return <div className="border rounded-md mt-1">{correctAnswers}</div>;
       default:
         return null;
     }
@@ -43,23 +45,38 @@ const AnswerCard = ({
       key={answer.id}
       className={cn(
         "p-3 border rounded-lg",
-        answer.isCorrect === true && "border-green-500 bg-green-50",
-        answer.isCorrect === false && "border-red-500 bg-red-50",
-        answer.isCorrect === null && "border-gray-300 bg-gray-50",
+        answer.isCorrect && "border-green-500 bg-green-50",
+        answer.isWrong && "border-red-500 bg-red-50",
+        answer.isSkipped && "border-gray-300 bg-gray-50",
       )}
     >
       <div className="flex justify-between items-start gap-2">
         <div
-          className={`w-6 h-6 flex items-center justify-center shrink-0 rounded-full text-sm text-white ${answer.isCorrect === true ? "bg-green-500" : answer.isCorrect === false ? "bg-red-500" : "bg-gray-300"}`}
+          className={cn(
+            `w-6 h-6 flex items-center justify-center shrink-0 rounded-full text-sm text-white`,
+            {
+              "bg-green-500": answer.isCorrect,
+              "bg-red-500": answer.isWrong,
+              "bg-gray-500": answer.isSkipped,
+            },
+          )}
         >
           {index + 1}
         </div>
         <div className="flex-1 space-y-1">
           <div className="flex gap-2 items-center">
             <div
-              className={`${answer.isCorrect ? "text-green-500" : "text-red-500"} text-sm font-bold`}
+              className={cn(`text-sm font-bold`, {
+                "text-green-500": answer.isCorrect,
+                "text-red-500": answer.isWrong,
+                "text-gray-500": answer.isSkipped,
+              })}
             >
-              {answer.isCorrect ? "Correct" : "Incorrect"}
+              {answer.isCorrect
+                ? "Correct"
+                : answer.isWrong
+                  ? "Incorrect"
+                  : "Skipped"}
             </div>
 
             <div className="flex justify-between items-center px-2 py-0.5 bg-gray-50 text-gray-500 text-xs rounded-full w-fit shadow">
@@ -67,11 +84,13 @@ const AnswerCard = ({
             </div>
 
             <div className="ms-auto">
-              {answer.isCorrect ? (
+              {answer.isCorrect && (
                 <CheckCircle width={18} className="text-green-500 ml-2" />
-              ) : answer.isCorrect === false ? (
+              )}{" "}
+              {answer.isWrong && (
                 <XCircle width={18} className="text-red-500 ml-2" />
-              ) : (
+              )}{" "}
+              {answer.isSkipped && (
                 <HelpCircle width={18} className="text-gray-400 ml-2" />
               )}
             </div>
@@ -91,18 +110,18 @@ const AnswerCard = ({
                   {answer.quizQuestion.question}
                 </p>
               </div>
-              <div>
-                <span className="font-semibold">Your answer:</span>{" "}
-                <div className="text-muted-foreground">
-                  {answer.userAnswer
-                    ? displayAnswer(
-                        answer.quizQuestion.type as QuizQuestionType,
-                        answer.userAnswer,
-                      )
-                    : "Not answered"}
+              {answer.userAnswer && (
+                <div>
+                  <span className="font-semibold">Your answer:</span>{" "}
+                  <div className="text-muted-foreground">
+                    {displayAnswer(
+                      answer.quizQuestion.type as QuizQuestionType,
+                      answer.userAnswer,
+                    )}
+                  </div>
                 </div>
-              </div>
-              {!answer.isCorrect && (
+              )}
+              {answer.quizQuestion.answer && !answer.isCorrect && (
                 <div>
                   <span className="font-semibold">Correct answer:</span>{" "}
                   <div className="text-muted-foreground">

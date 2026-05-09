@@ -98,34 +98,67 @@ const MatchingBody = ({
     setRightItems((prev) => [...prev, { id: rightId, text: rightId }]);
   };
 
+  const isCorrectMatch = (leftId: string, rightId: string) => {
+    if (!question.answer || !selectedMatchs) return false;
+    const correctAnswerMap = JSON.parse(question.answer) as Record<
+      string,
+      string
+    >;
+
+    return correctAnswerMap[leftId] === rightId;
+  };
+
+  const isAllMatchsCorrect = () => {
+    if (!question.answer || !selectedMatchs) return false;
+    return Object.entries(selectedMatchs).every(([leftId, rightId]) => {
+      return isCorrectMatch(leftId, rightId);
+    });
+  };
+
   return (
     <div>
       {Object.keys(selectedMatchs).length > 0 && (
         <>
-          <div className="border rounded-md p-4">
+          <div
+            className={cn("border rounded-md overflow-hidden", {
+              "border-green-600": question.answer && isAllMatchsCorrect,
+              "border-red-600": question.answer && !isAllMatchsCorrect,
+            })}
+          >
             {Object.entries(selectedMatchs).map(([leftId, rightId], index) => (
-              <div
-                key={leftId}
-                className="grid grid-cols-3 gap-x-4 cursor-pointer"
-                onClick={() => handleClickSelectedMatch(leftId)}
-              >
-                <div className="space-y-3 col-span-1">{leftId}</div>
-                <div className="space-y-3 col-span-2">{rightId}</div>
+              <div key={leftId}>
+                <div
+                  className={cn(
+                    "grid grid-cols-3 gap-x-4 items-center cursor-pointer p-4",
+                    {
+                      "bg-green-100":
+                        question.answer && isCorrectMatch(leftId, rightId),
+                      "bg-red-100":
+                        question.answer && !isCorrectMatch(leftId, rightId),
+                    },
+                  )}
+                  onClick={() => handleClickSelectedMatch(leftId)}
+                >
+                  <div className="space-y-3 col-span-1">{leftId}</div>
+                  <div className="space-y-3 col-span-2">{rightId}</div>
+                </div>
                 {index !== Object.entries(selectedMatchs).length - 1 && (
-                  <Separator decorative className="col-span-3 my-2" />
+                  <Separator decorative className="col-span-3" />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-end">
-            <Button
-              className="text-sm p-0"
-              variant={"link"}
-              onClick={handleReset}
-            >
-              Reset
-            </Button>
-          </div>
+          {!question.answer && (
+            <div className="flex justify-end">
+              <Button
+                className="text-sm p-0"
+                variant={"link"}
+                onClick={handleReset}
+              >
+                Reset
+              </Button>
+            </div>
+          )}
         </>
       )}
       <div className="grid grid-cols-3 gap-4 mt-4">

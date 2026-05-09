@@ -39,7 +39,7 @@ model User {
   reviewLogs ReviewLog[]
   accounts   Account[]
   sessions   Session[]
-  quizzesLog QuizzesLog[]
+  quiz       Quiz[]
   notes      Note[]
 }
 
@@ -150,9 +150,10 @@ model QuizQuestion {
   question   String
   type       QuestionType
   options    String[]     @default([])
+  gapHint    String?
   leftItems  String[]     @default([])
   rightItems String[]     @default([])
-  answer     String
+  answer     String?
   createdAt  DateTime     @default(now())
 
   // Many-to-many relationship with Word
@@ -161,16 +162,18 @@ model QuizQuestion {
   quizAnswers QuizAnswer[]
 }
 
-model QuizzesLog {
+model Quiz {
   id                 String     @id @default(cuid())
   userId             String
   user               User       @relation(fields: [userId], references: [id])
   durationSeconds    Int
-  correctAnswers     Int        @default(0)
-  totalQuestions     Int        @default(0)
   totalWords         Int        @default(0)
-  wrongAnswers       Int        @default(0)
+  totalQuestions     Int        @default(0)
+  completedQuestions Int        @default(0)
+  unreachedQuestions Int        @default(0)
   skippedQuestions   Int        @default(0)
+  correctAnswers     Int        @default(0)
+  wrongAnswers       Int        @default(0)
   createdAt          DateTime   @default(now())
   completedAt        DateTime?
   status             QuizStatus @default(InProgress)
@@ -183,14 +186,16 @@ model QuizAnswer {
   id             String       @id @default(cuid())
   quizQuestionId String
   quizQuestion   QuizQuestion @relation(fields: [quizQuestionId], references: [id])
-  quizzesLogId   String
-  quizzesLog     QuizzesLog   @relation(fields: [quizzesLogId], references: [id])
+  quizId         String
+  quiz           Quiz         @relation(fields: [quizId], references: [id])
   userAnswer     String?
-  isCorrect      Boolean?
+  isCorrect      Boolean?     @default(false)
+  isWrong        Boolean?     @default(false)
   isSkipped      Boolean?     @default(false)
+  isUnreached    Boolean?     @default(true)
   createdAt      DateTime     @default(now())
 
-  @@unique([quizQuestionId, quizzesLogId])
+  @@unique([quizQuestionId, quizId])
 }
 
 enum QuizStatus {
