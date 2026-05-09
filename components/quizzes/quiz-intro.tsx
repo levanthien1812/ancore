@@ -24,8 +24,8 @@ const QuizIntro = ({
   const handleStartQuiz = () => {
     startTransition(async () => {
       const result = await createQuizSession(wordsToQuizCount, specificWords);
-      if (result.success && result.quizLogId) {
-        router.push(`/quizzes/${result.quizLogId}`);
+      if (result.success && result.quizId) {
+        router.push(`/quizzes/${result.quizId}`);
       } else {
         // TODO: Implement user-friendly error handling, e.g., a toast notification
         console.error(result.message || "Failed to start quiz session.");
@@ -61,8 +61,7 @@ const QuizIntro = ({
           (Approx. {estimatedTime} {estimatedTime > 1 ? "minutes" : "minute"})
         </p>
       </div>
-      <Button onClick={handleStartQuiz} disabled={isPending} size="lg">
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+      <Button onClick={handleStartQuiz} size="lg" isLoading={isPending}>
         {isPending ? "Preparing quiz..." : "Start Quiz"}
       </Button>
     </div>

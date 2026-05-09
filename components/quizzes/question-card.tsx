@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,62 @@ import MultipleChoiceBody from "@/components/quizzes/multiple-choice-body";
 import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
 import { Separator } from "../ui/separator";
-import { QuizQuestion } from "@prisma/client";
+import { QuizQuestionWithWords } from "@/lib/type";
+import { CheckCircle, CircleX } from "lucide-react";
+import {
+  CORRECT_ENCOURAGEMENTS,
+  INCORRECT_ENCOURAGEMENTS,
+} from "@/lib/constants/constant";
+
+const AnswerWrapper = ({
+  isCorrect,
+  description,
+  correctAnswer,
+}: {
+  isCorrect: boolean;
+  description?: string;
+  correctAnswer?: React.ReactNode;
+}) => {
+  const [randomIndex] = useState(() =>
+    Math.floor(Math.random() * CORRECT_ENCOURAGEMENTS.length),
+  );
+
+  const randomEncouragement = isCorrect
+    ? CORRECT_ENCOURAGEMENTS[randomIndex]
+    : INCORRECT_ENCOURAGEMENTS[randomIndex];
+
+  return (
+    <div
+      className={cn(
+        "p-3 sm:p-4 rounded-md",
+        isCorrect && "border-green-300 bg-green-100",
+        !isCorrect && "border-red-300 bg-red-100",
+      )}
+    >
+      <div className="flex justify-center items-center gap-2">
+        {isCorrect ? (
+          <CheckCircle className="text-green-600" width={32} height={32} />
+        ) : (
+          <CircleX className="text-red-600" width={32} height={32} />
+        )}
+        <div>
+          <p className={isCorrect ? "text-green-600" : "text-red-600"}>
+            {isCorrect ? "Correct" : "Incorrect"}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            {description || randomEncouragement}
+          </p>
+        </div>
+      </div>
+      {correctAnswer && (
+        <div className="bg-white/50 p-3 sm:p-4 rounded-md mt-2">
+          <p className="mb-1 text-green-600">Correct answer:</p>
+          {correctAnswer}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const QuestionCard = ({
   question,
@@ -19,8 +74,8 @@ const QuestionCard = ({
   totalQuestions,
   isSubmitting,
 }: {
-  question: QuizQuestion;
-  onAnswer: (userAnswer: string | null, isSkipped?: boolean) => void;
+  question: QuizQuestionWithWords;
+  onAnswer: (userAnswer: string | null) => void;
   isCorrect: boolean | null;
   onNext: () => void;
   currentIndex: number;
@@ -34,13 +89,15 @@ const QuestionCard = ({
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
       setIsAnswered(true);
-      onAnswer(selectedAnswer, false);
+      onAnswer(selectedAnswer);
     }
   };
 
   const handleSkip = () => {
+    setSelectedAnswer(null);
     setIsAnswered(true);
-    onAnswer(null, true);
+    onAnswer(null);
+    onNext();
   };
 
   const renderQuestionBody = () => {
@@ -52,7 +109,6 @@ const QuestionCard = ({
             question={question}
             selectedAnswer={selectedAnswer}
             setSelectedAnswer={setSelectedAnswer}
-            isAnswered={isAnswered}
           />
         );
       case QuizQuestionType.FillInTheBlank:
@@ -75,40 +131,52 @@ const QuestionCard = ({
   };
 
   const correctAnswer = () => {
+    if (isCorrect) {
+      return <AnswerWrapper isCorrect={true} />;
+    }
+
     switch (question.type) {
       case QuizQuestionType.MultipleChoice_DefinitionToWord:
       case QuizQuestionType.MultipleChoice_WordToSynonym:
       case QuizQuestionType.FillInTheBlank:
-        return <p className="text-center">{question.answer}</p>;
+        return (
+          <AnswerWrapper
+            isCorrect={false}
+            correctAnswer={<div>{question.answer}</div>}
+          />
+        );
       case QuizQuestionType.Matching:
+        if (!question.answer) return null;
         const correctAnswerMap = JSON.parse(question.answer) as Record<
           string,
           string
         >;
-        const correctAnswers = Object.entries(correctAnswerMap).map(
+        const correctMatches = Object.entries(correctAnswerMap).map(
           ([leftId, rightId], index) => {
             return (
               <div key={leftId} className="grid grid-cols-3 gap-x-4">
                 <div className="space-y-3 col-span-1 text-green-600">
                   {leftId}
                 </div>
-                <div className="space-y-3 col-span-2 text-green-600">
-                  {rightId}
-                </div>
+                <div className="space-y-3 col-span-2">{rightId}</div>
                 {index !== Object.entries(correctAnswerMap).length - 1 && (
-                  <Separator
-                    decorative
-                    className="col-span-3 my-2 bg-green-500"
-                  />
+                  <Separator decorative className="col-span-3 my-2" />
                 )}
               </div>
             );
           },
         );
+
         return (
-          <div className="border border-green-600 rounded-md p-4">
-            {correctAnswers}
-          </div>
+          <AnswerWrapper
+            isCorrect={false}
+            description={"Some matches are not correct."}
+            correctAnswer={
+              <div className="border border-green-600 rounded-md p-3 sm:p-4">
+                {correctMatches}
+              </div>
+            }
+          />
         );
       default:
         return null;
@@ -130,27 +198,12 @@ const QuestionCard = ({
           </CardTitle>
         )}
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-center custom-scrollbar-y overflow-y-auto">
+      <CardContent className="flex-1 flex flex-col justify-center custom-scrollbar-y">
         <div className="flex-1 flex flex-col justify-center">
           {renderQuestionBody()}
         </div>
         <div className="mt-4 space-y-2">
-          {isAnswered && isCorrect !== null && (
-            <div
-              className={cn(
-                "p-4 rounded-md font-bold",
-                isCorrect
-                  ? "bg-green-100 text-green-800"
-                  : "bg-red-100 text-red-800",
-              )}
-            >
-              {isCorrect ? (
-                <div className="text-center">Correct!</div>
-              ) : (
-                <div>Incorrect. The correct answer is: {correctAnswer()}</div>
-              )}
-            </div>
-          )}
+          {isAnswered && !isSubmitting && isCorrect !== null && correctAnswer()}
           {!isAnswered && (
             <Button variant={"outline"} onClick={handleSkip} className="w-full">
               Skip
@@ -167,11 +220,11 @@ const QuestionCard = ({
           )}
           {isAnswered && (
             <Button onClick={onNext} className="w-full" disabled={isSubmitting}>
-              {isLastQuestion
+              {!isLastQuestion
                 ? isSubmitting
-                  ? "Saving..."
-                  : "Finish Quiz"
-                : "Next"}
+                  ? "Checking answer..."
+                  : "Next"
+                : "Finish Quiz"}
             </Button>
           )}
         </div>

@@ -23,7 +23,7 @@ async function main() {
 
   try {
     await prisma.quizQuestion.deleteMany({ where: { userId: user.id } });
-    await prisma.quizzesLog.deleteMany({ where: { userId: user.id } });
+    await prisma.quiz.deleteMany({ where: { userId: user.id } });
     await prisma.reviewLog.deleteMany({ where: { userId: user.id } });
     await prisma.wordMeaning.deleteMany({ where: { wordId: { not: "" } } });
     await prisma.reviewSession.deleteMany({ where: { userId: user.id } });

@@ -5,10 +5,28 @@ import Link from "next/link";
 import Praise from "@/public/images/praise.png";
 import Image from "next/image";
 import QuizSummaryDetail from "./quiz-summary-detail";
-import { QuizLogWithAnswers } from "@/lib/type";
+import { QuizWithAnswers } from "@/lib/type";
 import { List, RotateCcw } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { retryQuizSession } from "@/lib/actions/quiz.actions";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
-const QuizSummary = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
+const QuizSummary = ({ quiz }: { quiz: QuizWithAnswers }) => {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const handleRetry = () => {
+    startTransition(async () => {
+      const result = await retryQuizSession(quiz.id);
+      if (result.success && result.quizId) {
+        router.push(`/quizzes/${result.quizId}`);
+      } else {
+        toast.error(result.message || "Failed to retry quiz");
+      }
+    });
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -18,14 +36,13 @@ const QuizSummary = ({ quizzesLog }: { quizzesLog: QuizLogWithAnswers }) => {
         <div className="flex justify-center items-center">
           <Image src={Praise} alt="praise" width={200} />
         </div>
-        <QuizSummaryDetail quizzesLog={quizzesLog} />
+        <QuizSummaryDetail quiz={quiz} />
         <div className="flex gap-2">
-          <Button asChild className="flex-1">
-            <Link href="/quizzes">
-              <RotateCcw width={16} /> Take Another Quiz
-            </Link>
+          <Button className="flex-1" onClick={handleRetry}>
+            <RotateCcw width={16} />{" "}
+            {isPending ? "Processing..." : "Retry quiz"}
           </Button>
-          <Button variant="outline" asChild className="flex-1">
+          <Button variant="outline" className="flex-1">
             <Link href="/quizzes?tab=history">
               {" "}
               <List width={16} /> Back to List

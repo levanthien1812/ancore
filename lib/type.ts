@@ -2,7 +2,7 @@ import {
   MasteryLevel,
   QuizAnswer,
   QuizQuestion,
-  QuizzesLog,
+  Quiz,
   Word,
 } from "@prisma/client";
 
@@ -32,14 +32,15 @@ export type ActionState = {
   errors?: Record<string, string[]>;
 };
 
-export type QuizQuestionWithWords = QuizQuestion & {
+export type QuizQuestionWithWords = Omit<QuizQuestion, "answer"> & {
   words: Word[];
+  answer: string | null;
 };
 
 export type QuizAnswerWithQuestion = QuizAnswer & {
   quizQuestion: QuizQuestionWithWords;
 };
 
-export type QuizLogWithAnswers = QuizzesLog & {
+export type QuizWithAnswers = Quiz & {
   quizAnswers: QuizAnswerWithQuestion[];
 };

@@ -1,7 +1,7 @@
 "use client";
 import { Button } from "../ui/button";
 import { format } from "date-fns";
-import { QuizzesLog } from "@prisma/client";
+import { Quiz } from "@prisma/client";
 import {
   CheckCircle,
   ChevronRight,
@@ -12,10 +12,8 @@ import {
   RotateCcw,
   Star,
   XCircle,
-  Loader2,
 } from "lucide-react";
 import { buildStyles, CircularProgressbar } from "react-circular-progressbar";
-import "react-circular-progressbar/dist/styles.css";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { convertSecondsToMinutes } from "@/lib/utils/time-convert";
 import { QuizStatusLabel } from "@/lib/constants/enums";
@@ -31,7 +29,7 @@ type Action = {
   icon?: React.ReactNode;
 };
 
-const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
+const QuizCard = ({ quiz }: { quiz: Quiz }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -73,8 +71,8 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
   const handleRetry = () => {
     startTransition(async () => {
       const result = await retryQuizSession(quiz.id);
-      if (result.success && result.quizLogId) {
-        router.push(`/quizzes/${result.quizLogId}`);
+      if (result.success && result.quizId) {
+        router.push(`/quizzes/${result.quizId}`);
       } else {
         toast.error(result.message || "Failed to retry quiz");
       }
@@ -235,17 +233,11 @@ const QuizCard = ({ quiz }: { quiz: QuizzesLog }) => {
                   variant={action.variant}
                   size={"sm"}
                   onClick={action.onClick}
-                  disabled={isPending}
+                  isLoading={isPending && action.label === "Retry"}
                   className="h-fit px-4 py-1 min-w-[100px] justify-center rounded-sm text-xs flex items-center gap-1"
                 >
-                  {isPending && action.label === "Retry" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      <span>{action.label}</span>
-                      {action.icon}
-                    </>
-                  )}
+                  <span>{action.label}</span>
+                  {action.icon}
                 </Button>
               ))}
             </div>
