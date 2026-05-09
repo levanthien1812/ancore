@@ -43,7 +43,7 @@ const SidebarItem = ({
       >
         <span className="">{item.icon}</span>
         {open && (
-          <span className="md:w-[100px] text-center text-xs md:text-sm md:text-start">
+          <span className="md:w-[100px] text-center text-[10px] md:text-sm md:text-start">
             {item.title}
           </span>
         )}
