@@ -9,6 +9,7 @@ import {
 import { dateFilter } from "../utils/date-filter"; // Keep this for getReviewLogs
 import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers"; // New import
 import { startOfDay, subDays, addDays, format } from "date-fns"; // New imports
+import { revalidatePath } from "next/cache";
 
 /**
  * Updates the schedule for a single word based on user performance.
@@ -161,6 +162,8 @@ export async function logReviewSession(summary: {
       wordsReviewedCount,
     },
   });
+
+  revalidatePath("/review");
 }
 
 export async function getReviewLogs(date: Date) {

@@ -33,7 +33,7 @@ const ReviewWordCard = ({
         </div>
 
         {/* Back Face */}
-        <div className="absolute inset-0 h-full w-full transform-[rotateY(180deg)] backface-hidden bg-primary p-8 rounded-xl">
+        <div className="absolute inset-0 h-full w-full transform-[rotateY(180deg)] backface-hidden bg-primary p-4 rounded-xl">
           <BackFace word={word} />
         </div>
       </div>

@@ -10,7 +10,7 @@ const BackFace = ({ word }: { word: WordWithMeanings }) => {
 
   return (
     <div className="h-full flex flex-col justify-center">
-      <WordDetail word={word} />
+      <WordDetail word={word} showReviewStats={false} />
       <div className="absolute bottom-4 right-4">
         {canScrollNext && (
           <Button

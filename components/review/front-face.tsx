@@ -48,6 +48,7 @@ const FrontFace = ({
   const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
   const [hintList, setHintList] = useState<HintList>(INITIAL_HINT_LIST);
   const { scrollNext, canScrollNext } = useCarousel();
+  const [isReviewed, setIsReviewed] = useState(false);
   const session = useSession();
 
   const availableHints = useMemo(() => {
@@ -141,6 +142,7 @@ const FrontFace = ({
     setHintLevel(null);
     reviewSessionMutate(ReviewPerformance.FORGOT);
     onPerformanceUpdate("Forgot");
+    setIsReviewed(true);
     setIsFlipped(true);
   };
 
@@ -174,7 +176,7 @@ const FrontFace = ({
         onPerformanceUpdate("Easy");
         break;
     }
-
+    setIsReviewed(true);
     if (hintLevel) setIsFlipped(true);
     else scrollNext();
   };
@@ -192,63 +194,71 @@ const FrontFace = ({
         </Badge>
         <div className="text-[40px] font-bold mt-2 text-white">{word.word}</div>
       </div>
-      <div className="flex justify-between gap-2 ">
-        {Object.keys(availableHints).length > 0 && !showHint && (
-          <Button
-            className="border border-white bg-transparent flex-1"
-            onClick={handleClickShowHint}
-          >
-            <Lightbulb width={14} height={14} className="text-primary-2" />
-            Need a hint?
-          </Button>
-        )}
-        <Button
-          className="border border-white bg-transparent flex-1"
-          onClick={handleClickMarkAsFamiliar}
-          disabled={isUpdatingReviewSession}
-        >
-          <CircleCheckBig width={14} height={14} className="text-green-500" />
-          Mark as familiar
-        </Button>
-      </div>
-      {showHint && currentHint && (
-        <div className="border-2 rounded-xl bg-transparent p-4 mt-2">
-          <div className="font-bold text-white flex items-center gap-2">
-            <Sun width={20} height={20} className="text-primary-2" />{" "}
-            <span className="underline">Hint</span>
-          </div>
-          <div key={currentHint.field} className="text-white mt-2">
-            {FieldLabelMap[currentHint.field]}:{" "}
-            <span className="text-primary-2">{currentHint.value}</span>
-          </div>
-
-          <div className="flex gap-2 items-end mt-3">
-            {nextHintAvailable && (
+      {!isReviewed && (
+        <>
+          <div className="flex justify-between gap-2 ">
+            {Object.keys(availableHints).length > 0 && !showHint && (
               <Button
-                onClick={handleClickMoreHints}
-                variant={"outline"}
-                size={"sm"}
+                className="border border-white bg-transparent flex-1"
+                onClick={handleClickShowHint}
               >
-                Still need more hints?
+                <Lightbulb width={14} height={14} className="text-primary-2" />
+                Need a hint?
               </Button>
             )}
+            <Button
+              className="border border-white bg-transparent flex-1"
+              onClick={handleClickMarkAsFamiliar}
+              disabled={isUpdatingReviewSession}
+            >
+              <CircleCheckBig
+                width={14}
+                height={14}
+                className="text-green-500"
+              />
+              Mark as familiar
+            </Button>
           </div>
-        </div>
+          {showHint && currentHint && (
+            <div className="border-2 rounded-xl bg-transparent p-4 mt-2">
+              <div className="font-bold text-white flex items-center gap-2">
+                <Sun width={20} height={20} className="text-primary-2" />{" "}
+                <span className="underline">Hint</span>
+              </div>
+              <div key={currentHint.field} className="text-white mt-2">
+                {FieldLabelMap[currentHint.field]}:{" "}
+                <span className="text-primary-2">{currentHint.value}</span>
+              </div>
+
+              <div className="flex gap-2 items-end mt-3">
+                {nextHintAvailable && (
+                  <Button
+                    onClick={handleClickMoreHints}
+                    variant={"outline"}
+                    size={"sm"}
+                  >
+                    Still need more hints?
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          {isGettingReviewHintsByAI && (
+            <div className="mt-2">
+              <p className="text-sm text-center text-white">Getting hints...</p>
+            </div>
+          )}
+          <Button
+            onClick={handleForgotWord}
+            variant={"link"}
+            size={"sm"}
+            className="mx-auto text-white bg-transparent mt-2"
+            disabled={isUpdatingReviewSession}
+          >
+            I forgot this word.
+          </Button>
+        </>
       )}
-      {isGettingReviewHintsByAI && (
-        <div className="mt-2">
-          <p className="text-sm text-center text-white">Getting hints...</p>
-        </div>
-      )}
-      <Button
-        onClick={handleForgotWord}
-        variant={"link"}
-        size={"sm"}
-        className="mx-auto text-white bg-transparent mt-2"
-        disabled={isUpdatingReviewSession}
-      >
-        I forgot this word.
-      </Button>
     </div>
   );
 };

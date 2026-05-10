@@ -28,6 +28,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
   const [startTime] = useState(new Date());
   const [isPending, startTransition] = useTransition();
   const [sessionFinished, setSessionFinished] = useState(false);
+  const [isAllWordsReviewed, setIsAllWordsReviewed] = useState(false);
   const [summary, setSummary] = useState<PerformanceSummary>({
     Forgot: [],
     Hard: [],
@@ -77,8 +78,8 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
       [performance]: [...prev[performance], currentWord.word],
     }));
 
-    if (words.indexOf(currentWord) === words.length - 1) {
-      handleFinishSession();
+    if (current + 1 === words.length) {
+      setIsAllWordsReviewed(true);
     }
   };
 
@@ -142,7 +143,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
         <p className="text-white text-sm">
           {current + 1} of {words.length}
         </p>
-        {current === words.length - 1 && (
+        {isAllWordsReviewed && (
           <Button
             onClick={handleFinishSession}
             disabled={isPending}
