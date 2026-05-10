@@ -208,7 +208,7 @@ export async function getReviewLogsByMonth(year: number, month: number) {
   // Extract unique dates that have logs
   const datesWithLogs = new Set(
     logs.map((log) => {
-      const date = new Date(log.completedAt);
+      const date = new Date(log.completedAt!);
       const year = date.getUTCFullYear();
       const month = String(date.getUTCMonth() + 1).padStart(2, "0");
       const day = String(date.getUTCDate()).padStart(2, "0");
@@ -367,7 +367,7 @@ interface ReviewMetrics {
 
 function calculatePerformanceMetrics(
   logs: {
-    performanceSummary: Record<string, string[]>;
+    performanceSummary: any;
     durationSeconds: number;
   }[],
 ): ReviewMetrics {
@@ -383,9 +383,10 @@ function calculatePerformanceMetrics(
 
   for (const log of logs) {
     totalStudyTimeSeconds += log.durationSeconds;
-    for (const performanceKey in log.performanceSummary) {
-      const performance = performanceKey as ReviewPerformance;
-      const words = log.performanceSummary[performance];
+    const summary = log.performanceSummary as Record<string, string[]>;
+    for (const performanceKey in summary) {
+      const performance = Number(performanceKey) as ReviewPerformance;
+      const words = summary[performanceKey];
       if (words) {
         totalWordsReviewed += words.length;
         performanceCounts[performance] += words.length;
@@ -455,7 +456,7 @@ export async function getReviewStatistics(period: ReviewPeriod) {
       orderBy: { completedAt: "asc" },
       select: { completedAt: true },
     });
-    if (firstReview) {
+    if (firstReview && firstReview.completedAt) {
       const diffTime = Math.abs(
         currentPeriodEnd.getTime() - firstReview.completedAt.getTime(),
       );
@@ -516,14 +517,18 @@ export async function getReviewStatistics(period: ReviewPeriod) {
   >();
 
   for (const log of currentLogs) {
-    const dateKey = format(startOfDay(log.completedAt), "yyyy-MM-dd");
+    const dateKey = format(
+      startOfDay(log.completedAt || new Date()),
+      "yyyy-MM-dd",
+    );
     if (!dailyDataMap.has(dateKey)) {
       dailyDataMap.set(dateKey, { totalWords: 0, goodEasyWords: 0 });
     }
     const dailyStats = dailyDataMap.get(dateKey)!;
-    for (const performanceKey in log.performanceSummary) {
-      const performance = performanceKey as ReviewPerformance;
-      const words = log.performanceSummary[performance];
+    const summary = log.performanceSummary as Record<string, string[]>;
+    for (const performanceKey in summary) {
+      const performance = Number(performanceKey) as ReviewPerformance;
+      const words = summary[performanceKey];
       if (words) {
         dailyStats.totalWords += words.length;
         if (

@@ -227,10 +227,10 @@ model ReviewSession {
 }
 
 model ReviewLog {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   userId             String
-  user               User     @relation(fields: [userId], references: [id])
-  completedAt        DateTime @default(now())
+  user               User      @relation(fields: [userId], references: [id])
+  completedAt        DateTime?
   durationSeconds    Int
   wordsReviewedCount Int
   performanceSummary Json
