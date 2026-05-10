@@ -5,16 +5,35 @@ import TalkConversation from "@/components/talk/talk-conversation";
 import { getChatResponse, saveTalkSession } from "@/lib/actions/ai.actions";
 import { useQueryClient } from "@tanstack/react-query";
 import { Message } from "@/lib/type"; // Import Message type from shared file
-import { AI_GREETINGS } from "@/lib/constants/constant";
+import {
+  AI_GREETINGS,
+  MAXIMUM_MESSAGES_IN_CHAT,
+} from "@/lib/constants/constant";
+import { toast } from "sonner";
 
-const TalkInterface = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+const TalkInterface = ({
+  initialMessages,
+  sessionId,
+}: {
+  initialMessages?: Message[];
+  sessionId?: string;
+}) => {
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // If initialMessages are provided, ensure they don't exceed the maximum limit.
+    if (initialMessages && initialMessages.length > MAXIMUM_MESSAGES_IN_CHAT) {
+      // Keep only the latest MAXIMUM_MESSAGES_IN_CHAT messages
+      return initialMessages.slice(-MAXIMUM_MESSAGES_IN_CHAT);
+    }
+    return initialMessages || [];
+  });
   const [isPending, startTransition] = useTransition();
   const [isSaving, startSaveTransition] = useTransition();
   const queryClient = useQueryClient();
 
   // Pick a random greeting only after the component has mounted on the client
   useEffect(() => {
+    if (messages.length > 0) return;
+
     // Using a timeout breaks the synchronous setState call within the effect,
     // resolving the "cascading renders" error while still preventing hydration mismatch.
     const timer = setTimeout(() => {
@@ -23,25 +42,28 @@ const TalkInterface = () => {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [messages.length]);
 
   const handleSendMessage = useCallback(
     (text: string) => {
       const userMsg: Message = { role: "user", content: text };
-      const newMessages = [...messages, userMsg];
+      const updatedMessages = [...messages, userMsg];
 
-      setMessages(newMessages);
+      // Ensure the message count does not exceed the limit after adding user message
+      while (updatedMessages.length > MAXIMUM_MESSAGES_IN_CHAT) {
+        updatedMessages.shift(); // Remove the oldest message
+      }
+
+      setMessages(updatedMessages);
 
       startTransition(async () => {
         // Prepare history for API (clean version without refinements)
-        const apiHistory = newMessages.map(({ role, content }) => ({
+        const apiHistory = updatedMessages.map(({ role, content }) => ({
           role,
           content,
         }));
 
         const result = await getChatResponse(apiHistory);
-
-        console.log(result);
 
         if (result.success && result.data) {
           const aiMessage: Message = {
@@ -60,6 +82,14 @@ const TalkInterface = () => {
             }
             return [...updated, aiMessage];
           });
+          setMessages((prev) => {
+            const newConversation = [...prev, aiMessage];
+            // Ensure the message count does not exceed the limit after adding AI message
+            while (newConversation.length > MAXIMUM_MESSAGES_IN_CHAT) {
+              newConversation.shift();
+            } // Remove the oldest message
+            return newConversation;
+          });
         }
       });
     },
@@ -68,15 +98,15 @@ const TalkInterface = () => {
 
   const handleSave = useCallback(() => {
     startSaveTransition(async () => {
-      const result = await saveTalkSession(messages);
+      const result = await saveTalkSession(messages, sessionId);
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: ["talkSessions"] });
-        alert("Conversation saved to your history!");
+        toast.success("Conversation saved to your history!");
       } else {
         alert(result.message);
       }
     });
-  }, [messages, queryClient]);
+  }, [messages, queryClient, sessionId]);
 
   return (
     <>
@@ -92,6 +122,7 @@ const TalkInterface = () => {
         <Recording
           onTranscriptionComplete={handleSendMessage}
           isProcessing={isPending}
+          isLimitReached={messages.length >= MAXIMUM_MESSAGES_IN_CHAT}
         />
       </div>
     </>

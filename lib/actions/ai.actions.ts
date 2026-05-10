@@ -31,6 +31,7 @@ export async function transcribeAudio(formData: FormData) {
 
 export async function saveTalkSession(
   messages: { role: string; content: string; refinement?: string | null }[],
+  sessionId?: string,
 ) {
   try {
     const session = await auth();
@@ -41,19 +42,35 @@ export async function saveTalkSession(
       };
     }
 
-    await prisma.talkSession.create({
-      data: {
-        userId: session.user.id,
-        title: `Talk Session - ${new Date().toLocaleString()}`,
-        messages: {
-          create: messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-            refinement: m.refinement,
-          })),
+    if (sessionId) {
+      await prisma.talkSession.update({
+        where: { id: sessionId, userId: session.user.id },
+        data: {
+          messages: {
+            deleteMany: {}, // Replace existing messages with the updated conversation state
+            create: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+              refinement: m.refinement,
+            })),
+          },
         },
-      },
-    });
+      });
+    } else {
+      await prisma.talkSession.create({
+        data: {
+          userId: session.user.id,
+          title: `Talk Session - ${new Date().toLocaleString()}`,
+          messages: {
+            create: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+              refinement: m.refinement,
+            })),
+          },
+        },
+      });
+    }
 
     return { success: true };
   } catch (error) {

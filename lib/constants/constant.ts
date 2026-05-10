@@ -35,3 +35,4 @@ export const AI_GREETINGS = [
 export const MAXIMUM_WORDS_IN_AI_RESPONSE = 40;
 export const MAXIMUM_TOKENS_IN_AI_RESPONSE = 150;
 export const MAXIMUM_RECORDING_TIME = 30;
+export const MAXIMUM_MESSAGES_IN_CHAT = 14;

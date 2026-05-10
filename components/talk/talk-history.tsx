@@ -9,12 +9,17 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
+  Play,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { cn } from "@/lib/utils";
-import { TalkSessionWithMessages } from "@/lib/type";
+import { TalkSessionWithMessages, Message } from "@/lib/type";
 
-const TalkHistory = () => {
+const TalkHistory = ({
+  onContinue,
+}: {
+  onContinue: (sessionId: string, messages: Message[]) => void;
+}) => {
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(
     null,
   );
@@ -77,8 +82,30 @@ const TalkHistory = () => {
               </div>
             </CardHeader>
             {isExpanded && (
-              <CardContent className="p-4 pt-0 border-t bg-muted/5 max-h-[400px] custom-scrollbar-y">
-                <div className="space-y-4 pt-4">
+              <CardContent className="p-0 border-t bg-muted/5">
+                <div className="flex items-center justify-between p-3 bg-muted/10 border-b">
+                  <span className="text-[10px] text-muted-foreground uppercase font-medium">
+                    Session Review
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onContinue(
+                        session.id,
+                        session.messages.map((m) => ({
+                          role: m.role as "user" | "assistant",
+                          content: m.content,
+                          refinement: m.refinement,
+                        })),
+                      );
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-[10px] font-bold hover:opacity-90 transition-opacity"
+                  >
+                    <Play size={10} fill="currentColor" />
+                    Continue
+                  </button>
+                </div>
+                <div className="space-y-4 p-4 max-h-[400px] custom-scrollbar-y">
                   {session.messages.map((msg) => (
                     <div
                       key={msg.id}
