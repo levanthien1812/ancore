@@ -8,9 +8,11 @@ import { MAXIMUM_RECORDING_TIME } from "@/lib/constants/constant";
 const Recording = ({
   onTranscriptionComplete,
   isProcessing,
+  isLimitReached,
 }: {
   onTranscriptionComplete: (text: string) => void;
   isProcessing: boolean;
+  isLimitReached?: boolean;
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -179,7 +181,7 @@ const Recording = ({
             iconSize={isRecording ? 20 : 36}
             additionalClasses="p-3"
             onClick={handleToggleRecording}
-            disabled={isProcessing}
+            disabled={isProcessing || isLimitReached}
           />
           <IconDisplay
             asButton
@@ -200,9 +202,11 @@ const Recording = ({
         <p className="text-center text-muted-foreground text-sm">
           {isRecording
             ? "Recording..."
-            : audioUrl
-              ? "Recording ready to send"
-              : "Say anything in English with AI"}
+            : isLimitReached
+              ? "Message limit reached. Save this session to start a new one!"
+              : audioUrl
+                ? "Recording ready to send"
+                : "Say anything in English with AI"}
         </p>
       </div>
     </div>
