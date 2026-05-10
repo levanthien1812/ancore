@@ -6,7 +6,9 @@ import {
   ReviewPerformance,
   WordReviewInfo,
 } from "../constants/enums";
-import { dateFilter } from "../utils/date-filter";
+import { dateFilter } from "../utils/date-filter"; // Keep this for getReviewLogs
+import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers"; // New import
+import { startOfDay, subDays, addDays, format } from "date-fns"; // New imports
 
 /**
  * Updates the schedule for a single word based on user performance.
@@ -266,3 +268,306 @@ export const getReviewInfo = async (wordId: string) => {
 
   return info;
 };
+
+async function calculateReviewStreak(
+  userId: string,
+): Promise<{ currentStreak: number; bestStreak: number }> {
+  const reviewDays: { day: Date }[] = await prisma.$queryRaw`
+    SELECT DISTINCT DATE_TRUNC('day', "completedAt") as day
+    FROM "ReviewLog"
+    WHERE "userId" = ${userId} AND "completedAt" IS NOT NULL
+    ORDER BY day DESC
+  `;
+
+  if (reviewDays.length === 0) {
+    return { currentStreak: 0, bestStreak: 0 };
+  }
+
+  let currentStreak = 0;
+  let bestStreak = 0;
+  let tempCurrentStreak = 0;
+  let tempBestStreak = 0;
+
+  const today = startOfDay(new Date());
+  const yesterday = startOfDay(subDays(new Date(), 1));
+
+  // Calculate current streak
+  if (startOfDay(new Date(reviewDays[0].day)).getTime() === today.getTime()) {
+    tempCurrentStreak = 1;
+    let expectedDay = yesterday;
+    for (let i = 1; i < reviewDays.length; i++) {
+      const currentReviewDay = startOfDay(new Date(reviewDays[i].day));
+      if (currentReviewDay.getTime() === expectedDay.getTime()) {
+        tempCurrentStreak++;
+        expectedDay = startOfDay(subDays(expectedDay, 1));
+      } else if (currentReviewDay.getTime() < expectedDay.getTime()) {
+        // Gap found, current streak ends
+        break;
+      }
+    }
+    currentStreak = tempCurrentStreak;
+  } else if (
+    startOfDay(new Date(reviewDays[0].day)).getTime() === yesterday.getTime()
+  ) {
+    tempCurrentStreak = 1;
+    let expectedDay = startOfDay(subDays(yesterday, 1));
+    for (let i = 1; i < reviewDays.length; i++) {
+      const currentReviewDay = startOfDay(new Date(reviewDays[i].day));
+      if (currentReviewDay.getTime() === expectedDay.getTime()) {
+        tempCurrentStreak++;
+        expectedDay = startOfDay(subDays(expectedDay, 1));
+      } else if (currentReviewDay.getTime() < expectedDay.getTime()) {
+        // Gap found, current streak ends
+        break;
+      }
+    }
+    currentStreak = tempCurrentStreak;
+  }
+  // If reviewDays[0] is neither today nor yesterday, currentStreak remains 0
+
+  // Calculate best streak
+  let currentRunningStreak = 0;
+  let prevDay: Date | null = null;
+
+  // Iterate through reviewDays (already sorted DESC)
+  for (const record of reviewDays) {
+    const currentDay = startOfDay(new Date(record.day));
+    if (prevDay === null) {
+      currentRunningStreak = 1;
+    } else {
+      const diff = prevDay.getTime() - currentDay.getTime(); // prevDay is more recent
+      const daysDiff = Math.round(diff / (1000 * 60 * 60 * 24));
+
+      if (daysDiff === 1) {
+        // Consecutive day
+        currentRunningStreak++;
+      } else if (daysDiff > 1) {
+        // Gap found
+        currentRunningStreak = 1;
+      }
+      // If daysDiff is 0, it's the same day, currentRunningStreak remains unchanged
+    }
+    tempBestStreak = Math.max(tempBestStreak, currentRunningStreak);
+    prevDay = currentDay;
+  }
+  bestStreak = tempBestStreak;
+
+  return { currentStreak, bestStreak };
+}
+
+// Helper to process review logs and extract metrics
+interface ReviewMetrics {
+  totalWordsReviewed: number;
+  totalStudyTimeSeconds: number;
+  performanceCounts: Record<ReviewPerformance, number>;
+}
+
+function calculatePerformanceMetrics(
+  logs: {
+    performanceSummary: Record<string, string[]>;
+    durationSeconds: number;
+  }[],
+): ReviewMetrics {
+  let totalWordsReviewed = 0;
+  let totalStudyTimeSeconds = 0;
+  const performanceCounts: Record<ReviewPerformance, number> = {
+    [ReviewPerformance.FORGOT]: 0,
+    [ReviewPerformance.HARD]: 0,
+    [ReviewPerformance.MEDIUM]: 0,
+    [ReviewPerformance.GOOD]: 0,
+    [ReviewPerformance.EASY]: 0,
+  };
+
+  for (const log of logs) {
+    totalStudyTimeSeconds += log.durationSeconds;
+    for (const performanceKey in log.performanceSummary) {
+      const performance = performanceKey as ReviewPerformance;
+      const words = log.performanceSummary[performance];
+      if (words) {
+        totalWordsReviewed += words.length;
+        performanceCounts[performance] += words.length;
+      }
+    }
+  }
+
+  return { totalWordsReviewed, totalStudyTimeSeconds, performanceCounts };
+}
+
+export async function getReviewStatistics(period: ReviewPeriod) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Authentication required.");
+  }
+  const userId = session.user.id;
+
+  const {
+    currentPeriodStart,
+    currentPeriodEnd,
+    previousPeriodStart,
+    previousPeriodEnd,
+  } = getPeriodDateRange(period);
+
+  // Fetch current period logs
+  const currentLogs = await prisma.reviewLog.findMany({
+    where: {
+      userId,
+      completedAt: {
+        gte: currentPeriodStart,
+        lte: currentPeriodEnd,
+      },
+    },
+    select: {
+      durationSeconds: true,
+      performanceSummary: true,
+      completedAt: true,
+    },
+    orderBy: {
+      completedAt: "asc", // For daily trend
+    },
+  });
+
+  const currentMetrics = calculatePerformanceMetrics(currentLogs);
+
+  // Calculate accuracy percentage
+  const totalWordsInCurrentPeriod = currentMetrics.totalWordsReviewed;
+  let accuracyPercentage = 0;
+  if (totalWordsInCurrentPeriod > 0) {
+    const goodEasyWords =
+      currentMetrics.performanceCounts[ReviewPerformance.GOOD] +
+      currentMetrics.performanceCounts[ReviewPerformance.EASY];
+    accuracyPercentage = (goodEasyWords / totalWordsInCurrentPeriod) * 100;
+  }
+
+  // Calculate words per day
+  let wordsPerDay = 0;
+  if (period !== "all_time" && totalWordsInCurrentPeriod > 0) {
+    const diffTime = Math.abs(
+      currentPeriodEnd.getTime() - currentPeriodStart.getTime(),
+    );
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    wordsPerDay = totalWordsInCurrentPeriod / diffDays;
+  } else if (period === "all_time" && totalWordsInCurrentPeriod > 0) {
+    const firstReview = await prisma.reviewLog.findFirst({
+      where: { userId, completedAt: { not: null } },
+      orderBy: { completedAt: "asc" },
+      select: { completedAt: true },
+    });
+    if (firstReview) {
+      const diffTime = Math.abs(
+        currentPeriodEnd.getTime() - firstReview.completedAt.getTime(),
+      );
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays > 0) wordsPerDay = totalWordsInCurrentPeriod / diffDays;
+    }
+  }
+
+  // Fetch previous period logs for comparison
+  let previousMetrics: ReviewMetrics | null = null;
+  if (previousPeriodStart && previousPeriodEnd) {
+    const previousLogs = await prisma.reviewLog.findMany({
+      where: {
+        userId,
+        completedAt: {
+          gte: previousPeriodStart,
+          lte: previousPeriodEnd,
+        },
+      },
+      select: {
+        durationSeconds: true,
+        performanceSummary: true,
+      },
+    });
+    previousMetrics = calculatePerformanceMetrics(previousLogs);
+  }
+
+  const wordsReviewedChangePercentage = previousMetrics?.totalWordsReviewed
+    ? ((currentMetrics.totalWordsReviewed -
+        previousMetrics.totalWordsReviewed) /
+        previousMetrics.totalWordsReviewed) *
+      100
+    : currentMetrics.totalWordsReviewed > 0
+      ? 100
+      : 0; // If previous was 0 and current > 0, 100% increase
+
+  const studyTimeChangePercentage = previousMetrics?.totalStudyTimeSeconds
+    ? ((currentMetrics.totalStudyTimeSeconds -
+        previousMetrics.totalStudyTimeSeconds) /
+        previousMetrics.totalStudyTimeSeconds) *
+      100
+    : currentMetrics.totalStudyTimeSeconds > 0
+      ? 100
+      : 0; // If previous was 0 and current > 0, 100% increase
+
+  // Calculate review streak
+  const { currentStreak, bestStreak } = await calculateReviewStreak(userId);
+
+  // Calculate daily performance trend
+  const dailyPerformanceTrend: Array<{
+    date: string;
+    totalWords: number;
+    goodEasyPercentage: number;
+  }> = [];
+  const dailyDataMap = new Map<
+    string,
+    { totalWords: number; goodEasyWords: number }
+  >();
+
+  for (const log of currentLogs) {
+    const dateKey = format(startOfDay(log.completedAt), "yyyy-MM-dd");
+    if (!dailyDataMap.has(dateKey)) {
+      dailyDataMap.set(dateKey, { totalWords: 0, goodEasyWords: 0 });
+    }
+    const dailyStats = dailyDataMap.get(dateKey)!;
+    for (const performanceKey in log.performanceSummary) {
+      const performance = performanceKey as ReviewPerformance;
+      const words = log.performanceSummary[performance];
+      if (words) {
+        dailyStats.totalWords += words.length;
+        if (
+          performance === ReviewPerformance.GOOD ||
+          performance === ReviewPerformance.EASY
+        ) {
+          dailyStats.goodEasyWords += words.length;
+        }
+      }
+    }
+  }
+
+  // Populate dailyPerformanceTrend, ensuring all days in the period are represented
+  let tempDate = startOfDay(currentPeriodStart);
+  while (tempDate.getTime() <= startOfDay(currentPeriodEnd).getTime()) {
+    const dateKey = format(tempDate, "yyyy-MM-dd");
+    const stats = dailyDataMap.get(dateKey);
+    let goodEasyPercentage = 0;
+    if (stats && stats.totalWords > 0) {
+      goodEasyPercentage = (stats.goodEasyWords / stats.totalWords) * 100;
+    }
+    dailyPerformanceTrend.push({
+      date: dateKey,
+      totalWords: stats?.totalWords || 0,
+      goodEasyPercentage: parseFloat(goodEasyPercentage.toFixed(2)),
+    });
+    tempDate = addDays(tempDate, 1);
+  }
+
+  return {
+    totalWordsReviewed: currentMetrics.totalWordsReviewed,
+    totalStudyTimeSeconds: currentMetrics.totalStudyTimeSeconds,
+    accuracyPercentage: parseFloat(accuracyPercentage.toFixed(2)),
+    wordsPerDay: parseFloat(wordsPerDay.toFixed(2)),
+    currentReviewStreak: currentStreak,
+    bestReviewStreak: bestStreak,
+    periodComparison: {
+      previousTotalWordsReviewed: previousMetrics?.totalWordsReviewed || 0,
+      previousTotalStudyTimeSeconds:
+        previousMetrics?.totalStudyTimeSeconds || 0,
+      wordsReviewedChangePercentage: parseFloat(
+        wordsReviewedChangePercentage.toFixed(2),
+      ),
+      studyTimeChangePercentage: parseFloat(
+        studyTimeChangePercentage.toFixed(2),
+      ),
+    },
+    dailyPerformanceTrend,
+  };
+}

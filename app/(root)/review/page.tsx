@@ -11,19 +11,25 @@ const ReviewPage = async () => {
   return (
     <div className="w-full max-w-[500px] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
       <Tabs defaultValue="start" className="h-full flex flex-col">
-        <TabsList className="mx-auto">
+        <TabsList className="mx-auto sticky">
           <TabsTrigger value="start" className="text-sm">
             Start Review
           </TabsTrigger>
           <TabsTrigger value="history" className="text-sm">
             Review history
           </TabsTrigger>
+          <TabsTrigger value="statistics" className="text-sm">
+            Statictics
+          </TabsTrigger>
         </TabsList>
-        <TabsContent value="start" className="h-full flex-1">
+        <TabsContent value="start" className="flex-1">
           <ReviewIntro words={wordsToReview} />
         </TabsContent>
-        <TabsContent value="history" className="h-full flex-1">
+        <TabsContent value="history" className="flex-1">
           <ReviewHistory />
+        </TabsContent>
+        <TabsContent value="statistics" className="flex-1">
+          Statistics
         </TabsContent>
       </Tabs>
     </div>

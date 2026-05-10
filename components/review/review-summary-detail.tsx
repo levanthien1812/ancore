@@ -53,7 +53,7 @@ const WordList = ({ title, words }: { title: string; words: string[] }) => {
         <h3 className="font-semibold">
           {title} ({words.length})
         </h3>
-        <div className="flex flex-wrap gap-2 mt-1">
+        <div className="flex flex-wrap gap-1 mt-1">
           {words.map((word, index) => (
             <div
               key={`${word}-${index}`}

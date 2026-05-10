@@ -7,6 +7,7 @@ import Link from "next/link";
 import Image from "next/image";
 import reviewIllustration from "@/public/images/review-illustration.png";
 import { WordWithMeanings } from "../add-word/add-word-form";
+import { Play } from "lucide-react";
 
 const ReviewIntro = ({ words }: { words: WordWithMeanings[] }) => {
   const [started, setStarted] = useState(false);
@@ -36,15 +37,15 @@ const ReviewIntro = ({ words }: { words: WordWithMeanings[] }) => {
   return (
     <div className="flex flex-col justify-center items-center gap-4 h-full border rounded-lg p-4 text-center">
       <h1 className="text-2xl font-bold">Ready to Review?</h1>
-      <Image
-        src={reviewIllustration}
-        alt="review illustration"
-        className="w-full rounded-2xl"
-      />
+      <p className="text-base text-muted-foreground text-center">
+        Keep your streak alive and strengthen your memory.
+      </p>
+      <Image src={reviewIllustration} alt="review illustration" height={240} />
       <div className="text-muted-foreground text-center">
         <p>You have {words.length} words ready to review.</p>
       </div>
       <Button onClick={() => setStarted(true)} size="lg">
+        <Play width={16} />
         Start Review
       </Button>
     </div>
