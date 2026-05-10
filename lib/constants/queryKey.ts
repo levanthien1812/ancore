@@ -11,4 +11,5 @@ export const QUERY_KEY = {
   GET_WORDS_THIS_WEEK: "getWordsThisWeek",
   GET_WEEK_COMPARISON: "getWeekComparison",
   GET_BEST_DAY: "getBestDay",
+  GET_REVIEW_STATISTICS: "getReviewStatistics",
 };

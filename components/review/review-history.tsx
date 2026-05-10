@@ -59,7 +59,7 @@ const ReviewHistory = () => {
   };
 
   return (
-    <div className="flex flex-col gap-3 border rounded-lg p-4 h-full">
+    <div className="flex flex-col gap-3 border rounded-lg p-2 sm:p-4">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -89,7 +89,7 @@ const ReviewHistory = () => {
       </Popover>
       {isFetchingReviewLogs && <div className="text-center">Loading...</div>}
       {!isFetchingReviewLogs && reviewLogs && reviewLogs.length > 0 && (
-        <div className="flex flex-col space-y-4 mt-4">
+        <div className="flex flex-col space-y-6 mt-4">
           {reviewLogs.map((log) => (
             <div className="relative" key={log.id}>
               <div className="absolute -top-4 z-0">

@@ -34,7 +34,13 @@ import { WordReviewInfo } from "@/lib/constants/enums";
 import { format } from "date-fns";
 import { Skeleton } from "../ui/skeleton";
 
-const WordDetail = ({ word }: { word: WordWithMeanings }) => {
+const WordDetail = ({
+  word,
+  showReviewStats = true,
+}: {
+  word: WordWithMeanings;
+  showReviewStats?: boolean;
+}) => {
   const [api, setApi] = useState<CarouselApi | null>(null);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
@@ -53,6 +59,7 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
       const response = await getReviewInfo(word.id);
       return response;
     },
+    enabled: showReviewStats,
   });
 
   // Sync button disabled state when carousel initializes or changes
@@ -175,51 +182,53 @@ const WordDetail = ({ word }: { word: WordWithMeanings }) => {
 
       {/* Skeleton */}
 
-      <div className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around">
-        <div className="flex gap-2 md:gap-3 items-center">
-          <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
-          <div className="space-y-1">
-            <p className="text-white text-xs sm:text-sm">Review in</p>
-            {isLoading ? (
-              <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
-            ) : (
-              <p className="font-bold leading-none text-base text-white">
-                {reviewInfo?.nextReviewIn} days
-              </p>
-            )}
+      {showReviewStats && (
+        <div className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around">
+          <div className="flex gap-2 md:gap-3 items-center">
+            <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
+            <div className="space-y-1">
+              <p className="text-white text-xs sm:text-sm">Review in</p>
+              {isLoading ? (
+                <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
+              ) : (
+                <p className="font-bold leading-none text-base text-white">
+                  {reviewInfo?.nextReviewIn} days
+                </p>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex gap-2 md:gap-3 items-center">
-          <RefreshCcw className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
-          <div className="space-y-1">
-            <p className="text-white text-xs sm:text-sm">Reviewed</p>
-            {isLoading ? (
-              <Skeleton className="h-6 w-[50px] bg-blue-800/50" />
-            ) : (
-              <p className="font-bold leading-none text-base text-white">
-                {reviewInfo?.reviewedTimes} times
-              </p>
-            )}
+          <div className="flex gap-2 md:gap-3 items-center">
+            <RefreshCcw className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
+            <div className="space-y-1">
+              <p className="text-white text-xs sm:text-sm">Reviewed</p>
+              {isLoading ? (
+                <Skeleton className="h-6 w-[50px] bg-blue-800/50" />
+              ) : (
+                <p className="font-bold leading-none text-base text-white">
+                  {reviewInfo?.reviewedTimes} times
+                </p>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="flex gap-2 md:gap-3 items-center">
-          <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
-          <div className="space-y-1">
-            <p className="text-white text-xs sm:text-sm">Last Review</p>
-            {isLoading ? (
-              <Skeleton className="h-6 w-20 bg-blue-800/50" />
-            ) : (
-              <p className="font-bold leading-none text-base text-white">
-                {reviewInfo?.lastReviewAt
-                  ? format(reviewInfo.lastReviewAt, "dd/MM/yyyy")
-                  : "--"}
-              </p>
-            )}
+          <div className="flex gap-2 md:gap-3 items-center">
+            <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
+            <div className="space-y-1">
+              <p className="text-white text-xs sm:text-sm">Last Review</p>
+              {isLoading ? (
+                <Skeleton className="h-6 w-20 bg-blue-800/50" />
+              ) : (
+                <p className="font-bold leading-none text-base text-white">
+                  {reviewInfo?.lastReviewAt
+                    ? format(reviewInfo.lastReviewAt, "dd/MM/yyyy")
+                    : "--"}
+                </p>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
