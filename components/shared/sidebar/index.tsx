@@ -8,6 +8,7 @@ import {
   ArrowRightToLine,
   LogOut,
   NotebookPen,
+  Mic,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo } from "react";
@@ -81,6 +82,11 @@ const Sidebar = () => {
         title: "Notes",
         icon: <NotebookPen width={22} />,
         path: "/notes",
+      },
+      {
+        title: "Talk",
+        icon: <Mic width={22} />,
+        path: "/talk",
       },
     ];
   }, []);
