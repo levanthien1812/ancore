@@ -4,6 +4,8 @@ import {
   QuizQuestion,
   Quiz,
   Word,
+  TalkSession,
+  TalkMessage,
 } from "@prisma/client";
 
 export type WordsCountByMasteryLevel = {
@@ -43,4 +45,14 @@ export type QuizAnswerWithQuestion = QuizAnswer & {
 
 export type QuizWithAnswers = Quiz & {
   quizAnswers: QuizAnswerWithQuestion[];
+};
+
+export type TalkSessionWithMessages = TalkSession & {
+  messages: TalkMessage[];
+};
+
+export type Message = {
+  role: "user" | "assistant";
+  content: string;
+  refinement?: string | null;
 };

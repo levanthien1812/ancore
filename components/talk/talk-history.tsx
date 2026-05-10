@@ -1,0 +1,120 @@
+"use client";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getTalkSessions } from "@/lib/actions/ai.actions";
+import { format } from "date-fns";
+import {
+  MessageCircle,
+  Calendar as CalendarIcon,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+} from "lucide-react";
+import { Card, CardContent, CardHeader } from "../ui/card";
+import { cn } from "@/lib/utils";
+import { TalkSessionWithMessages } from "@/lib/type";
+
+const TalkHistory = () => {
+  const [expandedSessionId, setExpandedSessionId] = useState<string | null>(
+    null,
+  );
+
+  const { data: sessions, isLoading } = useQuery<TalkSessionWithMessages[]>({
+    queryKey: ["talkSessions"],
+    queryFn: () => getTalkSessions(),
+  });
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-10 text-muted-foreground italic">
+        Loading history...
+      </div>
+    );
+  }
+
+  if (!sessions || sessions.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground border rounded-lg border-dashed">
+        No talk history found. Start a conversation to see it here!
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 h-full custom-scrollbar-y pb-10">
+      {sessions.map((session) => {
+        const isExpanded = expandedSessionId === session.id;
+
+        return (
+          <Card key={session.id} className="py-0 gap-0">
+            <CardHeader
+              className="p-4 cursor-pointer hover:bg-muted/30 transition-colors gap-0"
+              onClick={() =>
+                setExpandedSessionId(isExpanded ? null : session.id)
+              }
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-1">
+                  <p className="font-semibold text-sm line-clamp-1">
+                    {session.title || "Untitled Session"}
+                  </p>
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <CalendarIcon size={12} />
+                      {format(new Date(session.createdAt), "MMM d, yyyy")}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <MessageCircle size={12} />
+                      {session.messages.length} messages
+                    </span>
+                  </div>
+                </div>
+                {isExpanded ? (
+                  <ChevronUp size={18} />
+                ) : (
+                  <ChevronDown size={18} />
+                )}
+              </div>
+            </CardHeader>
+            {isExpanded && (
+              <CardContent className="p-4 pt-0 border-t bg-muted/5 max-h-[400px] custom-scrollbar-y">
+                <div className="space-y-4 pt-4">
+                  {session.messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={cn(
+                        "flex flex-col max-w-[90%] gap-1",
+                        msg.role === "user"
+                          ? "ms-auto items-end"
+                          : "me-auto items-start",
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "px-3 py-1.5 rounded-xl text-xs",
+                          msg.role === "user"
+                            ? "bg-primary text-white rounded-tr-none"
+                            : "bg-muted border rounded-tl-none",
+                        )}
+                      >
+                        {msg.content}
+                      </div>
+                      {msg.refinement && (
+                        <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 border border-green-200 rounded-lg text-[10px] text-green-700 italic">
+                          <Sparkles size={10} className="shrink-0" />
+                          <span>Better: {msg.refinement}</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
+
+export default TalkHistory;

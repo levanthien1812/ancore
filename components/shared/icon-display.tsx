@@ -12,6 +12,7 @@ type Props = {
   hoverClass?: string;
   activeClass?: string;
   size?: "sm" | "md" | "lg";
+  iconSize?: number;
   iconColor?: string;
   additionalClasses?: string;
   asButton?: boolean;
@@ -22,15 +23,25 @@ type Props = {
 const IconDisplay = ({
   icon: Icon,
   bgClass = "bg-white/20",
-  hoverClass = "hover:bg-white/30",
-  activeClass = "active:bg-white/40",
+  hoverClass,
+  activeClass,
   size = "md",
+  iconSize,
   iconColor = "text-white",
   additionalClasses = "",
   asButton = false,
   ...rest
 }: Props) => {
   const classesBySize = useMemo(() => {
+    if (iconSize) {
+      return {
+        parent: "p-2",
+        child: {
+          width: iconSize,
+        },
+      };
+    }
+
     switch (size) {
       case "sm":
         return {
@@ -54,15 +65,21 @@ const IconDisplay = ({
           },
         };
     }
-  }, [size]);
+  }, [size, iconSize]);
 
   const Component = asButton ? "button" : "div";
 
   const classes = useMemo(() => {
+    const newHoverClass =
+      hoverClass || (bgClass !== "bg-white/20" ? bgClass : "hover:bg-white/30");
+    const newActiveClass =
+      activeClass ||
+      (bgClass !== "bg-white/20" ? bgClass : "active:bg-white/40");
+
     const commonClasses = `flex justify-center items-center ${classesBySize.parent} rounded-full h-fit ${bgClass} ${additionalClasses}`;
 
     if (asButton) {
-      return `${commonClasses} cursor-pointer ${hoverClass} active:font-bold ${activeClass}`;
+      return `${commonClasses} cursor-pointer ${newHoverClass} active:font-bold ${newActiveClass}`;
     } else {
       return commonClasses;
     }
