@@ -52,6 +52,7 @@ export async function saveTalkSession(
               role: m.role,
               content: m.content,
               refinement: m.refinement,
+              explanation: m.explanation,
             })),
           },
         },
