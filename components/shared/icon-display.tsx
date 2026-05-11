@@ -76,7 +76,7 @@ const IconDisplay = ({
       activeClass ||
       (bgClass !== "bg-white/20" ? bgClass : "active:bg-white/40");
 
-    const commonClasses = `flex justify-center items-center ${classesBySize.parent} rounded-full h-fit ${bgClass} ${additionalClasses}`;
+    const commonClasses = `flex justify-center items-center disabled:cursor-not-allowed disabled:opacity-50 ${classesBySize.parent} rounded-full h-fit ${bgClass} ${additionalClasses}`;
 
     if (asButton) {
       return `${commonClasses} cursor-pointer ${newHoverClass} active:font-bold ${newActiveClass}`;

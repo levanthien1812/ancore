@@ -7,16 +7,20 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Message } from "@/lib/type"; // Import Message type from shared file
 import {
   AI_GREETINGS,
+  AI_NUDGES,
   MAXIMUM_MESSAGES_IN_CHAT,
+  SHOW_NUDGE_IN,
 } from "@/lib/constants/constant";
 import { toast } from "sonner";
 
 const TalkInterface = ({
   initialMessages,
   sessionId,
+  onNewSession,
 }: {
   initialMessages?: Message[];
   sessionId?: string;
+  onNewSession?: () => void;
 }) => {
   const [messages, setMessages] = useState<Message[]>(() => {
     // If initialMessages are provided, ensure they don't exceed the maximum limit.
@@ -28,9 +32,23 @@ const TalkInterface = ({
   });
   const [isPending, startTransition] = useTransition();
   const [isSaving, startSaveTransition] = useTransition();
+  const [activeNudge, setActiveNudge] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  // Pick a random greeting only after the component has mounted on the client
+  // Function to speak text using Web Speech API
+  const speakText = useCallback((text: string) => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      // Cancel any ongoing speech to prevent overlapping
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US"; // Set language
+      utterance.pitch = 1; // Default pitch
+      utterance.rate = 1; // Default rate
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
+
   useEffect(() => {
     if (messages.length > 0) return;
 
@@ -38,14 +56,44 @@ const TalkInterface = ({
     // resolving the "cascading renders" error while still preventing hydration mismatch.
     const timer = setTimeout(() => {
       const randomIndex = Math.floor(Math.random() * AI_GREETINGS.length);
-      setMessages([{ role: "assistant", content: AI_GREETINGS[randomIndex] }]);
+      const greeting = AI_GREETINGS[randomIndex];
+      setMessages([{ role: "assistant", content: greeting }]);
+
+      // Speak the greeting
+      speakText(greeting);
     }, 0);
 
     return () => clearTimeout(timer);
   }, [messages.length]);
 
+  // Proactive Nudge Logic: Encourage the user if they take too long to think
+  useEffect(() => {
+    // Only nudge if the last message was from the assistant (it's the user's turn)
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage || lastMessage.role !== "assistant" || isPending) return;
+
+    // Cancel any ongoing speech before starting the nudge timer
+    speakText(""); // Cancel any ongoing speech (e.g., previous AI response)
+
+    const nudgeTimer = setTimeout(() => {
+      const randomNudge =
+        AI_NUDGES[Math.floor(Math.random() * AI_NUDGES.length)];
+
+      setActiveNudge(randomNudge);
+      // Optionally, you could speak the nudge too:
+      // speakText(randomNudge);
+    }, SHOW_NUDGE_IN);
+
+    return () => {
+      clearTimeout(nudgeTimer);
+      speakText(""); // Cancel nudge speech if user interacts
+    };
+  }, [messages, isPending, speakText]);
+
   const handleSendMessage = useCallback(
     (text: string) => {
+      speakText(""); // Cancel any ongoing speech when user sends a message
+      setActiveNudge(null);
       const userMsg: Message = { role: "user", content: text };
       const updatedMessages = [...messages, userMsg];
 
@@ -65,6 +113,8 @@ const TalkInterface = ({
 
         const result = await getChatResponse(apiHistory);
 
+        console.log(result);
+
         if (result.success && result.data) {
           const aiMessage: Message = {
             role: "assistant",
@@ -79,21 +129,17 @@ const TalkInterface = ({
             );
             if (lastUserIndex !== -1) {
               updated[lastUserIndex].refinement = result.data.refinement;
+              updated[lastUserIndex].explanation = result.data.explanation;
             }
-            return [...updated, aiMessage];
+            return [...updated, aiMessage]; // Ensure aiMessage is added before speaking
           });
-          setMessages((prev) => {
-            const newConversation = [...prev, aiMessage];
-            // Ensure the message count does not exceed the limit after adding AI message
-            while (newConversation.length > MAXIMUM_MESSAGES_IN_CHAT) {
-              newConversation.shift();
-            } // Remove the oldest message
-            return newConversation;
-          });
+
+          // Speak the AI message after it's rendered
+          speakText(aiMessage.content);
         }
       });
     },
-    [messages],
+    [messages, speakText],
   );
 
   const handleSave = useCallback(() => {
@@ -108,6 +154,12 @@ const TalkInterface = ({
     });
   }, [messages, queryClient, sessionId]);
 
+  const handleNewSession = useCallback(() => {
+    speakText("");
+    setActiveNudge(null);
+    onNewSession?.();
+  }, [onNewSession, speakText]);
+
   return (
     <>
       <div className="flex-1 min-h-0 border rounded-md overflow-hidden bg-white">
@@ -116,6 +168,9 @@ const TalkInterface = ({
           isAiThinking={isPending}
           onSave={handleSave}
           isSaving={isSaving}
+          activeNudge={activeNudge}
+          onNewSession={handleNewSession}
+          onPlayAudio={speakText}
         />
       </div>
       <div className="h-fit">

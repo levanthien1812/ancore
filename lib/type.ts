@@ -55,4 +55,5 @@ export type Message = {
   role: "user" | "assistant";
   content: string;
   refinement?: string | null;
+  explanation?: string | null;
 };
