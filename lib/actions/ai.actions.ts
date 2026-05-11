@@ -30,7 +30,12 @@ export async function transcribeAudio(formData: FormData) {
 }
 
 export async function saveTalkSession(
-  messages: { role: string; content: string; refinement?: string | null }[],
+  messages: {
+    role: string;
+    content: string;
+    refinement?: string | null;
+    explanation?: string | null;
+  }[],
   sessionId?: string,
 ) {
   try {
