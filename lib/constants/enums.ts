@@ -1,3 +1,5 @@
+import { ReviewPeriod } from "../utils/date-helpers";
+
 export enum CEFRLevel {
   A1 = "A1",
   A2 = "A2",
@@ -68,11 +70,11 @@ export const SAMPLE_TOPICS = [
 ];
 
 export enum ReviewPerformance {
-  FORGOT = 0,
-  HARD = 1,
-  MEDIUM = 2,
-  GOOD = 3,
-  EASY = 4,
+  FORGOT = "Forgot",
+  HARD = "Hard",
+  MEDIUM = "Medium",
+  GOOD = "Good",
+  EASY = "Easy",
 }
 
 export enum QuizQuestionType {
@@ -150,4 +152,18 @@ export type WordReviewInfo = {
   nextReviewIn: number | null;
   lastReviewAt: Date | null;
   reviewedTimes: number;
+};
+
+export const REVIEW_PERIOD_LABEL: Record<ReviewPeriod, string> = {
+  "7_days": "7 days",
+  "1_month": "1 month",
+  all_time: "All time",
+};
+
+export const REVIEW_PERFORMANCE_COLOR: Record<ReviewPerformance, string> = {
+  [ReviewPerformance.FORGOT]: "#FF5555",
+  [ReviewPerformance.HARD]: "#3B82F6",
+  [ReviewPerformance.MEDIUM]: "#F59E0B",
+  [ReviewPerformance.GOOD]: "#8B5CF6",
+  [ReviewPerformance.EASY]: "#22C55E",
 };

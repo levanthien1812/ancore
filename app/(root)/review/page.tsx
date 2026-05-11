@@ -2,6 +2,7 @@ import ReviewIntro from "@/components/review/review-intro";
 import { getWordsToReview } from "@/lib/actions/word.actions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReviewHistory from "@/components/review/review-history";
+import ReviewStats from "@/components/review/review-stats";
 
 const ReviewPage = async () => {
   const wordsToReview = await getWordsToReview();
@@ -9,7 +10,7 @@ const ReviewPage = async () => {
   if (!wordsToReview) return null;
 
   return (
-    <div className="w-full max-w-[500px] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
+    <div className="w-full max-w-[520px] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
       <Tabs defaultValue="start" className="h-full flex flex-col">
         <TabsList className="mx-auto sticky">
           <TabsTrigger value="start" className="text-sm">
@@ -29,7 +30,7 @@ const ReviewPage = async () => {
           <ReviewHistory />
         </TabsContent>
         <TabsContent value="statistics" className="flex-1">
-          Statistics
+          <ReviewStats />
         </TabsContent>
       </Tabs>
     </div>

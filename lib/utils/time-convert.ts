@@ -8,3 +8,13 @@ export const convertSecondsToMinutes2 = (seconds: number): string => {
   const remainingSeconds = seconds % 60;
   return `${minutes}:${remainingSeconds}`;
 };
+
+export const convertSecondsToHHMM = (seconds: number): string => {
+  const hours = Math.floor(seconds / 3600);
+  const remainingSeconds = seconds % 3600;
+  const minutes = Math.floor(remainingSeconds / 60);
+  if (hours === 0) {
+    return `${minutes}m`;
+  }
+  return `${hours}h ${minutes}m`;
+};
