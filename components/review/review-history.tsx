@@ -21,7 +21,7 @@ import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const ReviewHistory = () => {
   const [open, setOpen] = React.useState(false);
-  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
 
   const { data: reviewLogs, isFetching: isFetchingReviewLogs } = useQuery({
@@ -59,13 +59,13 @@ const ReviewHistory = () => {
   };
 
   return (
-    <div className="flex flex-col gap-3 border rounded-lg p-2 sm:p-4">
+    <div className="flex flex-col gap-3 border rounded-lg p-2 sm:p-4 h-full">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
             id="date"
-            className="w-full justify-between font-normal mx-auto"
+            className="w-full max-w-[360px] justify-between font-normal mx-auto"
           >
             {date ? date.toLocaleDateString() : "Select date"}
             <ChevronDownIcon />
@@ -92,13 +92,15 @@ const ReviewHistory = () => {
         <div className="flex flex-col space-y-6 mt-4">
           {reviewLogs.map((log) => (
             <div className="relative" key={log.id}>
-              <div className="absolute -top-4 z-0">
-                <Badge className="rounded-md py-2 px-4">
-                  <CheckCircle width={16} height={16} />
-                  Completed at:{" "}
-                  <span>{format(log.completedAt, "dd/MM/yyyy hh:mm a")}</span>
-                </Badge>
-              </div>
+              {log.completedAt && (
+                <div className="absolute -top-4 z-0">
+                  <Badge className="rounded-md py-2 px-4">
+                    <CheckCircle width={16} height={16} />
+                    Completed at:{" "}
+                    <span>{format(log.completedAt, "dd/MM/yyyy hh:mm a")}</span>
+                  </Badge>
+                </div>
+              )}
               <ReviewSummaryDetail
                 summary={log.performanceSummary as PerformanceSummary}
               />
@@ -106,9 +108,16 @@ const ReviewHistory = () => {
           ))}
         </div>
       )}
-      {!isFetchingReviewLogs && (!reviewLogs || reviewLogs.length === 0) && (
-        <p className="text-center text-muted-foreground text-xl">
-          No review logs found
+      {date &&
+        !isFetchingReviewLogs &&
+        (!reviewLogs || reviewLogs.length === 0) && (
+          <p className="text-center text-muted-foreground text-lg">
+            No review logs found
+          </p>
+        )}
+      {!date && (
+        <p className="text-center text-muted-foreground text-lg">
+          Select a date to view review logs
         </p>
       )}
     </div>

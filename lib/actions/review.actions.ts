@@ -158,6 +158,7 @@ export async function logReviewSession(summary: {
   await prisma.reviewLog.create({
     data: {
       userId: session.user.id,
+      completedAt: new Date(),
       ...summary,
       wordsReviewedCount,
     },
@@ -385,7 +386,7 @@ function calculatePerformanceMetrics(
     totalStudyTimeSeconds += log.durationSeconds;
     const summary = log.performanceSummary as Record<string, string[]>;
     for (const performanceKey in summary) {
-      const performance = Number(performanceKey) as ReviewPerformance;
+      const performance = performanceKey as ReviewPerformance;
       const words = summary[performanceKey];
       if (words) {
         totalWordsReviewed += words.length;
@@ -395,6 +396,27 @@ function calculatePerformanceMetrics(
   }
 
   return { totalWordsReviewed, totalStudyTimeSeconds, performanceCounts };
+}
+
+export interface ReviewStatistics {
+  totalWordsReviewed: number;
+  totalStudyTimeSeconds: number;
+  accuracyPercentage: number;
+  wordsPerDay: number;
+  currentReviewStreak: number;
+  bestReviewStreak: number;
+  periodComparison: {
+    previousTotalWordsReviewed: number;
+    previousTotalStudyTimeSeconds: number;
+    wordsReviewedChangePercentage: number;
+    studyTimeChangePercentage: number;
+  } | null;
+  dailyPerformanceTrend: Array<{
+    date: string;
+    totalWords: number;
+    goodEasyPercentage: number;
+  }>;
+  performanceCounts: Record<ReviewPerformance, number>;
 }
 
 export async function getReviewStatistics(period: ReviewPeriod) {
@@ -517,17 +539,14 @@ export async function getReviewStatistics(period: ReviewPeriod) {
   >();
 
   for (const log of currentLogs) {
-    const dateKey = format(
-      startOfDay(log.completedAt || new Date()),
-      "yyyy-MM-dd",
-    );
+    const dateKey = format(startOfDay(log.completedAt || new Date()), "MM-dd");
     if (!dailyDataMap.has(dateKey)) {
       dailyDataMap.set(dateKey, { totalWords: 0, goodEasyWords: 0 });
     }
     const dailyStats = dailyDataMap.get(dateKey)!;
     const summary = log.performanceSummary as Record<string, string[]>;
     for (const performanceKey in summary) {
-      const performance = Number(performanceKey) as ReviewPerformance;
+      const performance = performanceKey as ReviewPerformance;
       const words = summary[performanceKey];
       if (words) {
         dailyStats.totalWords += words.length;
@@ -542,9 +561,11 @@ export async function getReviewStatistics(period: ReviewPeriod) {
   }
 
   // Populate dailyPerformanceTrend, ensuring all days in the period are represented
-  let tempDate = startOfDay(currentPeriodStart);
-  while (tempDate.getTime() <= startOfDay(currentPeriodEnd).getTime()) {
-    const dateKey = format(tempDate, "yyyy-MM-dd");
+  const today = startOfDay(new Date());
+  let tempDate = startOfDay(subDays(today, 6)); // Start 6 days before today to get a 7-day window
+
+  while (tempDate.getTime() <= today.getTime()) {
+    const dateKey = format(tempDate, "MM-dd");
     const stats = dailyDataMap.get(dateKey);
     let goodEasyPercentage = 0;
     if (stats && stats.totalWords > 0) {
@@ -565,17 +586,22 @@ export async function getReviewStatistics(period: ReviewPeriod) {
     wordsPerDay: parseFloat(wordsPerDay.toFixed(2)),
     currentReviewStreak: currentStreak,
     bestReviewStreak: bestStreak,
-    periodComparison: {
-      previousTotalWordsReviewed: previousMetrics?.totalWordsReviewed || 0,
-      previousTotalStudyTimeSeconds:
-        previousMetrics?.totalStudyTimeSeconds || 0,
-      wordsReviewedChangePercentage: parseFloat(
-        wordsReviewedChangePercentage.toFixed(2),
-      ),
-      studyTimeChangePercentage: parseFloat(
-        studyTimeChangePercentage.toFixed(2),
-      ),
-    },
+    periodComparison:
+      period === "all_time"
+        ? null
+        : {
+            previousTotalWordsReviewed:
+              previousMetrics?.totalWordsReviewed || 0,
+            previousTotalStudyTimeSeconds:
+              previousMetrics?.totalStudyTimeSeconds || 0,
+            wordsReviewedChangePercentage: parseFloat(
+              wordsReviewedChangePercentage.toFixed(2),
+            ),
+            studyTimeChangePercentage: parseFloat(
+              studyTimeChangePercentage.toFixed(2),
+            ),
+          },
     dailyPerformanceTrend,
+    performanceCounts: currentMetrics.performanceCounts,
   };
 }
