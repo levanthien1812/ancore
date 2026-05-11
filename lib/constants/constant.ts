@@ -32,7 +32,15 @@ export const AI_GREETINGS = [
   "Hey there. Whether it's a big project or a random thought, I'm here for the conversation.",
 ];
 
+export const AI_NUDGES = [
+  "No rush! I'm here whenever you're ready to practice.",
+  "Don't worry about making mistakes, just give it a try!",
+  "Stuck? You can try starting with 'I think...' or just say a single word.",
+  "I'm still listening! What's on your mind regarding what I just said?",
+];
+
 export const MAXIMUM_WORDS_IN_AI_RESPONSE = 40;
 export const MAXIMUM_TOKENS_IN_AI_RESPONSE = 150;
 export const MAXIMUM_RECORDING_TIME = 30;
 export const MAXIMUM_MESSAGES_IN_CHAT = 14;
+export const SHOW_NUDGE_IN = 40000;

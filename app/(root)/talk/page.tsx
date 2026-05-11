@@ -20,6 +20,12 @@ const TalkPage = () => {
     setActiveTab("chat");
   };
 
+  const handleNewSession = () => {
+    setSelectedMessages(null);
+    setActiveSessionId(undefined);
+    setSessionKey((prev) => prev + 1); // Force re-mount to get a fresh greeting
+  };
+
   return (
     <div className="w-full max-w-[500px] mx-auto py-2 px-2 sm:px-4 md:px-0 h-full">
       <Tabs
@@ -44,6 +50,7 @@ const TalkPage = () => {
             key={sessionKey}
             initialMessages={selectedMessages || undefined}
             sessionId={activeSessionId}
+            onNewSession={handleNewSession}
           />
         </TabsContent>
 
