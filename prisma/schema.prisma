@@ -269,7 +269,7 @@ model TalkMessage {
   content             String      @db.Text
   refinement          String?     @db.Text
   explanation         String?     @db.Text
-  evaluation          String      @default("")
+  evaluation          String?     @db.Text
   speakingSuggestions String[]    @default([])
   createdAt           DateTime    @default(now())
 }
