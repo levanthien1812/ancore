@@ -128,8 +128,17 @@ const TalkInterface = ({
               (m) => m.role === "user",
             );
             if (lastUserIndex !== -1) {
+              if (result.data.refinement === "null") {
+                result.data.refinement = null;
+              }
+              if (result.data.explanation === "null") {
+                result.data.explanation = null;
+              }
               updated[lastUserIndex].refinement = result.data.refinement;
               updated[lastUserIndex].explanation = result.data.explanation;
+              updated[lastUserIndex].evaluation = result.data.evaluation;
+              updated[lastUserIndex].speakingSuggestions =
+                result.data.speakingSuggestions;
             }
             return [...updated, aiMessage]; // Ensure aiMessage is added before speaking
           });

@@ -79,6 +79,25 @@ const TalkConversation = ({
                 </span>
               </div>
             )}
+            {msg.evaluation && (
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-[11px] text-yellow-700 animate-in fade-in slide-in-from-top-1">
+                <Sparkles size={12} className="shrink-0" />
+                <span className="font-medium italic">
+                  Evaluation: {msg.evaluation}
+                </span>
+              </div>
+            )}
+            {msg.speakingSuggestions && (
+              <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-[11px] text-yellow-700 animate-in fade-in slide-in-from-top-1">
+                <Sparkles size={12} className="shrink-0" />
+                <div className="font-medium italic">
+                  Speaking Suggestions:{" "}
+                  {msg.speakingSuggestions.map((s) => (
+                    <p key={s}>{s}</p>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
