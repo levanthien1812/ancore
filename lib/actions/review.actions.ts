@@ -238,6 +238,7 @@ export const getReviewInfo = async (wordId: string) => {
   const info: WordReviewInfo = {
     nextReviewAt: null,
     nextReviewIn: null,
+    overdueIn: null,
     lastReviewAt: null,
     reviewedTimes: 0,
   };
@@ -265,10 +266,19 @@ export const getReviewInfo = async (wordId: string) => {
     if (nextScheduledReview.scheduledAt) {
       const now = new Date();
       const diff = nextScheduledReview.scheduledAt.getTime() - now.getTime();
-      // Use Math.ceil to round up days, so 0.5 days remaining shows as 1 day
-      info.nextReviewIn = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      const diffDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        info.nextReviewIn = null;
+        info.overdueIn = Math.abs(diffDays);
+      } else {
+        info.nextReviewIn = diffDays;
+        info.overdueIn = null;
+      }
     }
   }
+
+  console.log(info);
 
   return info;
 };

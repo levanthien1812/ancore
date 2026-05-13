@@ -146,7 +146,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
         {isAllWordsReviewed && (
           <Button
             onClick={handleFinishSession}
-            disabled={isPending}
+            isLoading={isPending}
             variant="outline"
             size={"sm"}
           >

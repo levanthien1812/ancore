@@ -84,6 +84,35 @@ const WordDetail = ({
 
   const currentMeaning = word.meanings[current];
 
+  const reviewStatsItems = [
+    {
+      text: "Review in",
+      value: `${reviewInfo?.nextReviewIn} days`,
+      icon: <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
+      display: !!reviewInfo?.nextReviewIn && reviewInfo?.nextReviewIn >= 0,
+    },
+    {
+      text: "Overdue",
+      value: `${reviewInfo?.overdueIn} days`,
+      icon: <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
+      display: !!reviewInfo?.overdueIn && reviewInfo?.overdueIn >= 0,
+    },
+    {
+      text: "Reviewed",
+      value: `${reviewInfo?.reviewedTimes} times`,
+      icon: <RefreshCcw className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
+      display: true,
+    },
+    {
+      text: "Last Review",
+      value: reviewInfo?.lastReviewAt
+        ? format(reviewInfo.lastReviewAt, "dd/MM/yyyy")
+        : "--",
+      icon: <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
+      display: true,
+    },
+  ];
+
   return (
     <div className="overflow-x-hidden">
       <div className="flex gap-2">
@@ -125,7 +154,7 @@ const WordDetail = ({
                   onClick={() =>
                     updateWordMutation({ highlighted: !word.highlighted })
                   }
-                  disabled={isUpdating}
+                  isLoading={isUpdating}
                 >
                   {word.highlighted ? "Unfavorite" : "Add to Favorite"}
                 </Button>
@@ -184,49 +213,24 @@ const WordDetail = ({
 
       {showReviewStats && (
         <div className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around">
-          <div className="flex gap-2 md:gap-3 items-center">
-            <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
-            <div className="space-y-1">
-              <p className="text-white text-xs sm:text-sm">Review in</p>
-              {isLoading ? (
-                <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
-              ) : (
-                <p className="font-bold leading-none text-base text-white">
-                  {reviewInfo?.nextReviewIn} days
-                </p>
-              )}
+          {reviewStatsItems.map((item, index) => (
+            <div
+              className={`${item.display ? "flex" : "hidden"} gap-2 md:gap-3 items-center`}
+              key={index}
+            >
+              {item.icon}
+              <div className="space-y-1">
+                <p className="text-white text-xs sm:text-sm">{item.text}</p>
+                {isLoading ? (
+                  <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
+                ) : (
+                  <p className="font-bold leading-none text-base text-white">
+                    {item.value}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div className="flex gap-2 md:gap-3 items-center">
-            <RefreshCcw className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
-            <div className="space-y-1">
-              <p className="text-white text-xs sm:text-sm">Reviewed</p>
-              {isLoading ? (
-                <Skeleton className="h-6 w-[50px] bg-blue-800/50" />
-              ) : (
-                <p className="font-bold leading-none text-base text-white">
-                  {reviewInfo?.reviewedTimes} times
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex gap-2 md:gap-3 items-center">
-            <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />
-            <div className="space-y-1">
-              <p className="text-white text-xs sm:text-sm">Last Review</p>
-              {isLoading ? (
-                <Skeleton className="h-6 w-20 bg-blue-800/50" />
-              ) : (
-                <p className="font-bold leading-none text-base text-white">
-                  {reviewInfo?.lastReviewAt
-                    ? format(reviewInfo.lastReviewAt, "dd/MM/yyyy")
-                    : "--"}
-                </p>
-              )}
-            </div>
-          </div>
+          ))}
         </div>
       )}
     </div>
