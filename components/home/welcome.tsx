@@ -8,7 +8,7 @@ import {
 } from "@/lib/actions/word.actions";
 import Image from "next/image";
 import BigFire from "@/public/images/big-fire.png";
-import AddWord from "../add-word/add-word";
+import AddOrEditWord from "../add-word/add-word";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
 import Link from "next/link";
@@ -96,7 +96,7 @@ const Welcome = () => {
             </div>
           </div>
           <div className="flex flex-col gap-1 mt-auto">
-            <AddWord
+            <AddOrEditWord
               triggerButton={
                 <Button className="w-full justify-start">
                   <Plus className="text-white" width={16} /> Add word

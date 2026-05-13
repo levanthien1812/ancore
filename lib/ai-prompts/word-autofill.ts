@@ -1,6 +1,11 @@
 import type { User } from "@prisma/client";
 
-export function buildWordAutofillPrompt(word: string, user: User): string {
+export function buildWordAutofillPrompt(
+  word: string,
+  user: User,
+  pos?: string,
+  avoidMeanings?: string[],
+): string {
   let userInfo;
   if (user.topics && user.topics.length > 0) {
     userInfo = `The user is a ${user.level} learner interested in topics: ${user.topics}.`;
@@ -8,9 +13,18 @@ export function buildWordAutofillPrompt(word: string, user: User): string {
     userInfo = `The user is a ${user.level} learner.`;
   }
 
+  let refinementInstructions = "";
+  if (pos) {
+    refinementInstructions += `Focus on generating meanings for the part of speech: "${pos}". `;
+  }
+  if (avoidMeanings && avoidMeanings.length > 0) {
+    refinementInstructions += `Avoid generating meanings that are identical or very similar to these existing definitions: [${avoidMeanings.join(" | ")}]. `;
+  }
+
   return `
     You are an English learning assistant.
     ${userInfo}
+    ${refinementInstructions}
     Given the word or phrase "${word}", return complete learning information in JSON format.
     (If the word or phrase is invalid or does not exist, return null instead)
 

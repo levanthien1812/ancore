@@ -92,7 +92,7 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
+    <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 md:ps-0 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
       <div className="hidden md:flex justify-end px-2">
         <IconDisplay
           asButton

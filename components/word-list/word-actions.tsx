@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { Button } from "../ui/button";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import AddWord from "../add-word/add-word";
+import AddOrEditWord from "../add-word/add-word";
 import { deleteWords } from "@/lib/actions/word.actions";
 import { initialActionState } from "@/lib/constants/initial-values";
 import { useQueryClient } from "@tanstack/react-query";
@@ -48,7 +48,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
 
   return (
     <div className={`flex ${mode === "list" ? "flex-row" : "flex-col"} gap-1`}>
-      <AddWord
+      <AddOrEditWord
         word={word}
         triggerButton={
           <Button

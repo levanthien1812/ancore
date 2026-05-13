@@ -3,7 +3,7 @@ import Link from "next/link";
 import React from "react";
 import Logo from "@/public/images/logo-ancore-cut.png";
 import UserButton from "./user-button";
-import AddWord from "../../add-word/add-word";
+import AddOrEditWord from "../../add-word/add-word";
 import { auth } from "@/auth";
 
 const Header = async () => {
@@ -25,7 +25,7 @@ const Header = async () => {
           </Link>
         </div>
         <div className="flex gap-1 sm:gap-2">
-          <AddWord />
+          <AddOrEditWord />
           <UserButton user={session?.user} />
         </div>
       </div>

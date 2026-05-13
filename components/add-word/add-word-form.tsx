@@ -22,6 +22,13 @@ import {
   SelectValue,
 } from "../ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import {
   INITIAL_MEANING,
   INITIAL_WORD,
   initialActionState,
@@ -34,27 +41,36 @@ import {
   saveWord,
 } from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
-import { CEFR_LEVELS, CEFRLevel, MASTERY_LEVELS } from "@/lib/constants/enums";
+import {
+  CEFR_LEVELS,
+  CEFRLevel,
+  MASTERY_LEVELS,
+  PARTS_OF_SPEECH,
+} from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
-import { BookOpen, Info, Layers2, Plus, Sparkles } from "lucide-react";
+import { BookOpen, Info, Layers2, Plus, Sparkles, X } from "lucide-react";
 import { Badge } from "../ui/badge";
-import { X } from "lucide-react";
+import { toast } from "sonner";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
 };
 
-interface AddWordFormProps {
+interface AddOrEditWordFormProps {
   word?: WordWithMeanings;
   onClose: () => void;
   wordOfTheDay?: WordOfTheDay;
 }
 
-const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
+const AddOrEditWordForm = ({
+  word,
+  onClose,
+  wordOfTheDay,
+}: AddOrEditWordFormProps) => {
   const [enteredWord, setEnteredWord] = useState(
     word?.word || wordOfTheDay?.word || "",
   );
@@ -69,6 +85,8 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     saveWord,
     initialActionState,
   );
+  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+  const [selectedPos, setSelectedPos] = useState<string>("all");
 
   const defaultValues = (): WordWithMeanings => {
     const existingWord = word || wordOfTheDay;
@@ -99,6 +117,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
 
   const highlighted = watch("highlighted");
   const watchedTags = watch("tags"); // Watch the tags field from react-hook-form
+  const meanings = watch("meanings"); // Watch the tags field from react-hook-form
   const [currentTagInput, setCurrentTagInput] = useState(""); // Local state for the tag input field
 
   const parsedTags = useMemo(() => {
@@ -143,6 +162,51 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     () => debounce(checkWord, 500),
     [checkWord],
   );
+
+  const { mutate: addMeaningWithAIMutate, isPending: isAddingMeaningWithAi } =
+    useMutation({
+      mutationKey: ["addMeaningWithAI", enteredWord],
+      mutationFn: async (pos?: string) => {
+        const currentMeanings = meanings.map((m) => m.definition);
+        const responseData = await fillWithAI(
+          enteredWord,
+          pos,
+          currentMeanings,
+        );
+        return responseData;
+      },
+      onSuccess: (data) => {
+        if (data && data.meanings && data.meanings.length > 0) {
+          setValue("word", data.word.toLowerCase());
+
+          const mappedMeanings = data.meanings.map((meaning) => ({
+            ...INITIAL_MEANING,
+            id: "temp-" + Math.random(),
+            wordId: word?.id ?? "",
+            definition: meaning.definition,
+            pronunciation: meaning.pronunciation ?? null,
+            cefrLevel:
+              meaning.cefrLevel &&
+              CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+                ? (meaning.cefrLevel as CEFRLevel)
+                : null,
+            partOfSpeech: meaning.partOfSpeech ?? null,
+            exampleSentences: meaning.exampleSentences ?? null,
+            synonyms: meaning.synonyms ?? null,
+            antonyms: meaning.antonyms ?? null,
+            usageNotes: data.usageNotes ?? null,
+          }));
+
+          replace(mappedMeanings);
+          setIsAiDialogOpen(false);
+          toast.success("Meanings replaced by AI suggestion");
+        } else {
+          toast.error(
+            "Could not generate new meanings. Try a different part of speech.",
+          );
+        }
+      },
+    });
 
   const { mutate: fillWithAIMutate, isPending: isFillingWithAi } = useMutation({
     mutationKey: ["fillWithAI"], // Stabilize mutation key to avoid overhead during typing
@@ -260,6 +324,11 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_MASTERY_LEVEL],
       });
+      if (word?.id) {
+        queryClient.invalidateQueries({
+          queryKey: ["review-info", word.id],
+        });
+      }
 
       onClose();
     }
@@ -408,20 +477,82 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
           </div>
         </div>
         <div className="w-full border-t border-gray-200">
-          {fields.map((field, index) => (
-            <Meaning
-              key={field.id}
-              index={index}
-              onRemove={handleRemoveMeaning}
-              register={register}
-              setValue={setValue}
-              getValues={getValues}
-              control={control}
-              errors={state?.errors?.meanings}
-              entryType={entryType}
-              count={fields.length}
-            />
-          ))}
+          <div className="flex justify-end">
+            <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant={"link"}
+                  className="italic"
+                  disabled={enteredWord.length === 0}
+                >
+                  Want spedific meanings?
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Suggest suitable meanings with AI</DialogTitle>
+                </DialogHeader>
+                {meanings.filter((m) => m.definition.length > 0).length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-600 italic">
+                      Avoid generating meanings that are identical or very
+                      similar to these existing definitions:{" "}
+                    </p>
+                    <ul className="list-inside list-disc mt-1">
+                      {meanings.map((meaning, index) => (
+                        <li key={index} className="text-sm text-primary italic">
+                          {meaning.definition}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Label htmlFor="pos">Part of Speech (Optional)</Label>
+                  <Select value={selectedPos} onValueChange={setSelectedPos}>
+                    <SelectTrigger
+                      className="w-full whitespace-nowrap"
+                      name="pos"
+                    >
+                      <SelectValue placeholder="Select Part of Speech" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PARTS_OF_SPEECH.map((pos) => (
+                        <SelectItem key={pos} value={pos}>
+                          {pos}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    onClick={() => addMeaningWithAIMutate(selectedPos)}
+                    disabled={isAddingMeaningWithAi}
+                    isLoading={isAddingMeaningWithAi}
+                  >
+                    Generate & Replace
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <div>
+            {fields.map((field, index) => (
+              <Meaning
+                key={field.id}
+                index={index}
+                onRemove={handleRemoveMeaning}
+                register={register}
+                setValue={setValue}
+                getValues={getValues}
+                control={control}
+                errors={state?.errors?.meanings}
+                entryType={entryType}
+                count={fields.length}
+              />
+            ))}
+          </div>
         </div>
       </div>
       <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
@@ -506,4 +637,4 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
   );
 };
 
-export default AddWordForm;
+export default AddOrEditWordForm;
