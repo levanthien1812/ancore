@@ -70,7 +70,7 @@ const WordSuggest = memo(function WordSuggest({
         className="mt-1"
       />
       {showSuggestions && entryType === "word" && (
-        <div className="absolute w-full top-14 left-0 bg-white border p-2 rounded-md">
+        <div className="absolute w-full top-14 left-0 bg-white border p-2 rounded-md z-20">
           <p className="text-gray-600 text-xs ">Suggestions</p>
           {suggestedWordList.length === 0 && (
             <p className="text-center text-muted-foreground">No word found</p>

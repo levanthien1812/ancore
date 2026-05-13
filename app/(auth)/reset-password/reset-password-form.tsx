@@ -17,7 +17,7 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
     const { pending } = useFormStatus();
 
     return (
-      <Button disabled={pending} type="submit" className="w-full">
+      <Button type="submit" className="w-full" isLoading={pending}>
         {pending ? "Resetting..." : "Reset Password"}
       </Button>
     );

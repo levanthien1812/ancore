@@ -130,7 +130,7 @@ const AddNoteForm = ({ note, onClose }: AddNoteFormProps) => {
         <Button variant={"outline"} type="button" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" isLoading={isPending}>
           {isPending ? "Saving..." : "Save"}
         </Button>
       </div>

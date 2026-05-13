@@ -272,7 +272,7 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
     >
       {/* Add a hidden input for the word ID if it exists */}
       {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
+      <div className="rounded-lg border border-gray-200">
         <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
           <div className="flex gap-2">
             <Info
@@ -494,7 +494,11 @@ const AddWordForm = ({ word, onClose, wordOfTheDay }: AddWordFormProps) => {
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading || !!wordExistsError}>
+        <Button
+          type="submit"
+          disabled={isLoading || !!wordExistsError}
+          isLoading={isLoading}
+        >
           {!isLoading ? "Save changes" : "Saving changes..."}
         </Button>
       </div>

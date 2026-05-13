@@ -35,7 +35,7 @@ const initialState = {
 export const OnboardingForm = ({ onSuccess }: { onSuccess: () => void }) => {
   const [state, formAction, isPending] = useActionState(
     updateUserOnboarding,
-    initialState
+    initialState,
   );
 
   const {
@@ -181,7 +181,7 @@ export const OnboardingForm = ({ onSuccess }: { onSuccess: () => void }) => {
         <FieldError error={errors.dailyGoal?.message} />
       </div>
 
-      <Button type="submit" disabled={isPending} className="mt-4">
+      <Button type="submit" isLoading={isPending} className="mt-4">
         {isPending ? "Saving..." : "Get Started"}
       </Button>
     </form>
