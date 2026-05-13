@@ -29,11 +29,12 @@ import {
   SelectValue,
 } from "../ui/select";
 import { DifficultyLevel } from "@prisma/client";
-import { ChevronUp, Plus, Trash, Volume2Icon, X } from "lucide-react";
+import { ChevronUp, Ellipsis, Plus, Trash, Volume2Icon, X } from "lucide-react";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import IconDisplay from "../shared/icon-display";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 interface MeaningProps {
   index: number;
@@ -115,6 +116,12 @@ const Meaning = memo(function Meaning({
     updateExamples(newList);
   };
 
+  const handleSetAsPrimary = () => {
+    // move primary meaning to the begining
+    const meanings = getValues("meanings");
+    setValue("meanings", [meanings[index], ...meanings.slice(0, index)]);
+  };
+
   return (
     <div className="px-2 sm:px-4 py-3 first:border-t-0 border-t border-gray-200">
       <div className="flex items-center gap-2">
@@ -166,13 +173,29 @@ const Meaning = memo(function Meaning({
             !isOpen && "rotate-180",
           )}
         />
-        <IconDisplay
-          icon={Trash}
-          asButton
-          size="sm"
-          onClick={handleRemove}
-          iconColor="text-red-600"
-        />
+        <Popover>
+          <PopoverTrigger asChild>
+            <IconDisplay icon={Ellipsis} iconColor="text-primary" asButton />
+          </PopoverTrigger>
+          <PopoverContent className="w-fit p-0">
+            {index !== 0 && (
+              <div className="">
+                <Button variant={"link"} onClick={handleSetAsPrimary}>
+                  Set as primary
+                </Button>
+              </div>
+            )}
+            <div className="border-t">
+              <Button
+                variant={"link"}
+                className="text-red-600"
+                onClick={handleRemove}
+              >
+                Delete
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
       {isOpen && (
         <div className="border rounded-md p-2 sm:p-4 grid grid-cols-1 md:grid-cols-12 mt-2">
@@ -198,6 +221,7 @@ const Meaning = memo(function Meaning({
                   {...register(`meanings.${index}.pronunciation`)}
                 />
                 <Button
+                  type="button"
                   onClick={() => handlePlayAudio(getValues("word"))}
                   variant="ghost"
                   disabled={!getValues("word")}
@@ -229,6 +253,7 @@ const Meaning = memo(function Meaning({
                       onPaste={handlePaste}
                     />
                     <Button
+                      type="button"
                       onClick={() => removeExample(exIdx)}
                       variant="ghost"
                     >

@@ -142,7 +142,7 @@ const WordOfTheDay = () => {
         <div className="mt-4 flex justify-end">
           <Button
             onClick={() => startTransition(() => void handleEnable())}
-            disabled={isPending}
+            isLoading={isPending}
           >
             Enable Word of the Day
           </Button>
@@ -172,7 +172,7 @@ const WordOfTheDay = () => {
         <div className="mt-4 flex justify-end">
           <Button
             onClick={() => startTransition(() => void loadWordOfTheDay())}
-            disabled={isPending}
+            isLoading={isPending}
           >
             Retry
           </Button>
@@ -194,7 +194,7 @@ const WordOfTheDay = () => {
               <Button
                 variant={"outline"}
                 onClick={() => startTransition(() => void handleStop())}
-                disabled={isPending}
+                isLoading={isPending}
               >
                 Stop
               </Button>

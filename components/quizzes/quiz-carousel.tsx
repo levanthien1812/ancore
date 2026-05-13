@@ -61,6 +61,16 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
     startTransition(async () => {
       const result = await updateQuizAnswer(answerId, userAnswer);
       if (result) {
+        // Play audio feedback if the user didn't skip the question
+        if (userAnswer !== null) {
+          const audio = new Audio(
+            result.isCorrect
+              ? "/sounds/correct-answer-sound.mp3"
+              : "/sounds/wrong-answer-sound.mp3",
+          );
+          audio.play().catch((err) => console.error("Audio play failed:", err));
+        }
+
         setCurrentAnswers((prev) =>
           prev.map((a) =>
             a.id === answerId

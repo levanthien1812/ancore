@@ -99,8 +99,8 @@ const WordsPage = () => {
           <Button
             variant={"outline"}
             onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
             className="w-full sm:w-auto"
+            isLoading={isFetchingNextPage}
           >
             {isFetchingNextPage ? "Loading..." : "Load more words"}
           </Button>

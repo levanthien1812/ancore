@@ -219,7 +219,11 @@ const QuestionCard = ({
             </Button>
           )}
           {isAnswered && (
-            <Button onClick={onNext} className="w-full" disabled={isSubmitting}>
+            <Button
+              onClick={onNext}
+              className="w-full"
+              isLoading={isSubmitting}
+            >
               {!isLastQuestion
                 ? isSubmitting
                   ? "Checking answer..."

@@ -42,12 +42,11 @@ const QuizSummary = ({ quiz }: { quiz: QuizWithAnswers }) => {
             <RotateCcw width={16} />{" "}
             {isPending ? "Processing..." : "Retry quiz"}
           </Button>
-          <Button variant="outline" className="flex-1">
-            <Link href="/quizzes?tab=history">
-              {" "}
+          <Link href="/quizzes?tab=history" className="flex-1">
+            <Button variant="outline" className="w-full">
               <List width={16} /> Back to List
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>
