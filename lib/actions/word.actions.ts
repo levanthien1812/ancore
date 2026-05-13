@@ -593,11 +593,20 @@ export const checkWordExists = async (word: string) =>
     return existingWord !== null;
   });
 
-export const fillWithAI = async (word: string) =>
+export const fillWithAI = async (
+  word: string,
+  pos?: string,
+  avoidMeanings?: string[],
+) =>
   authenticationAction(async (userId) => {
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
-    const prompt = buildWordAutofillPrompt(word, user as User);
+    const prompt = buildWordAutofillPrompt(
+      word,
+      user as User,
+      pos,
+      avoidMeanings,
+    );
 
     const data = await fillWordWithAi(prompt);
 

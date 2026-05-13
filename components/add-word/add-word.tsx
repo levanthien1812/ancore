@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import AddWordForm, { WordWithMeanings } from "./add-word-form";
+import AddOrEditWordForm, { WordWithMeanings } from "./add-word-form";
 import {
   Dialog,
   DialogContent,
@@ -12,13 +12,17 @@ import { Button } from "../ui/button";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { PlusIcon } from "lucide-react";
 
-type AddWordProps = {
+type AddOrEditWordProps = {
   word?: WordWithMeanings;
   triggerButton?: React.ReactNode;
   wordOfTheDay?: WordOfTheDay;
 };
 
-const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
+const AddOrEditWord = ({
+  word,
+  triggerButton,
+  wordOfTheDay,
+}: AddOrEditWordProps) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   const defaultTriggerBtn = (
@@ -40,7 +44,7 @@ const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
         <DialogHeader>
           <DialogTitle>{word ? "Edit word" : "Add new word"}</DialogTitle>
         </DialogHeader>
-        <AddWordForm
+        <AddOrEditWordForm
           onClose={() => setIsOpen(false)}
           word={word}
           wordOfTheDay={wordOfTheDay}
@@ -50,4 +54,4 @@ const AddWord = ({ word, triggerButton, wordOfTheDay }: AddWordProps) => {
   );
 };
 
-export default AddWord;
+export default AddOrEditWord;

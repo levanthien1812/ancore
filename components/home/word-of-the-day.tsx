@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { Bookmark, EllipsisIcon } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
-import AddWord from "../add-word/add-word";
+import AddOrEditWord from "../add-word/add-word";
 import { CEFRLevel } from "@/lib/constants/enums";
 import { getWordOfTheDay } from "@/lib/actions/word.actions";
 import {
@@ -239,7 +239,7 @@ const WordOfTheDay = () => {
         </div>
       </div>
       <div className="mt-2 flex justify-end">
-        <AddWord
+        <AddOrEditWord
           triggerButton={
             <button className="p-2 rounded-md cursor-pointer hover:bg-purple-100 flex gap-1 items-center text-primary text-sm">
               <Bookmark width={20} /> Save word

@@ -8,7 +8,7 @@ import {
   CarouselContent,
   CarouselItem,
 } from "../ui/carousel";
-import { useEffect, useState } from "react";
+import { startTransition, useActionState, useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import {
   ArrowLeft,
@@ -18,21 +18,24 @@ import {
   EllipsisIcon,
   PenIcon,
   RefreshCcw,
-  Star,
   Volume2Icon,
 } from "lucide-react";
 import { Popover, PopoverContent } from "../ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
-import AddWord from "../add-word/add-word";
+import AddOrEditWord from "../add-word/add-word";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import IconDisplay from "../shared/icon-display";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { updateWord } from "@/lib/actions/word.actions";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deleteWords, updateWord } from "@/lib/actions/word.actions";
 import { getReviewInfo } from "@/lib/actions/review.actions";
 import { WordReviewInfo } from "@/lib/constants/enums";
 import { format } from "date-fns";
 import { Skeleton } from "../ui/skeleton";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
+import ConfirmActionDialog from "../shared/confirm-action-dialog";
+import { toast } from "sonner";
+import { initialActionState } from "@/lib/constants/initial-values";
 
 const WordDetail = ({
   word,
@@ -45,22 +48,34 @@ const WordDetail = ({
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
   const [current, setCurrent] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const queryClient = useQueryClient();
+  const [state, formAction, isDeleting] = useActionState(
+    deleteWords,
+    initialActionState,
+  );
 
   const { mutate: updateWordMutation, isPending: isUpdating } = useMutation({
     mutationKey: ["update-word"],
     mutationFn: async (payload: Partial<WordWithMeanings>) => {
       await updateWord(word.id, payload);
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });
+      toast.success("Word updated");
+    },
   });
 
-  const { data: reviewInfo, isLoading } = useQuery<WordReviewInfo | null>({
-    queryKey: ["review-info", word.id],
-    queryFn: async () => {
-      const response = await getReviewInfo(word.id);
-      return response;
-    },
-    enabled: showReviewStats,
-  });
+  const { data: reviewInfo, isLoading: isLoadingReviewInfo } =
+    useQuery<WordReviewInfo | null>({
+      queryKey: ["review-info", word.id],
+      queryFn: async () => {
+        const response = await getReviewInfo(word.id);
+        return response;
+      },
+      enabled: showReviewStats,
+    });
 
   // Sync button disabled state when carousel initializes or changes
   useEffect(() => {
@@ -81,6 +96,15 @@ const WordDetail = ({
       api.off("reInit", updateButtons);
     };
   }, [api]);
+
+  const handleDelete = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    startTransition(() => {
+      formAction(formData);
+    });
+  };
 
   const currentMeaning = word.meanings[current];
 
@@ -137,7 +161,7 @@ const WordDetail = ({
             additionalClasses="hidden md:block"
           />
           <div className="hidden md:block">
-            <AddWord
+            <AddOrEditWord
               word={word}
               triggerButton={<IconDisplay icon={PenIcon} asButton />}
             />
@@ -160,7 +184,7 @@ const WordDetail = ({
                 </Button>
               </div>
               <div className="border-t block md:hidden">
-                <AddWord
+                <AddOrEditWord
                   word={word}
                   triggerButton={<Button variant={"link"}>Edit</Button>}
                 />
@@ -174,9 +198,20 @@ const WordDetail = ({
                 </Button>
               </div>
               <div className="border-t">
-                <Button variant={"link"} className="text-red-600">
-                  Delete
-                </Button>
+                <ConfirmActionDialog
+                  showDialog={showDeleteDialog}
+                  setShowDialog={setShowDeleteDialog}
+                  handleDelete={handleDelete}
+                  title="Delete word"
+                  message={`Are you sure you want to delete "${word.word}"?`}
+                  isLoading={isDeleting}
+                  triggerButton={
+                    <Button variant={"link"} className="text-red-600">
+                      Delete
+                    </Button>
+                  }
+                  actionText="Delete"
+                />
               </div>
             </PopoverContent>
           </Popover>
@@ -221,7 +256,7 @@ const WordDetail = ({
               {item.icon}
               <div className="space-y-1">
                 <p className="text-white text-xs sm:text-sm">{item.text}</p>
-                {isLoading ? (
+                {isLoadingReviewInfo ? (
                   <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
                 ) : (
                   <p className="font-bold leading-none text-base text-white">
