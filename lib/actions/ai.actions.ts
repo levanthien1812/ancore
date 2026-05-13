@@ -35,8 +35,8 @@ export async function saveTalkSession(
     content: string;
     refinement?: string | null;
     explanation?: string | null;
-    evaluation: string;
-    speakingSuggestions: [string];
+    evaluation?: string | null;
+    speakingSuggestions?: string[];
   }[],
   sessionId?: string,
 ) {
