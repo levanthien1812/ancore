@@ -150,6 +150,7 @@ export const MasteryLevelColorCode: Record<
 export type WordReviewInfo = {
   nextReviewAt: Date | null;
   nextReviewIn: number | null;
+  overdueIn: number | null;
   lastReviewAt: Date | null;
   reviewedTimes: number;
 };
