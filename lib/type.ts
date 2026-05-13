@@ -56,4 +56,6 @@ export type Message = {
   content: string;
   refinement?: string | null;
   explanation?: string | null;
+  evaluation: string;
+  speakingSuggestions: [string];
 };

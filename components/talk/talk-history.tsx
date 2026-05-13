@@ -96,6 +96,9 @@ const TalkHistory = ({
                           role: m.role as "user" | "assistant",
                           content: m.content,
                           refinement: m.refinement,
+                          explanation: m.explanation,
+                          evaluation: m.evaluation,
+                          speakingSuggestions: m.speakingSuggestions,
                         })),
                       );
                     }}
