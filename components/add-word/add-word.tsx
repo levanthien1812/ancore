@@ -14,16 +14,25 @@ import { PlusIcon } from "lucide-react";
 
 type AddOrEditWordProps = {
   word?: WordWithMeanings;
-  triggerButton?: React.ReactNode;
+  triggerButton?: React.ReactNode | null;
   wordOfTheDay?: WordOfTheDay;
+  initialWord?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 const AddOrEditWord = ({
   word,
   triggerButton,
   wordOfTheDay,
+  initialWord,
+  open: controlledOpen,
+  onOpenChange,
 }: AddOrEditWordProps) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [internalOpen, setInternalOpen] = React.useState(false);
+
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
 
   const defaultTriggerBtn = (
     <Button
@@ -37,9 +46,11 @@ const AddOrEditWord = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {triggerButton || defaultTriggerBtn}
-      </DialogTrigger>
+      {triggerButton !== null && (
+        <DialogTrigger asChild>
+          {triggerButton || defaultTriggerBtn}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>{word ? "Edit word" : "Add new word"}</DialogTitle>
@@ -48,6 +59,7 @@ const AddOrEditWord = ({
           onClose={() => setIsOpen(false)}
           word={word}
           wordOfTheDay={wordOfTheDay}
+          initialWord={initialWord}
         />
       </DialogContent>
     </Dialog>

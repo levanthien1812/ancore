@@ -35,6 +35,7 @@ import IconDisplay from "../shared/icon-display";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { MAXIMUM_EXAMPLES } from "@/lib/constants/constant";
 
 interface MeaningProps {
   index: number;
@@ -104,6 +105,9 @@ const Meaning = memo(function Meaning({
   };
 
   const addExample = () => {
+    if (examples.length >= MAXIMUM_EXAMPLES) {
+      return;
+    }
     updateExamples([...examples, ""]);
   };
 
@@ -136,7 +140,7 @@ const Meaning = memo(function Meaning({
           render={({ field }) => (
             <Select
               onValueChange={field.onChange}
-              value={field.value as PartOfSpeech}
+              value={field.value || undefined}
             >
               <SelectTrigger className="w-fit" size="sm">
                 <SelectValue placeholder="Part of Speech" />
@@ -262,18 +266,20 @@ const Meaning = memo(function Meaning({
                   </div>
                 ))}
               </div>
-              <div className="flex justify-end items-end mt-1 gap-2">
-                <Button
-                  variant={"outline"}
-                  type="button"
-                  onClick={addExample}
-                  size={"sm"}
-                  className="h-7"
-                >
-                  <Plus width={14} height={14} className="text-blue-600" />
-                  Add example
-                </Button>
-              </div>
+              {examples.length < MAXIMUM_EXAMPLES && (
+                <div className="flex justify-end items-end mt-1 gap-2">
+                  <Button
+                    variant={"outline"}
+                    type="button"
+                    onClick={addExample}
+                    size={"sm"}
+                    className="h-7"
+                  >
+                    <Plus width={14} height={14} className="text-blue-600" />
+                    Add example
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           <div className="col-span-5  mt-3 md:mt-0 ps-0 md:ps-4 space-y-3">
@@ -287,7 +293,7 @@ const Meaning = memo(function Meaning({
                 render={({ field }) => (
                   <Select
                     onValueChange={field.onChange}
-                    value={field.value as DifficultyLevel}
+                    value={field.value || undefined}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select CEFR level" />

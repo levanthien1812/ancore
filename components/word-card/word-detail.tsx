@@ -36,6 +36,7 @@ import { QUERY_KEY } from "@/lib/constants/queryKey";
 import ConfirmActionDialog from "../shared/confirm-action-dialog";
 import { toast } from "sonner";
 import { initialActionState } from "@/lib/constants/initial-values";
+import { convertHoursToDaysHours } from "@/lib/utils/time-convert";
 
 const WordDetail = ({
   word,
@@ -72,6 +73,7 @@ const WordDetail = ({
       queryKey: ["review-info", word.id],
       queryFn: async () => {
         const response = await getReviewInfo(word.id);
+        console.log(response);
         return response;
       },
       enabled: showReviewStats,
@@ -111,13 +113,13 @@ const WordDetail = ({
   const reviewStatsItems = [
     {
       text: "Review in",
-      value: `${reviewInfo?.nextReviewIn} days`,
+      value: `${convertHoursToDaysHours(reviewInfo?.nextReviewIn || 0)}`,
       icon: <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
       display: !!reviewInfo?.nextReviewIn && reviewInfo?.nextReviewIn >= 0,
     },
     {
       text: "Overdue",
-      value: `${reviewInfo?.overdueIn} days`,
+      value: `${convertHoursToDaysHours(reviewInfo?.overdueIn || 0)}`,
       icon: <Calendar className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
       display: !!reviewInfo?.overdueIn && reviewInfo?.overdueIn >= 0,
     },

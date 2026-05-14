@@ -43,7 +43,7 @@ const WordsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto space-y-2 p-4 md:p-0">
+      <div className="container mx-auto space-y-2 p-4">
         <h2 className="text-3xl">Word list</h2>
         {mode === "list" && (
           <div className="space-y-2">
@@ -65,7 +65,7 @@ const WordsPage = () => {
 
   if (error) {
     return (
-      <div className="container mx-auto space-y-2 p-4 md:p-0">
+      <div className="container mx-auto space-y-2 p-4">
         <h2 className="text-3xl">Word list</h2>
         <p className="text-red-500">
           Failed to load word list:{" "}

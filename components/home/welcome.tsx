@@ -41,8 +41,8 @@ const Welcome = () => {
         <div className="mt-2">
           <Skeleton className="h-5 w-full" />
         </div>
-        <div className="flex justify-between mt-auto items-end">
-          <div className="flex flex-col gap-2">
+        <div className="flex items-end gap-2 mt-2">
+          <div className="flex flex-col gap-2 flex-1">
             <Skeleton className="h-9 w-32" />
             <Skeleton className="h-9 w-32" />
             <Skeleton className="h-9 w-32" />
