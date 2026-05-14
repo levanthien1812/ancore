@@ -18,3 +18,9 @@ export const convertSecondsToHHMM = (seconds: number): string => {
   }
   return `${hours}h ${minutes}m`;
 };
+
+export const convertHoursToDaysHours = (hours: number = 0): string => {
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return `${days}d ${remainingHours}h`;
+};

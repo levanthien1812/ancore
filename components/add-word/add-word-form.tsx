@@ -64,15 +64,17 @@ interface AddOrEditWordFormProps {
   word?: WordWithMeanings;
   onClose: () => void;
   wordOfTheDay?: WordOfTheDay;
+  initialWord?: string;
 }
 
 const AddOrEditWordForm = ({
   word,
   onClose,
   wordOfTheDay,
+  initialWord,
 }: AddOrEditWordFormProps) => {
   const [enteredWord, setEnteredWord] = useState(
-    word?.word || wordOfTheDay?.word || "",
+    word?.word || wordOfTheDay?.word || initialWord || "",
   );
   const queryClient = useQueryClient();
   const [entryType, setEntryType] = useState<"word" | "phrase">(
@@ -86,7 +88,7 @@ const AddOrEditWordForm = ({
     initialActionState,
   );
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
-  const [selectedPos, setSelectedPos] = useState<string>("all");
+  const [selectedPos, setSelectedPos] = useState<string | undefined>(undefined);
 
   const defaultValues = (): WordWithMeanings => {
     const existingWord = word || wordOfTheDay;
@@ -315,6 +317,12 @@ const AddOrEditWordForm = ({
   };
 
   useEffect(() => {
+    if (initialWord && !word && !wordOfTheDay) {
+      checkWord(initialWord);
+    }
+  }, [initialWord, word, wordOfTheDay, checkWord]);
+
+  useEffect(() => {
     if (state && state.success) {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });
@@ -342,7 +350,7 @@ const AddOrEditWordForm = ({
       {/* Add a hidden input for the word ID if it exists */}
       {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
       <div className="rounded-lg border border-gray-200">
-        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
+        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50 rounded-t-lg">
           <div className="flex gap-2">
             <Info
               width={20}
@@ -409,7 +417,10 @@ const AddOrEditWordForm = ({
                   control={control}
                   name="masteryLevel"
                   render={({ field }) => (
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      value={field.value || undefined}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select mastery level" />
                       </SelectTrigger>

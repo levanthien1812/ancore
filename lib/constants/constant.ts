@@ -44,3 +44,4 @@ export const MAXIMUM_TOKENS_IN_AI_RESPONSE = 150;
 export const MAXIMUM_RECORDING_TIME = 30;
 export const MAXIMUM_MESSAGES_IN_CHAT = 14;
 export const SHOW_NUDGE_IN = 40000;
+export const MAXIMUM_EXAMPLES = 10;

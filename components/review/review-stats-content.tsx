@@ -163,7 +163,7 @@ const ReviewStatsContent = ({
                 tickMargin={10}
                 axisLine={true}
                 fontSize={12}
-                width={20}
+                width={28}
               />
               <ChartTooltip content={<ChartTooltipContent />} />
               <ChartLegend content={<ChartLegendContent />} />
@@ -252,11 +252,12 @@ const ReviewStatsContent = ({
       </div>
     );
   };
+
   return (
     <>
       <div>
         <p className="text-sm font-bold">Overview</p>
-        <div className="mt-1 flex gap-2">
+        <div className="mt-1 grid grid-cols-2 md:grid-cols-4 gap-2">
           {overviewItems.map((item, index) => (
             <div
               key={index}

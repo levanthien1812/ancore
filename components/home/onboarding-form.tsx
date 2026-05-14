@@ -95,7 +95,10 @@ export const OnboardingForm = ({ onSuccess }: { onSuccess: () => void }) => {
           name="level"
           control={control}
           render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value}>
+            <Select
+              onValueChange={field.onChange}
+              value={field.value || undefined}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select your level" />
               </SelectTrigger>

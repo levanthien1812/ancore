@@ -192,7 +192,9 @@ const FrontFace = ({
         <Badge className="bg-primary-2 text-white">
           {word.meanings[0]?.cefrLevel}
         </Badge>
-        <div className="text-[40px] font-bold mt-2 text-white">{word.word}</div>
+        <div className="text-[40px] font-bold mt-2 text-white text-center">
+          {word.word}
+        </div>
       </div>
       {!isReviewed && (
         <>

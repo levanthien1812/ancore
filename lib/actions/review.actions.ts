@@ -266,13 +266,13 @@ export const getReviewInfo = async (wordId: string) => {
     if (nextScheduledReview.scheduledAt) {
       const now = new Date();
       const diff = nextScheduledReview.scheduledAt.getTime() - now.getTime();
-      const diffDays = Math.ceil(diff / (1000 * 60 * 60 * 24));
+      const diffHours = diff / (1000 * 60 * 60);
 
-      if (diffDays < 0) {
+      if (diffHours < 0) {
         info.nextReviewIn = null;
-        info.overdueIn = Math.abs(diffDays);
+        info.overdueIn = Math.floor(Math.abs(diffHours));
       } else {
-        info.nextReviewIn = diffDays;
+        info.nextReviewIn = Math.ceil(diffHours);
         info.overdueIn = null;
       }
     }
@@ -549,7 +549,7 @@ export async function getReviewStatistics(period: ReviewPeriod) {
   >();
 
   for (const log of currentLogs) {
-    const dateKey = format(startOfDay(log.completedAt || new Date()), "MM-dd");
+    const dateKey = format(startOfDay(log.completedAt || new Date()), "dd/MM");
     if (!dailyDataMap.has(dateKey)) {
       dailyDataMap.set(dateKey, { totalWords: 0, goodEasyWords: 0 });
     }
@@ -575,7 +575,7 @@ export async function getReviewStatistics(period: ReviewPeriod) {
   let tempDate = startOfDay(subDays(today, 6)); // Start 6 days before today to get a 7-day window
 
   while (tempDate.getTime() <= today.getTime()) {
-    const dateKey = format(tempDate, "MM-dd");
+    const dateKey = format(tempDate, "dd/MM");
     const stats = dailyDataMap.get(dateKey);
     let goodEasyPercentage = 0;
     if (stats && stats.totalWords > 0) {
