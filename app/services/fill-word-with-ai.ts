@@ -22,37 +22,7 @@ export const fillWordWithAi = async (
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-2024-08-06",
       messages: [{ role: "user", content: prompt }],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "WordDefinition",
-          schema: {
-            type: "object",
-            properties: {
-              word: { type: "string" },
-              meanings: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    pronunciation: { type: "string" },
-                    cefrLevel: { type: "string" },
-                    definition: { type: "string" },
-                    partOfSpeech: { type: "string" },
-                    exampleSentences: { type: "string" },
-                    synonyms: { type: "string" },
-                    antonyms: { type: "string" },
-                  },
-                  required: ["definition", "partOfSpeech"],
-                },
-              },
-              usageNotes: { type: "string" },
-            },
-            required: ["meanings"],
-            additionalProperties: false,
-          },
-        },
-      },
+      response_format: { type: "json_object" },
     });
 
     const result = completion.choices[0].message.content;
