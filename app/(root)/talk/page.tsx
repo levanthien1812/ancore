@@ -27,7 +27,7 @@ const TalkPage = () => {
   };
 
   return (
-    <div className="w-full max-w-[500px] mx-auto py-2 px-2 sm:px-4 md:px-0 h-full">
+    <div className="w-full max-w-[560px] mx-auto py-2 px-2 sm:px-4 md:px-0 h-full">
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}

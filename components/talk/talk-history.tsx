@@ -120,17 +120,7 @@ const TalkHistory = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onContinue(
-                              session.id,
-                              session.messages.map((m) => ({
-                                role: m.role as "user" | "assistant",
-                                content: m.content,
-                                refinement: m.refinement,
-                                explanation: m.explanation,
-                                evaluation: m.evaluation,
-                                speakingSuggestions: m.speakingSuggestions,
-                              })),
-                            );
+                            onContinue(session.id, session.messages);
                           }}
                           className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary text-white text-[10px] font-bold hover:opacity-90 transition-opacity"
                         >
