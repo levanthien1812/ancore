@@ -1,8 +1,11 @@
 "use client";
 import React from "react";
+import Image from "next/image";
 import {
   Loader2,
   Sparkles,
+  Info,
+  Trophy,
   Save,
   Plus,
   Volume2,
@@ -10,6 +13,10 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/lib/type"; // Import Message type from shared file
+import Chatbot from "@/public/images/chatbot.png";
+import User from "@/public/images/user.png";
+import { format } from "date-fns";
+import IconDisplay from "../shared/icon-display";
 
 const TalkConversation = ({
   messages,
@@ -44,7 +51,18 @@ const TalkConversation = ({
               msg.role === "user" ? "ms-auto items-end" : "me-auto items-start",
             )}
           >
-            <div className="flex items-center gap-1.5 group max-w-full">
+            <div className="flex items-start gap-2 group max-w-full">
+              {msg.role === "assistant" && (
+                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-0.5 p-1 bg-gray-50 shadow">
+                  <Image
+                    src={Chatbot}
+                    alt="AI"
+                    width={32}
+                    height={32}
+                    className="object-cover"
+                  />
+                </div>
+              )}
               {msg.role === "user" && onPlayAudio && (
                 <button
                   onClick={() => onPlayAudio(msg.content)}
@@ -55,14 +73,95 @@ const TalkConversation = ({
                 </button>
               )}
               <div
-                className={cn(
-                  "px-4 py-2 rounded-2xl text-sm",
-                  msg.role === "user"
-                    ? "bg-primary text-white rounded-tr-none"
-                    : "bg-muted border rounded-tl-none",
-                )}
+                className={`flex flex-col gap-1 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                {msg.content}
+                <div
+                  className={cn(
+                    "px-4 py-2 rounded-2xl text-sm",
+                    msg.role === "user"
+                      ? "bg-primary text-white rounded-tr-none"
+                      : "bg-muted border rounded-tl-none",
+                  )}
+                >
+                  {msg.content}
+                </div>
+                <div
+                  className={`text-[10px] text-muted-foreground ${msg.role === "user" ? "ms-auto" : "me-auto"}`}
+                >
+                  {format(msg.createdAt, "h:mm a")}
+                </div>
+
+                {msg.refinement && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-green-50 border border-green-200 rounded-lg animate-in fade-in slide-in-from-top-1 w-full">
+                    <IconDisplay
+                      icon={Sparkles}
+                      iconColor="text-green-600"
+                      bgClass="bg-green-100"
+                    />
+                    <div>
+                      <p className="text-green-600 font-bold text-[13px]">
+                        Better
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-700">
+                        {msg.refinement}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {msg.explanation && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg animate-in fade-in slide-in-from-top-1 w-full">
+                    <IconDisplay
+                      icon={Info}
+                      iconColor="text-blue-600"
+                      bgClass="bg-blue-100"
+                    />
+                    <div>
+                      <p className="text-blue-600 font-bold text-[13px]">
+                        Explanation
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-700">
+                        {msg.explanation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {msg.evaluation && (
+                  <div className="flex items-center gap-2 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg animate-in fade-in slide-in-from-top-1 w-full">
+                    <IconDisplay
+                      icon={Trophy}
+                      iconColor="text-yellow-600"
+                      bgClass="bg-yellow-100"
+                    />
+                    <div>
+                      <p className="text-yellow-600 font-bold text-[13px]">
+                        Evaluation
+                      </p>
+                      <p className="mt-0.5 text-xs text-gray-700">
+                        {msg.evaluation}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {msg.speakingSuggestions &&
+                  msg.speakingSuggestions.length > 0 && (
+                    <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 border border-purple-200 rounded-lg animate-in fade-in slide-in-from-top-1 w-full">
+                      <IconDisplay
+                        icon={Sparkles}
+                        iconColor="text-purple-600"
+                        bgClass="bg-purple-100"
+                      />
+                      <div>
+                        <p className="text-purple-600 font-bold text-[13px]">
+                          Speaking Suggestions
+                        </p>
+                        <div className="mt-0.5 text-xs text-gray-700 space-y-1">
+                          {msg.speakingSuggestions.map((s) => (
+                            <p key={s}>{s}</p>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
               </div>
               {msg.role === "assistant" && onPlayAudio && (
                 <button
@@ -73,60 +172,55 @@ const TalkConversation = ({
                   <Volume2 size={14} className="text-muted-foreground" />
                 </button>
               )}
-            </div>
-
-            {msg.refinement && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-green-50 border border-green-200 rounded-lg text-[11px] text-green-700 animate-in fade-in slide-in-from-top-1">
-                <Sparkles size={12} className="shrink-0" />
-                <span className="font-medium italic">
-                  Better: {msg.refinement}
-                </span>
-              </div>
-            )}
-            {msg.explanation && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-[11px] text-yellow-700 animate-in fade-in slide-in-from-top-1">
-                <Sparkles size={12} className="shrink-0" />
-                <span className="font-medium italic">
-                  Explanation: {msg.explanation}
-                </span>
-              </div>
-            )}
-            {msg.evaluation && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-[11px] text-yellow-700 animate-in fade-in slide-in-from-top-1">
-                <Sparkles size={12} className="shrink-0" />
-                <span className="font-medium italic">
-                  Evaluation: {msg.evaluation}
-                </span>
-              </div>
-            )}
-            {msg.speakingSuggestions && msg.speakingSuggestions.length > 0 && (
-              <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-[11px] text-yellow-700 animate-in fade-in slide-in-from-top-1">
-                <Sparkles size={12} className="shrink-0" />
-                <div className="font-medium italic">
-                  Speaking Suggestions:{" "}
-                  {msg.speakingSuggestions.map((s) => (
-                    <p key={s}>{s}</p>
-                  ))}
+              {msg.role === "user" && (
+                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-50 shadow p-1 shrink-0 mt-0.5">
+                  <Image
+                    src={User}
+                    alt="Me"
+                    width={32}
+                    height={32}
+                    className="object-cover"
+                  />
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         ))}
 
         {activeNudge && (
           <div className="flex flex-col max-w-[85%] gap-1 items-start me-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="px-4 py-2 rounded-2xl text-sm bg-muted border rounded-tl-none border-dashed border-primary/30">
-              <div className="flex items-center gap-1.5 mb-1 text-[10px] text-primary font-bold uppercase tracking-wider">
-                <Sparkles size={10} />
-                Tutor Hint
+            <div className="flex items-start gap-2 group max-w-full">
+              <div className="w-8 h-8 rounded-full overflow-hidden border bg-white shrink-0 mt-0.5">
+                <Image
+                  src={Chatbot}
+                  alt="AI"
+                  width={32}
+                  height={32}
+                  className="object-cover"
+                />
               </div>
-              {activeNudge}
+              <div className="px-4 py-2 rounded-2xl text-sm bg-muted border rounded-tl-none border-dashed border-primary/30">
+                <div className="flex items-center gap-1.5 mb-1 text-[10px] text-primary font-bold uppercase tracking-wider">
+                  <Sparkles size={10} />
+                  Tutor Hint
+                </div>
+                {activeNudge}
+              </div>
             </div>
           </div>
         )}
 
         {isAiThinking && (
-          <div className="flex items-center gap-2 text-muted-foreground text-xs italic">
+          <div className="flex items-center gap-2 text-muted-foreground text-xs italic me-auto">
+            <div className="w-8 h-8 rounded-full overflow-hidden border bg-white shrink-0">
+              <Image
+                src={Chatbot}
+                alt="AI"
+                width={32}
+                height={32}
+                className="object-cover"
+              />
+            </div>
             <Loader2 className="h-3 w-3 animate-spin" />
             AI is thinking...
           </div>

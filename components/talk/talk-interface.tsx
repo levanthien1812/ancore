@@ -12,6 +12,7 @@ import {
   SHOW_NUDGE_IN,
 } from "@/lib/constants/constant";
 import { toast } from "sonner";
+import { INITIAL_MESSAGE } from "@/lib/constants/initial-values";
 
 const TalkInterface = ({
   initialMessages,
@@ -57,7 +58,9 @@ const TalkInterface = ({
     const timer = setTimeout(() => {
       const randomIndex = Math.floor(Math.random() * AI_GREETINGS.length);
       const greeting = AI_GREETINGS[randomIndex];
-      setMessages([{ role: "assistant", content: greeting }]);
+      setMessages([
+        { ...INITIAL_MESSAGE, role: "assistant", content: greeting },
+      ]);
 
       // Speak the greeting
       speakText(greeting);
@@ -95,16 +98,15 @@ const TalkInterface = ({
       startTransition(async () => {
         // Prepare history for API (clean version without refinements)
         const apiHistory = updatedMessages.map(({ role, content }) => ({
-          role,
+          role: role as "user" | "assistant",
           content,
         }));
 
         const result = await getChatResponse(apiHistory);
 
-        console.log(result);
-
         if (result.success && result.data) {
           const aiMessage: Message = {
+            ...INITIAL_MESSAGE,
             role: "assistant",
             content: result.data.reply,
           };
@@ -145,7 +147,11 @@ const TalkInterface = ({
     (text: string) => {
       speakText(""); // Cancel any ongoing speech when user sends a message
       setActiveNudge(null);
-      const userMsg: Message = { role: "user", content: text };
+      const userMsg: Message = {
+        ...INITIAL_MESSAGE,
+        role: "user",
+        content: text,
+      };
       const updatedMessages = [...messages, userMsg];
 
       // Ensure the message count does not exceed the limit after adding user message

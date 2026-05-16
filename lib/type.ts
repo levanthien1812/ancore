@@ -51,11 +51,4 @@ export type TalkSessionWithMessages = TalkSession & {
   messages: TalkMessage[];
 };
 
-export type Message = {
-  role: "user" | "assistant";
-  content: string;
-  refinement?: string | null;
-  explanation?: string | null;
-  evaluation?: string | null;
-  speakingSuggestions?: string[];
-};
+export type Message = Omit<TalkMessage, "id" | "sessionId">;

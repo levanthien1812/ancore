@@ -40,3 +40,13 @@ export const initialActionState: ActionState = {
   message: "",
   errors: {},
 };
+
+export const INITIAL_MESSAGE = {
+  role: "user",
+  content: "",
+  refinement: null,
+  explanation: null,
+  evaluation: null,
+  speakingSuggestions: [],
+  createdAt: new Date(),
+};
