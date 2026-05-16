@@ -53,13 +53,14 @@ const TalkConversation = ({
           >
             <div className="flex items-start gap-2 group max-w-full">
               {msg.role === "assistant" && (
-                <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-0.5 p-1 bg-gray-50 shadow">
+                <div className="hidden sm:block w-8 sm:h-8 rounded-full overflow-hidden shrink-0 mt-0.5 p-1 bg-gray-50 shadow">
                   <Image
                     src={Chatbot}
                     alt="AI"
                     width={32}
                     height={32}
                     className="object-cover"
+                    title="AI"
                   />
                 </div>
               )}
@@ -73,8 +74,11 @@ const TalkConversation = ({
                 </button>
               )}
               <div
-                className={`flex flex-col gap-1 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex flex-col gap-1 ${msg.role === "user" ? "items-end" : "items-start"}`}
               >
+                <p className={"block sm:hidden text-xs text-muted-foreground"}>
+                  {msg.role === "user" ? "You" : "AI"}
+                </p>
                 <div
                   className={cn(
                     "px-4 py-2 rounded-2xl text-sm",
@@ -85,9 +89,7 @@ const TalkConversation = ({
                 >
                   {msg.content}
                 </div>
-                <div
-                  className={`text-[10px] text-muted-foreground ${msg.role === "user" ? "ms-auto" : "me-auto"}`}
-                >
+                <div className={`text-[10px] text-muted-foreground`}>
                   {format(msg.createdAt, "h:mm a")}
                 </div>
 
@@ -173,13 +175,14 @@ const TalkConversation = ({
                 </button>
               )}
               {msg.role === "user" && (
-                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-50 shadow p-1 shrink-0 mt-0.5">
+                <div className="hidden sm:block w-8 sm:h-8 rounded-full overflow-hidden bg-gray-50 shadow p-1 shrink-0 mt-0.5">
                   <Image
                     src={User}
                     alt="Me"
                     width={32}
                     height={32}
                     className="object-cover"
+                    title="Me"
                   />
                 </div>
               )}
