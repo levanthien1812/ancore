@@ -5,6 +5,7 @@ export function buildWordAutofillPrompt(
   user: User,
   pos?: string,
   avoidMeanings?: string[],
+  relatedTo?: string,
 ): string {
   let userInfo;
   if (user.topics && user.topics.length > 0) {
@@ -16,6 +17,9 @@ export function buildWordAutofillPrompt(
   let refinementInstructions = "";
   if (pos) {
     refinementInstructions += `Focus on generating meanings for the part of speech: "${pos}". `;
+  }
+  if (relatedTo) {
+    refinementInstructions += `Generate meanings and examples specifically related to: "${relatedTo}". `;
   }
   if (avoidMeanings && avoidMeanings.length > 0) {
     refinementInstructions += `Avoid generating meanings that are identical or very similar to these existing definitions: [${avoidMeanings.join(" | ")}]. `;

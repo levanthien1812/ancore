@@ -80,6 +80,7 @@ const AddOrEditWordForm = ({
   const [entryType, setEntryType] = useState<"word" | "phrase">(
     word?.type === "Phrase" ? "phrase" : "word",
   );
+  const [relatedTo, setRelatedTo] = useState<string>("");
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
   const [generated, setGenerated] = useState(false);
@@ -174,6 +175,7 @@ const AddOrEditWordForm = ({
           enteredWord,
           pos,
           currentMeanings,
+          relatedTo, // Pass the new relatedTo field
         );
         return responseData;
       },
@@ -518,8 +520,22 @@ const AddOrEditWordForm = ({
                     </ul>
                   </div>
                 )}
+                {/* New field for relatedTo */}
                 <div className="flex gap-2">
-                  <Label htmlFor="pos">Part of Speech (Optional)</Label>
+                  <Label htmlFor="relatedTo" className="w-full">
+                    Related to (Optional)
+                  </Label>
+                  <Input
+                    id="relatedTo"
+                    placeholder="e.g., technology, business, travel"
+                    value={relatedTo}
+                    onChange={(e) => setRelatedTo(e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Label htmlFor="pos" className="w-full">
+                    Part of Speech (Optional)
+                  </Label>
                   <Select value={selectedPos} onValueChange={setSelectedPos}>
                     <SelectTrigger
                       className="w-full whitespace-nowrap"

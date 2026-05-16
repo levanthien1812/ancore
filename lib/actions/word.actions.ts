@@ -597,6 +597,7 @@ export const fillWithAI = async (
   word: string,
   pos?: string,
   avoidMeanings?: string[],
+  relatedTo?: string, // Add new parameter
 ) =>
   authenticationAction(async (userId) => {
     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -606,6 +607,7 @@ export const fillWithAI = async (
       user as User,
       pos,
       avoidMeanings,
+      relatedTo, // Pass the new parameter to the prompt builder
     );
 
     const data = await fillWordWithAi(prompt);
