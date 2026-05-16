@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState, memo } from "react";
+import { useMemo, useState, memo } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -12,14 +12,8 @@ import {
   useWatch,
 } from "react-hook-form";
 import FieldError from "../shared/field-error";
-import {
-  CEFR_LEVELS,
-  PartOfSpeech,
-  PARTS_OF_SPEECH,
-} from "@/lib/constants/enums";
-import { Badge } from "../ui/badge";
+import { CEFR_LEVELS, PARTS_OF_SPEECH } from "@/lib/constants/enums";
 import { WordWithMeanings } from "./add-word-form";
-import { ClipboardEventHandler } from "react";
 import {
   Select,
   SelectContent,
@@ -28,8 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { DifficultyLevel } from "@prisma/client";
-import { ChevronUp, Ellipsis, Plus, Trash, Volume2Icon, X } from "lucide-react";
+import { ChevronUp, Ellipsis, Plus, Trash, Volume2Icon } from "lucide-react";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import IconDisplay from "../shared/icon-display";
 import { cn } from "@/lib/utils";
@@ -57,7 +50,6 @@ const Meaning = memo(function Meaning({
   getValues,
   control,
   errors,
-  entryType,
   count,
 }: MeaningProps) {
   const [isOpen, setIsOpen] = useState(true);
@@ -72,26 +64,6 @@ const Meaning = memo(function Meaning({
 
   const handleRemove = () => {
     onRemove(index);
-  };
-
-  const handlePaste: ClipboardEventHandler<
-    HTMLTextAreaElement | HTMLInputElement
-  > = (event) => {
-    event.preventDefault();
-    const existingText = getValues(`meanings.${index}.exampleSentences`) || "";
-    if (existingText) {
-      return;
-    }
-
-    const clipboardData = event.clipboardData;
-    const pastedText = clipboardData?.getData("text/plain");
-
-    if (pastedText) {
-      setValue(
-        `meanings.${index}.exampleSentences`,
-        pastedText.replace(/\n/g, "|"),
-      );
-    }
   };
 
   const updateExamples = (newList: string[]) => {
@@ -254,7 +226,6 @@ const Meaning = memo(function Meaning({
                       onChange={(e) =>
                         handleExampleChange(exIdx, e.target.value)
                       }
-                      onPaste={handlePaste}
                     />
                     <Button
                       type="button"

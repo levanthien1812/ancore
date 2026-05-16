@@ -22,31 +22,20 @@ import {
   SelectValue,
 } from "../ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
-import {
   INITIAL_MEANING,
   INITIAL_WORD,
   initialActionState,
 } from "@/lib/constants/initial-values";
 import Meaning from "./meaning";
 import WordSuggest from "./word-suggest";
+import AiMeaningSuggest from "./ai-meaning-suggest";
 import {
   checkWordExists,
   fillWithAI,
   saveWord,
 } from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
-import {
-  CEFR_LEVELS,
-  CEFRLevel,
-  MASTERY_LEVELS,
-  PARTS_OF_SPEECH,
-} from "@/lib/constants/enums";
+import { CEFR_LEVELS, CEFRLevel, MASTERY_LEVELS } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -55,6 +44,7 @@ import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { BookOpen, Info, Layers2, Plus, Sparkles, X } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
+import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -80,7 +70,6 @@ const AddOrEditWordForm = ({
   const [entryType, setEntryType] = useState<"word" | "phrase">(
     word?.type === "Phrase" ? "phrase" : "word",
   );
-  const [relatedTo, setRelatedTo] = useState<string>("");
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
   const [generated, setGenerated] = useState(false);
@@ -88,8 +77,6 @@ const AddOrEditWordForm = ({
     saveWord,
     initialActionState,
   );
-  const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
-  const [selectedPos, setSelectedPos] = useState<string | undefined>(undefined);
 
   const defaultValues = (): WordWithMeanings => {
     const existingWord = word || wordOfTheDay;
@@ -166,51 +153,38 @@ const AddOrEditWordForm = ({
     [checkWord],
   );
 
-  const { mutate: addMeaningWithAIMutate, isPending: isAddingMeaningWithAi } =
-    useMutation({
-      mutationKey: ["addMeaningWithAI", enteredWord],
-      mutationFn: async (pos?: string) => {
-        const currentMeanings = meanings.map((m) => m.definition);
-        const responseData = await fillWithAI(
-          enteredWord,
-          pos,
-          currentMeanings,
-          relatedTo, // Pass the new relatedTo field
-        );
-        return responseData;
-      },
-      onSuccess: (data) => {
-        if (data && data.meanings && data.meanings.length > 0) {
-          setValue("word", data.word.toLowerCase());
+  const handleAiSuccess = useCallback(
+    (data: WordDefinitionOutput, mode: "append" | "replace") => {
+      setValue("word", data.word.toLowerCase());
 
-          const mappedMeanings = data.meanings.map((meaning) => ({
-            ...INITIAL_MEANING,
-            id: "temp-" + Math.random(),
-            wordId: word?.id ?? "",
-            definition: meaning.definition,
-            pronunciation: meaning.pronunciation ?? null,
-            cefrLevel:
-              meaning.cefrLevel &&
-              CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
-                ? (meaning.cefrLevel as CEFRLevel)
-                : null,
-            partOfSpeech: meaning.partOfSpeech ?? null,
-            exampleSentences: meaning.exampleSentences ?? null,
-            synonyms: meaning.synonyms ?? null,
-            antonyms: meaning.antonyms ?? null,
-            usageNotes: data.usageNotes ?? null,
-          }));
+      const mappedMeanings = data.meanings.map((meaning) => ({
+        ...INITIAL_MEANING,
+        id: "temp-" + Math.random(),
+        wordId: word?.id ?? "",
+        definition: meaning.definition,
+        pronunciation: meaning.pronunciation ?? null,
+        cefrLevel:
+          meaning.cefrLevel &&
+          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+            ? (meaning.cefrLevel as CEFRLevel)
+            : null,
+        partOfSpeech: meaning.partOfSpeech ?? null,
+        exampleSentences: meaning.exampleSentences ?? null,
+        synonyms: meaning.synonyms ?? null,
+        antonyms: meaning.antonyms ?? null,
+        usageNotes: data.usageNotes ?? null,
+      }));
 
-          replace(mappedMeanings);
-          setIsAiDialogOpen(false);
-          toast.success("Meanings replaced by AI suggestion");
-        } else {
-          toast.error(
-            "Could not generate new meanings. Try a different part of speech.",
-          );
-        }
-      },
-    });
+      if (mode === "replace") {
+        replace(mappedMeanings);
+        toast.success("Meanings replaced by AI suggestion");
+      } else {
+        append(mappedMeanings);
+        toast.success("New meanings added to existing list");
+      }
+    },
+    [setValue, word?.id, replace, append],
+  );
 
   const { mutate: fillWithAIMutate, isPending: isFillingWithAi } = useMutation({
     mutationKey: ["fillWithAI"], // Stabilize mutation key to avoid overhead during typing
@@ -438,9 +412,9 @@ const AddOrEditWordForm = ({
                     </Select>
                   )}
                 />
-                <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
               </div>
             </div>
+            <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
           </div>
           {wordExistsError && <FieldError error={wordExistsError} />}
           <div className="flex gap-2 mt-4">
@@ -491,78 +465,11 @@ const AddOrEditWordForm = ({
         </div>
         <div className="w-full border-t border-gray-200">
           <div className="flex justify-end">
-            <Dialog open={isAiDialogOpen} onOpenChange={setIsAiDialogOpen}>
-              <DialogTrigger asChild>
-                <Button
-                  variant={"link"}
-                  className="italic"
-                  disabled={enteredWord.length === 0}
-                >
-                  Want spedific meanings?
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Suggest suitable meanings with AI</DialogTitle>
-                </DialogHeader>
-                {meanings.filter((m) => m.definition.length > 0).length > 0 && (
-                  <div>
-                    <p className="text-sm text-gray-600 italic">
-                      Avoid generating meanings that are identical or very
-                      similar to these existing definitions:{" "}
-                    </p>
-                    <ul className="list-inside list-disc mt-1">
-                      {meanings.map((meaning, index) => (
-                        <li key={index} className="text-sm text-primary italic">
-                          {meaning.definition}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {/* New field for relatedTo */}
-                <div className="flex gap-2">
-                  <Label htmlFor="relatedTo" className="w-full">
-                    Related to (Optional)
-                  </Label>
-                  <Input
-                    id="relatedTo"
-                    placeholder="e.g., technology, business, travel"
-                    value={relatedTo}
-                    onChange={(e) => setRelatedTo(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Label htmlFor="pos" className="w-full">
-                    Part of Speech (Optional)
-                  </Label>
-                  <Select value={selectedPos} onValueChange={setSelectedPos}>
-                    <SelectTrigger
-                      className="w-full whitespace-nowrap"
-                      name="pos"
-                    >
-                      <SelectValue placeholder="Select Part of Speech" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PARTS_OF_SPEECH.map((pos) => (
-                        <SelectItem key={pos} value={pos}>
-                          {pos}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end gap-2">
-                  <Button
-                    onClick={() => addMeaningWithAIMutate(selectedPos)}
-                    disabled={isAddingMeaningWithAi}
-                    isLoading={isAddingMeaningWithAi}
-                  >
-                    Generate & Replace
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <AiMeaningSuggest
+              enteredWord={enteredWord}
+              existingMeanings={meanings}
+              onSuccess={handleAiSuccess}
+            />
           </div>
           <div>
             {fields.map((field, index) => (

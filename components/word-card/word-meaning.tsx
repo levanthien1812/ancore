@@ -29,7 +29,7 @@ const WordMeaning = ({
   return (
     <div
       key={meaning.id}
-      className="text-white border border-white/40 rounded-lg p-4 max-h-[420px] no-scrollbar overflow-y-auto"
+      className="text-white border border-white/40 rounded-lg p-4 max-h-[420px] no-scrollbar overflow-y-auto h-full"
     >
       {meaning.partOfSpeech && (
         <p className="font-bold text-blue-400">{meaning.partOfSpeech}</p>
