@@ -98,13 +98,11 @@ const TalkInterface = ({
       startTransition(async () => {
         // Prepare history for API (clean version without refinements)
         const apiHistory = updatedMessages.map(({ role, content }) => ({
-          role,
+          role: role as "user" | "assistant",
           content,
         }));
 
         const result = await getChatResponse(apiHistory);
-
-        console.log(result);
 
         if (result.success && result.data) {
           const aiMessage: Message = {
