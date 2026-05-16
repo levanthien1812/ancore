@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useTransition, useEffect, useCallback } from "react";
-import Recording from "@/components/talk/recording";
+import TalkInput from "@/components/talk/talk-input"; // Import the new component
 import TalkConversation from "@/components/talk/talk-conversation";
 import { getChatResponse, saveTalkSession } from "@/lib/actions/ai.actions";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,7 +33,7 @@ const TalkInterface = ({
   const [isPending, startTransition] = useTransition();
   const [isSaving, startSaveTransition] = useTransition();
   const [activeNudge, setActiveNudge] = useState<string | null>(null);
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient(); // Keep queryClient here as it's used for saving
 
   // Function to speak text using Web Speech API
   const speakText = useCallback((text: string) => {
@@ -90,20 +90,8 @@ const TalkInterface = ({
     };
   }, [messages, isPending, speakText]);
 
-  const handleSendMessage = useCallback(
-    (text: string) => {
-      speakText(""); // Cancel any ongoing speech when user sends a message
-      setActiveNudge(null);
-      const userMsg: Message = { role: "user", content: text };
-      const updatedMessages = [...messages, userMsg];
-
-      // Ensure the message count does not exceed the limit after adding user message
-      while (updatedMessages.length > MAXIMUM_MESSAGES_IN_CHAT) {
-        updatedMessages.shift(); // Remove the oldest message
-      }
-
-      setMessages(updatedMessages);
-
+  const triggerAiResponse = useCallback(
+    (updatedMessages: Message[]) => {
       startTransition(async () => {
         // Prepare history for API (clean version without refinements)
         const apiHistory = updatedMessages.map(({ role, content }) => ({
@@ -145,11 +133,40 @@ const TalkInterface = ({
 
           // Speak the AI message after it's rendered
           speakText(aiMessage.content);
+        } else {
+          toast.error(result.message);
         }
       });
     },
-    [messages, speakText],
+    [speakText],
   );
+
+  const handleSendMessage = useCallback(
+    (text: string) => {
+      speakText(""); // Cancel any ongoing speech when user sends a message
+      setActiveNudge(null);
+      const userMsg: Message = { role: "user", content: text };
+      const updatedMessages = [...messages, userMsg];
+
+      // Ensure the message count does not exceed the limit after adding user message
+      while (updatedMessages.length > MAXIMUM_MESSAGES_IN_CHAT) {
+        updatedMessages.shift(); // Remove the oldest message
+      }
+
+      setMessages(updatedMessages);
+
+      triggerAiResponse(updatedMessages);
+    },
+    [messages, triggerAiResponse, speakText],
+  );
+
+  const handleRegenerate = useCallback(() => {
+    if (messages.length === 0) return;
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role !== "user") return;
+
+    triggerAiResponse(messages);
+  }, [messages, triggerAiResponse]);
 
   const handleSave = useCallback(() => {
     startSaveTransition(async () => {
@@ -180,15 +197,14 @@ const TalkInterface = ({
           activeNudge={activeNudge}
           onNewSession={handleNewSession}
           onPlayAudio={speakText}
+          onRegenerate={handleRegenerate}
         />
       </div>
-      <div className="h-fit">
-        <Recording
-          onTranscriptionComplete={handleSendMessage}
-          isProcessing={isPending}
-          isLimitReached={messages.length >= MAXIMUM_MESSAGES_IN_CHAT}
-        />
-      </div>
+      <TalkInput
+        onSendMessage={handleSendMessage}
+        isProcessing={isPending}
+        isLimitReached={messages.length >= MAXIMUM_MESSAGES_IN_CHAT}
+      />
     </>
   );
 };

@@ -1,6 +1,13 @@
 "use client";
 import React from "react";
-import { Loader2, Sparkles, Save, Plus, Volume2 } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  Save,
+  Plus,
+  Volume2,
+  RefreshCw,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Message } from "@/lib/type"; // Import Message type from shared file
 
@@ -12,6 +19,7 @@ const TalkConversation = ({
   activeNudge,
   onNewSession,
   onPlayAudio,
+  onRegenerate,
 }: {
   messages: Message[];
   isAiThinking: boolean;
@@ -20,7 +28,11 @@ const TalkConversation = ({
   activeNudge?: string | null;
   onNewSession?: () => void;
   onPlayAudio?: (text: string) => void;
+  onRegenerate?: () => void;
 }) => {
+  const lastMessage = messages[messages.length - 1];
+  const canRegenerate = lastMessage?.role === "user" && !isAiThinking;
+
   return (
     <div className="flex flex-col h-full gap-4 p-4">
       <div className="flex-1 overflow-y-auto space-y-4 no-scrollbar">
@@ -87,7 +99,7 @@ const TalkConversation = ({
                 </span>
               </div>
             )}
-            {msg.speakingSuggestions && (
+            {msg.speakingSuggestions && msg.speakingSuggestions.length > 0 && (
               <div className="flex items-center gap-1.5 px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-lg text-[11px] text-yellow-700 animate-in fade-in slide-in-from-top-1">
                 <Sparkles size={12} className="shrink-0" />
                 <div className="font-medium italic">
@@ -117,6 +129,19 @@ const TalkConversation = ({
           <div className="flex items-center gap-2 text-muted-foreground text-xs italic">
             <Loader2 className="h-3 w-3 animate-spin" />
             AI is thinking...
+          </div>
+        )}
+
+        {canRegenerate && onRegenerate && (
+          <div className="flex justify-center py-2 animate-in fade-in slide-in-from-bottom-1">
+            <button
+              onClick={onRegenerate}
+              disabled={isAiThinking}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold bg-white border border-primary/20 text-primary shadow-sm hover:bg-primary/5 transition-all"
+            >
+              <RefreshCw size={14} />
+              Regenerate Response
+            </button>
           </div>
         )}
       </div>
