@@ -26,6 +26,7 @@ export const INITIAL_WORD: Word = {
   userId: "",
   audioUrl: "",
   highlighted: false,
+  isOriginal: false,
 };
 
 export const defaultWordsCountByMasteryLevel: WordsCountByMasteryLevel = {
