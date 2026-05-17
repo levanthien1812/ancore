@@ -21,7 +21,7 @@ export interface WordOfTheDay {
   meanings: {
     definition: string;
     partOfSpeech: string;
-    exampleSentences: string;
+    examples: string[];
   }[];
 }
 
@@ -227,13 +227,11 @@ const WordOfTheDay = () => {
           <div className="mt-2">
             <p className="font-bold text-purple-600">Example:</p>
             <ul className="list-disc ms-4 text-gray-600 italic text-sm">
-              {wordOfTheDay.meanings[0]?.exampleSentences
-                .split("|")
-                .map((example, index) => (
-                  <li key={index} className="text-justify">
-                    {example}
-                  </li>
-                ))}
+              {wordOfTheDay.meanings[0]?.examples.map((example, index) => (
+                <li key={index} className="text-justify">
+                  {example}
+                </li>
+              ))}
             </ul>
           </div>
         </div>

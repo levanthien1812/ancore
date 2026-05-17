@@ -6,7 +6,7 @@ export const saveWordMeaningSchema = z.object({
   pronunciation: z.string().trim().optional().nullable(),
   cefrLevel: z.nativeEnum(CEFRLevel).optional().nullable(),
   partOfSpeech: z.string().trim().optional().nullable(),
-  exampleSentences: z.string().trim().optional().nullable(),
+  examples: z.array(z.string()),
   synonyms: z.string().trim().optional().nullable(),
   antonyms: z.string().trim().optional().nullable(),
   usageNotes: z.string().trim().optional().nullable(),
@@ -28,6 +28,7 @@ export const saveWordSchema = z.object({
     .nullable(),
   tags: z.string().optional(),
   highlighted: z.boolean().optional(),
+  isOriginal: z.boolean().optional(),
   meanings: z.preprocess(
     (value) => {
       if (typeof value === "string") {

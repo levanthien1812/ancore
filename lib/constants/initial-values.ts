@@ -1,5 +1,5 @@
 import { ActionState, WordsCountByMasteryLevel } from "../type";
-import { CEFRLevel, MasteryLevel } from "./enums";
+import { MasteryLevel } from "./enums";
 import { Word, WordMeaning } from "@prisma/client";
 
 export const INITIAL_MEANING: WordMeaning = {
@@ -9,7 +9,7 @@ export const INITIAL_MEANING: WordMeaning = {
   pronunciation: "",
   cefrLevel: null,
   partOfSpeech: "",
-  exampleSentences: "",
+  examples: [""],
   synonyms: "",
   antonyms: "",
   usageNotes: "",
@@ -26,6 +26,7 @@ export const INITIAL_WORD: Word = {
   userId: "",
   audioUrl: "",
   highlighted: false,
+  isOriginal: false,
 };
 
 export const defaultWordsCountByMasteryLevel: WordsCountByMasteryLevel = {

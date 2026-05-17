@@ -99,6 +99,7 @@ model Word {
   audioUrl     String?
   tags         String?
   highlighted  Boolean      @default(false)
+  isOriginal   Boolean      @default(false)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -120,17 +121,17 @@ enum MasteryLevel {
 }
 
 model WordMeaning {
-  id               String           @id @default(cuid())
-  wordId           String
-  word             Word             @relation(fields: [wordId], references: [id])
-  definition       String
-  pronunciation    String?
-  cefrLevel        DifficultyLevel?
-  partOfSpeech     String?
-  exampleSentences String?
-  synonyms         String?
-  antonyms         String?
-  usageNotes       String?
+  id            String           @id @default(cuid())
+  wordId        String
+  word          Word             @relation(fields: [wordId], references: [id])
+  definition    String
+  pronunciation String?
+  cefrLevel     DifficultyLevel?
+  partOfSpeech  String?
+  examples      String[]         @default([])
+  synonyms      String?
+  antonyms      String?
+  usageNotes    String?
 }
 
 enum DifficultyLevel {

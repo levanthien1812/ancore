@@ -5,8 +5,8 @@ export interface WordDefinitionOutput {
     pronunciation?: string;
     cefrLevel?: string | null;
     definition: string;
-    partOfSpeech: string;
-    exampleSentences?: string;
+    partOfSpeech?: string;
+    examples?: string[];
     synonyms?: string;
     antonyms?: string;
   }>;

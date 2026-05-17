@@ -88,6 +88,7 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       tags: formData.get("tags"),
       meanings: formData.get("meanings"),
       highlighted: toBoolean(formData.get("highlighted") as string),
+      isOriginal: toBoolean(formData.get("isOriginal") as string),
     });
 
     if (!validatedFields.success) {
@@ -98,7 +99,11 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       };
     }
 
-    const { meanings: meaningData, ...wordData } = validatedFields.data;
+    const {
+      meanings: meaningData,
+      isOriginal,
+      ...wordData
+    } = validatedFields.data;
 
     try {
       if (wordId) {
@@ -119,7 +124,7 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
         await prisma.$transaction([
           prisma.word.update({
             where: { id: wordId },
-            data: { ...wordData },
+            data: { ...wordData, isOriginal },
           }),
           prisma.wordMeaning.deleteMany({ where: { wordId } }),
           prisma.wordMeaning.createMany({
@@ -134,6 +139,7 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
         const word = await prisma.word.create({
           data: {
             ...wordData,
+            isOriginal,
             userId,
           },
         });
@@ -595,19 +601,49 @@ export const checkWordExists = async (word: string) =>
 
 export const fillWithAI = async (
   word: string,
-  pos?: string,
-  avoidMeanings?: string[],
-  relatedTo?: string, // Add new parameter
+  additionalInfo?: {
+    pos?: string;
+    avoidMeanings?: string[];
+    relatedTo?: string; // Add new parameter
+  },
 ) =>
   authenticationAction(async (userId) => {
+    // Reduce token usage by checking for an existing original (AI-generated) word record
+    if (!additionalInfo) {
+      console.log("Entered!");
+      const existingWord = await prisma.word.findFirst({
+        where: {
+          word: word.toLowerCase(),
+          isOriginal: true,
+        },
+        include: { meanings: true },
+      });
+
+      if (existingWord) {
+        return {
+          word: existingWord.word,
+          meanings: existingWord.meanings.map((m) => ({
+            definition: m.definition,
+            pronunciation: m.pronunciation || undefined,
+            cefrLevel: m.cefrLevel || undefined,
+            partOfSpeech: m.partOfSpeech || undefined,
+            examples: m.examples,
+            synonyms: m.synonyms || undefined,
+            antonyms: m.antonyms || undefined,
+          })),
+          usageNotes: existingWord.meanings[0]?.usageNotes || undefined,
+        };
+      }
+    }
+
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
     const prompt = buildWordAutofillPrompt(
       word,
       user as User,
-      pos,
-      avoidMeanings,
-      relatedTo, // Pass the new parameter to the prompt builder
+      additionalInfo?.pos,
+      additionalInfo?.avoidMeanings,
+      additionalInfo?.relatedTo,
     );
 
     const data = await fillWordWithAi(prompt);

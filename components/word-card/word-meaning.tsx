@@ -1,6 +1,5 @@
 import type { WordMeaning } from "@prisma/client";
-import { NotebookPen, Quote, Star, ThumbsDown, ThumbsUp } from "lucide-react";
-import React from "react";
+import { NotebookPen, Quote, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Badge } from "../ui/badge";
 import IconDisplay from "../shared/icon-display";
 
@@ -11,21 +10,20 @@ const WordMeaning = ({
   word: string;
   meaning: WordMeaning;
 }) => {
-  const examples = meaning.exampleSentences
-    ? meaning.exampleSentences.split("|").map((example) => (
-        <li key={example} className="text-sm italic">
-          <div
-            dangerouslySetInnerHTML={{
-              __html: example.replace(
-                word,
-                `<span class="text-primary-2">${word}</span>`,
-              ),
-            }}
-          ></div>
-        </li>
-      ))
-    : [];
+  if (!meaning.examples) return null;
 
+  const examples = meaning.examples.map((example) => (
+    <li key={example} className="text-sm italic">
+      <div
+        dangerouslySetInnerHTML={{
+          __html: example.replace(
+            word,
+            `<span class="text-primary-2">${word}</span>`,
+          ),
+        }}
+      ></div>
+    </li>
+  ));
   return (
     <div
       key={meaning.id}

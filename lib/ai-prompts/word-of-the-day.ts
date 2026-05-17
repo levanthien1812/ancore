@@ -21,7 +21,7 @@ export function buildWordOfTheDayPrompt(user: User): string {
         {
         "definition": "",
         "partOfSpeech": "",
-        "exampleSentences": "<example_1|example_2|example_3>",
+        "examples": ["example_1", "example_2"],
         }
     ]
     }
@@ -29,7 +29,7 @@ export function buildWordOfTheDayPrompt(user: User): string {
     Rules:
     - The "pronunciation" should be in International Phonetic Alphabet (IPA) format, enclosed in slashes (e.g., /prəˌnʌnsiˈeɪʃn/).
     - The CEFR level must be one of A1, A2, B1, B2, C1, C2.
-    - "exampleSentences" should be a single string with multiple examples separated by a pipe character (|).
+    - "examples" should be an array of strings.
     - Example sentence should be simple and accurate.
     - Do not include any explanation outside the JSON.
 `;

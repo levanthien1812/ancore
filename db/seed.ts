@@ -47,9 +47,9 @@ async function main() {
               cefrLevel: faker.helpers.arrayElement(cefrLevels),
               definition: faker.lorem.sentence(),
               partOfSpeech: faker.helpers.arrayElement(partsOfSpeech),
-              exampleSentences: faker.lorem.sentences(
-                faker.number.int({ min: 1, max: 3 }),
-              ),
+              examples: Array.from({
+                length: faker.number.int({ min: 1, max: 3 }),
+              }).map(() => faker.lorem.sentence()),
               synonyms: faker.lorem
                 .words(faker.number.int({ min: 0, max: 5 }))
                 .split(" ")

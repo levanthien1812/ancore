@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState, memo } from "react";
+import { useState, memo } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -54,25 +54,23 @@ const Meaning = memo(function Meaning({
 }: MeaningProps) {
   const [isOpen, setIsOpen] = useState(true);
 
-  const watchedExamples =
+  const examples =
     useWatch({
       control,
-      name: `meanings.${index}.exampleSentences`,
-    }) || "";
-
-  const examples = useMemo(() => watchedExamples.split("|"), [watchedExamples]);
+      name: `meanings.${index}.examples`,
+    }) || [];
 
   const handleRemove = () => {
     onRemove(index);
   };
 
   const updateExamples = (newList: string[]) => {
-    setValue(`meanings.${index}.exampleSentences`, newList.join("|"));
+    setValue(`meanings.${index}.examples`, newList);
   };
 
   const handleExampleChange = (idx: number, value: string) => {
     const newList = [...examples];
-    newList[idx] = value.replace(/\|/g, ""); // Prevent manual pipe characters
+    newList[idx] = value;
     updateExamples(newList);
   };
 

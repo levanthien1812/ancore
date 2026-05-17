@@ -198,13 +198,13 @@ export async function createQuizSession(
           break;
         // --- Question Type 3: Fill in the Blank ---
         case QuestionType.FillInTheBlank: // No AI call needed for this type
-          if (
-            !mainMeaning.exampleSentences ||
-            mainMeaning.exampleSentences.trim().length === 0
-          ) {
+          if (!mainMeaning.examples || mainMeaning.examples.length === 0) {
             break;
           }
-          const example = mainMeaning.exampleSentences.split("|")[0];
+          const randomIndex = Math.floor(
+            Math.random() * mainMeaning.examples.length,
+          );
+          const example = mainMeaning.examples[randomIndex];
           if (!example.includes(word.word)) {
             break;
           }
@@ -455,7 +455,7 @@ export const getWordsToQuiz = async ({
     if (hasSynonyms || hasAntonyms) questionCount++;
 
     // Fill in the Blank question
-    const example = mainMeaning.exampleSentences?.split("|")[0];
+    const example = mainMeaning.examples?.[0];
     if (example && example.includes(word.word)) questionCount++;
   }
 

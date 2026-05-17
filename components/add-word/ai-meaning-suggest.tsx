@@ -47,7 +47,11 @@ const AiMeaningSuggest = ({
       const currentDefinitions = existingMeanings
         .map((m) => m.definition)
         .filter(Boolean);
-      return await fillWithAI(enteredWord, pos, currentDefinitions, relatedTo);
+      return await fillWithAI(enteredWord, {
+        pos,
+        avoidMeanings: currentDefinitions,
+        relatedTo,
+      });
     },
     onSuccess: (data) => {
       if (data && data.meanings && data.meanings.length > 0) {
