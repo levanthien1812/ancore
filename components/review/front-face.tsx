@@ -14,7 +14,7 @@ import { useCarousel } from "../ui/carousel";
 import { PerformanceSummary } from "./review-carousel";
 
 type Hint = Partial<
-  Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "exampleSentences">
+  Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
 >;
 type HintLevel = keyof Hint;
 type HintList = {
@@ -25,14 +25,16 @@ type HintList = {
 
 const FieldLabelMap: Record<HintLevel, string> = {
   tags: "Tags/Topics",
-  exampleSentences: "Example",
+  examples: "Example",
   synonyms: "Synonyms",
+  antonyms: "Antonyms",
 };
 
 const INITIAL_HINT_LIST: HintList = [
   { field: "tags", value: "" },
-  { field: "exampleSentences", value: "" },
+  { field: "examples", value: "" },
   { field: "synonyms", value: "" },
+  { field: "antonyms", value: "" },
 ];
 
 const FrontFace = ({
@@ -47,18 +49,19 @@ const FrontFace = ({
   const [showHint, setShowHint] = React.useState(false);
   const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
   const [hintList, setHintList] = useState<HintList>(INITIAL_HINT_LIST);
-  const { scrollNext, canScrollNext } = useCarousel();
+  const { scrollNext } = useCarousel();
   const [isReviewed, setIsReviewed] = useState(false);
   const session = useSession();
 
   const availableHints = useMemo(() => {
     const availableHints: Hint = {};
     if (word.tags) availableHints.tags = word.tags;
-    if (word.meanings[0]?.exampleSentences)
-      availableHints.exampleSentences =
-        word.meanings[0]?.exampleSentences.split("|")[0];
+    if (word.meanings[0]?.examples)
+      availableHints.examples = word.meanings[0]?.examples;
     if (word.meanings[0]?.synonyms)
       availableHints.synonyms = word.meanings[0]?.synonyms;
+    if (word.meanings[0]?.antonyms)
+      availableHints.antonyms = word.meanings[0]?.antonyms;
     return availableHints;
   }, [word]);
 
@@ -103,7 +106,7 @@ const FrontFace = ({
   const { isPending: isUpdatingReviewSession, mutate: reviewSessionMutate } =
     useMutation({
       mutationFn: async (performance: ReviewPerformance) => {
-        const response = await updateReviewSession(word.id, performance);
+        await updateReviewSession(word.id, performance);
       },
       mutationKey: ["updateReviewSession"],
     });
@@ -164,10 +167,11 @@ const FrontFace = ({
         onPerformanceUpdate("Good");
         break;
       case "synonyms":
+      case "antonyms":
         reviewSessionMutate(ReviewPerformance.MEDIUM);
         onPerformanceUpdate("Medium");
         break;
-      case "exampleSentences":
+      case "examples":
         reviewSessionMutate(ReviewPerformance.HARD);
         onPerformanceUpdate("Hard");
         break;
@@ -229,7 +233,20 @@ const FrontFace = ({
               </div>
               <div key={currentHint.field} className="text-white mt-2">
                 {FieldLabelMap[currentHint.field]}:{" "}
-                <span className="text-primary-2">{currentHint.value}</span>
+                {currentHint.field === "tags" ||
+                  currentHint.field === "synonyms" ||
+                  (currentHint.field === "antonyms" && (
+                    <span className="text-primary-2 text-sm">
+                      {currentHint.value}
+                    </span>
+                  ))}
+                {currentHint.field === "examples" && (
+                  <ul className="text-primary-2 text-sm list-disc list-inside">
+                    {(currentHint.value as string[]).map((example, index) => (
+                      <li key={index}>{example}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <div className="flex gap-2 items-end mt-3">

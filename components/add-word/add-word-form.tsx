@@ -72,7 +72,7 @@ const AddOrEditWordForm = ({
   );
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
-  const [generated, setGenerated] = useState(false);
+  const [generated, setGenerated] = useState(word?.isOriginal || false);
   const [state, formAction, isLoading] = useActionState(
     saveWord,
     initialActionState,
@@ -169,16 +169,18 @@ const AddOrEditWordForm = ({
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
-        exampleSentences: meaning.exampleSentences ?? null,
+        examples: meaning.examples ?? [""],
         synonyms: meaning.synonyms ?? null,
         antonyms: meaning.antonyms ?? null,
         usageNotes: data.usageNotes ?? null,
       }));
 
       if (mode === "replace") {
+        setGenerated(true);
         replace(mappedMeanings);
         toast.success("Meanings replaced by AI suggestion");
       } else {
+        setGenerated(false);
         append(mappedMeanings);
         toast.success("New meanings added to existing list");
       }
@@ -200,8 +202,8 @@ const AddOrEditWordForm = ({
 
       setValue("word", data.word.toLowerCase());
 
-      const mappedMeanings = data.meanings.map((meaning) => ({
-        id: "123",
+      const mappedMeanings = data.meanings.map((meaning, index) => ({
+        id: `${index}`,
         wordId: word?.id ?? "",
         definition: meaning.definition,
         pronunciation: meaning.pronunciation ?? null,
@@ -211,12 +213,13 @@ const AddOrEditWordForm = ({
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
-        exampleSentences: meaning.exampleSentences ?? null,
+        examples: meaning.examples ?? [""],
         synonyms: meaning.synonyms ?? null,
         antonyms: meaning.antonyms ?? null,
         usageNotes: data.usageNotes ?? null,
       }));
 
+      setGenerated(true);
       replace(mappedMeanings);
     },
   });
@@ -227,10 +230,12 @@ const AddOrEditWordForm = ({
   };
 
   const handleClickAddMeaning = () => {
+    setGenerated(false);
     append(INITIAL_MEANING);
   };
 
   const handleRemoveMeaning = (index: number) => {
+    setGenerated(false);
     remove(index);
   };
 
@@ -269,6 +274,7 @@ const AddOrEditWordForm = ({
         formData.append(key, String(value));
       }
     });
+    formData.append("isOriginal", String(generated));
 
     startTransition(() => {
       formAction(formData);

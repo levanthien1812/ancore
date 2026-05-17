@@ -27,9 +27,12 @@ export const generateWordOfTheDayWithAI = async (
                   properties: {
                     definition: { type: "string" },
                     partOfSpeech: { type: "string" },
-                    exampleSentences: { type: "string" },
+                    examples: {
+                      type: "array",
+                      items: { type: "string" },
+                    },
                   },
-                  required: ["definition", "partOfSpeech", "exampleSentences"],
+                  required: ["definition", "partOfSpeech", "examples"],
                 },
               },
             },
