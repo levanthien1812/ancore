@@ -29,6 +29,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { MAXIMUM_EXAMPLES } from "@/lib/constants/constant";
+import { toast } from "sonner";
 
 interface MeaningProps {
   index: number;
@@ -62,6 +63,43 @@ const Meaning = memo(function Meaning({
 
   const handleRemove = () => {
     onRemove(index);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const htmlData = e.clipboardData.getData("text/html");
+    console.log(htmlData);
+    let newItems: string[] = [];
+
+    if (htmlData) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlData, "text/html");
+      // Detect Cambridge Dictionary example elements
+      const elements = doc.querySelectorAll(".eg.deg");
+      if (elements.length > 0) {
+        newItems = Array.from(elements)
+          .map((el) => el.textContent?.trim())
+          .filter((t): t is string => !!t);
+      }
+    }
+
+    // Fallback to splitting by newline if no structured HTML examples were found
+    if (newItems.length === 0) {
+      const textData = e.clipboardData.getData("text/plain");
+      if (textData && textData.includes("\n")) {
+        newItems = textData
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+    }
+
+    if (newItems.length > 0) {
+      e.preventDefault();
+      const current = examples.filter((ex) => ex.trim() !== "");
+      const combined = [...current, ...newItems].slice(0, MAXIMUM_EXAMPLES);
+      updateExamples(combined.length > 0 ? combined : [""]);
+      toast.success(`Imported ${newItems.length} example(s) from clipboard`);
+    }
   };
 
   const updateExamples = (newList: string[]) => {
@@ -216,7 +254,7 @@ const Meaning = memo(function Meaning({
                   ({examples.length}/10)
                 </span>
               </Label>
-              <div className="space-y-1">
+              <div className="space-y-1" onPaste={handlePaste}>
                 {examples.map((ex, exIdx) => (
                   <div key={exIdx} className="flex gap-1">
                     <Input
