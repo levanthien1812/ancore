@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 const ForgotPasswordPage = () => {
   return (
     <div className="w-full max-w-md mx-auto">
-      <Card>
+      <Card className="p-8">
         <CardHeader className="flex flex-col items-center">
           <Link href={"/"}>
             <Image src={Logo} height={50} alt="ancore-logo" />

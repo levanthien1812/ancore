@@ -45,6 +45,7 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
             type="password"
             required
             autoComplete="new-password"
+            className="mt-1"
           />
         </div>
         <div>
@@ -55,6 +56,7 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
             type="password"
             required
             autoComplete="new-password"
+            className="mt-1"
           />
         </div>
         <div>
@@ -70,7 +72,11 @@ const ResetPasswordForm = ({ token }: { token: string }) => {
         <div className="">
           <p className="text-center text-sm">
             Remember your password?{" "}
-            <Link href={"/sign-in"} target="_self" className="link">
+            <Link
+              href={"/sign-in"}
+              target="_self"
+              className="link text-primary hover:underline hover:text-primary-2"
+            >
               Sign in
             </Link>
           </p>

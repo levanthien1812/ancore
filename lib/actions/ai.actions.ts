@@ -1,11 +1,11 @@
 "use server";
 import openai from "../openai";
-import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
 import { buildGetAiResponsePrompt } from "../ai-prompts/get-ai-response";
 import { MAXIMUM_TOKENS_IN_AI_RESPONSE } from "../constants/constant";
+import { authenticationAction } from "./_helpers";
 
-export async function transcribeAudio(formData: FormData) {
+export const transcribeAudio = async (formData: FormData) => {
   const file = formData.get("file") as File;
 
   if (!file) {
@@ -27,9 +27,9 @@ export async function transcribeAudio(formData: FormData) {
       message: "Failed to transcribe audio.",
     };
   }
-}
+};
 
-export async function saveTalkSession(
+export const saveTalkSession = async (
   messages: {
     role: string;
     content: string;
@@ -39,65 +39,58 @@ export async function saveTalkSession(
     speakingSuggestions?: string[];
   }[],
   sessionId?: string,
-) {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) {
+) =>
+  authenticationAction(async (userId) => {
+    try {
+      if (sessionId) {
+        await prisma.talkSession.update({
+          where: { id: sessionId, userId },
+          data: {
+            messages: {
+              deleteMany: {}, // Replace existing messages with the updated conversation state
+              create: messages.map((m) => ({
+                role: m.role,
+                content: m.content,
+                refinement: m.refinement,
+                explanation: m.explanation,
+                evaluation: m.evaluation,
+                speakingSuggestions: m.speakingSuggestions,
+              })),
+            },
+          },
+        });
+      } else {
+        await prisma.talkSession.create({
+          data: {
+            userId,
+            title: `Talk Session - ${new Date().toLocaleString()}`,
+            messages: {
+              create: messages.map((m) => ({
+                role: m.role,
+                content: m.content,
+                refinement: m.refinement,
+                explanation: m.explanation,
+                evaluation: m.evaluation,
+                speakingSuggestions: m.speakingSuggestions,
+              })),
+            },
+          },
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Error saving conversation:", error);
       return {
         success: false,
-        message: "You must be logged in to save conversations.",
+        message: "Failed to save conversation.",
       };
     }
+  });
 
-    if (sessionId) {
-      await prisma.talkSession.update({
-        where: { id: sessionId, userId: session.user.id },
-        data: {
-          messages: {
-            deleteMany: {}, // Replace existing messages with the updated conversation state
-            create: messages.map((m) => ({
-              role: m.role,
-              content: m.content,
-              refinement: m.refinement,
-              explanation: m.explanation,
-              evaluation: m.evaluation,
-              speakingSuggestions: m.speakingSuggestions,
-            })),
-          },
-        },
-      });
-    } else {
-      await prisma.talkSession.create({
-        data: {
-          userId: session.user.id,
-          title: `Talk Session - ${new Date().toLocaleString()}`,
-          messages: {
-            create: messages.map((m) => ({
-              role: m.role,
-              content: m.content,
-              refinement: m.refinement,
-              explanation: m.explanation,
-              evaluation: m.evaluation,
-              speakingSuggestions: m.speakingSuggestions,
-            })),
-          },
-        },
-      });
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error("Error saving conversation:", error);
-    return {
-      success: false,
-      message: "Failed to save conversation.",
-    };
-  }
-}
-
-export async function getChatResponse(
+export const getChatResponse = async (
   messages: { role: "user" | "assistant"; content: string }[],
-) {
+) => {
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -123,24 +116,22 @@ export async function getChatResponse(
       message: "Failed to get AI response.",
     };
   }
-}
+};
 
-export async function getTalkSessions() {
-  try {
-    const session = await auth();
-    if (!session?.user?.id) return [];
-
-    return await prisma.talkSession.findMany({
-      where: { userId: session.user.id },
-      include: {
-        messages: {
-          orderBy: { createdAt: "asc" },
+export const getTalkSessions = async () =>
+  authenticationAction(async (userId) => {
+    try {
+      return await prisma.talkSession.findMany({
+        where: { userId },
+        include: {
+          messages: {
+            orderBy: { createdAt: "asc" },
+          },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-  } catch (error) {
-    console.error("Error fetching talk sessions:", error);
-    return [];
-  }
-}
+        orderBy: { createdAt: "desc" },
+      });
+    } catch (error) {
+      console.error("Error fetching talk sessions:", error);
+      return [];
+    }
+  }, []);
