@@ -43,6 +43,7 @@ const ForgotPasswordForm = () => {
             type="email"
             required
             autoComplete="email"
+            className="mt-1"
           />
         </div>
         <div>
@@ -58,7 +59,11 @@ const ForgotPasswordForm = () => {
         <div className="">
           <p className="text-center text-sm">
             Remember your password?{" "}
-            <Link href={"/sign-in"} target="_self" className="link">
+            <Link
+              href={"/sign-in"}
+              target="_self"
+              className="link text-primary hover:underline hover:text-primary-2"
+            >
               Sign in
             </Link>
           </p>

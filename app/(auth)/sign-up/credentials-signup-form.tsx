@@ -48,6 +48,7 @@ const CredentialsSignupForm = () => {
             type="text"
             required
             autoComplete="name"
+            className="mt-1"
           />
         </div>
         <div>
@@ -58,6 +59,7 @@ const CredentialsSignupForm = () => {
             type="email"
             required
             autoComplete="email"
+            className="mt-1"
           />
         </div>
         <div>
@@ -68,6 +70,7 @@ const CredentialsSignupForm = () => {
             type="password"
             required
             autoComplete="password"
+            className="mt-1"
           />
         </div>
         <div>
@@ -78,6 +81,7 @@ const CredentialsSignupForm = () => {
             type="password"
             required
             autoComplete="confirm-password"
+            className="mt-1"
           />
         </div>
         <div>
@@ -89,7 +93,11 @@ const CredentialsSignupForm = () => {
         <div className="">
           <p className="text-center text-sm">
             Already have an account?{" "}
-            <Link href={"/sign-in"} target="_self" className="link">
+            <Link
+              href={"/sign-in"}
+              target="_self"
+              className="link hover:underline hover:text-primary-2"
+            >
               Sign in
             </Link>
           </p>

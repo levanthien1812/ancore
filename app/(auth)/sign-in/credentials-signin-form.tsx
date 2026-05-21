@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signInWithCredentials } from "@/lib/actions/user.actions";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { startTransition, useActionState } from "react";
@@ -23,6 +24,7 @@ const CredentialsSigninForm = () => {
     return (
       <Button type="submit" className="w-full" isLoading={pending}>
         {pending ? "Signing in..." : "Sign in"}
+        <ArrowRight width={20} height={16} />
       </Button>
     );
   };
@@ -48,6 +50,7 @@ const CredentialsSigninForm = () => {
             type="email"
             required
             autoComplete="email"
+            className="mt-1"
           />
         </div>
         <div>
@@ -58,7 +61,19 @@ const CredentialsSigninForm = () => {
             type="password"
             required
             autoComplete="password"
+            className="mt-1"
           />
+        </div>
+        <div className="">
+          <p className="text-end text-sm">
+            <Link
+              href={"/forgot-password"}
+              target="_self"
+              className="text-primary hover:underline hover:text-primary-2"
+            >
+              Forgot your password?
+            </Link>
+          </p>
         </div>
         <div>
           <SignInButton />
@@ -68,15 +83,12 @@ const CredentialsSigninForm = () => {
         )}
         <div className="">
           <p className="text-center text-sm">
-            <Link href={"/forgot-password"} target="_self" className="link">
-              Forgot your password?
-            </Link>
-          </p>
-        </div>
-        <div className="">
-          <p className="text-center text-sm">
             Don&apos;t have an account yet?{" "}
-            <Link href={"/sign-up"} target="_self" className="link">
+            <Link
+              href={"/sign-up"}
+              target="_self"
+              className="text-primary hover:underline hover:text-primary-2"
+            >
               Sign up
             </Link>
           </p>

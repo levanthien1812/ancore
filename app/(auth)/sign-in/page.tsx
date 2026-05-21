@@ -32,12 +32,12 @@ const SignInPage = async (props: {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <Card>
+      <Card className="p-8">
         <CardHeader className="flex flex-col items-center">
           <Link href={"/"}>
             <Image src={Logo} height={50} alt="ancore-logo" />
           </Link>
-          <CardTitle className="text-3xl">Sign In</CardTitle>
+          <CardTitle className="text-3xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

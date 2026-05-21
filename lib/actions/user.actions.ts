@@ -1,6 +1,6 @@
 "use server";
 
-import { auth, signIn, signOut } from "@/auth";
+import { signIn, signOut } from "@/auth";
 import { AuthError } from "next-auth";
 import {
   onboardingFormSchema,
@@ -15,11 +15,12 @@ import { hashSync } from "bcrypt-ts-edge";
 import z from "zod";
 import { revalidatePath } from "next/cache";
 import { UserLevel } from "@prisma/client";
+import { authenticationAction } from "./_helpers";
 
-export async function signInWithCredentials(
+export const signInWithCredentials = async (
   prevState: unknown,
   formData: FormData,
-) {
+) => {
   try {
     const user = signInFormSchema.parse({
       email: formData.get("email"),
@@ -57,16 +58,16 @@ export async function signInWithCredentials(
       message: "Invalid credentials",
     };
   }
-}
+};
 
-export async function signOutUser() {
+export const signOutUser = async () => {
   await signOut({ redirectTo: "/sign-in" });
-}
+};
 
-export async function signUpWithCredentials(
+export const signUpWithCredentials = async (
   prevState: unknown,
   formData: FormData,
-) {
+) => {
   try {
     const user = signUpFormSchema.parse({
       email: formData.get("email"),
@@ -114,48 +115,47 @@ export async function signUpWithCredentials(
       message: "Something went wrong",
     };
   }
-}
+};
 
-export async function updateUserOnboarding(
+export const updateUserOnboarding = async (
   prevState: unknown,
   formData: FormData,
-) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, message: "Authentication required.", errors: {} };
-  }
+) =>
+  authenticationAction(async (userId) => {
+    const validatedFields = onboardingFormSchema.safeParse({
+      level: formData.get("level"),
+      topics: formData.get("topics"),
+      dailyGoal: parseInt(formData.get("dailyGoal") as string),
+    });
 
-  const validatedFields = onboardingFormSchema.safeParse({
-    level: formData.get("level"),
-    topics: formData.get("topics"),
-    dailyGoal: parseInt(formData.get("dailyGoal") as string),
+    if (!validatedFields.success) {
+      return {
+        success: false,
+        message: "Validation failed.",
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...validatedFields.data,
+          level: validatedFields.data.level as UserLevel,
+          onboarded: true,
+        },
+      });
+      revalidatePath("/");
+      return { success: true, message: "Welcome!", errors: {} };
+    } catch (error) {
+      return { success: false, message: "Database error.", errors: {} };
+    }
   });
 
-  if (!validatedFields.success) {
-    return {
-      success: false,
-      message: "Validation failed.",
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-
-  try {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        ...validatedFields.data,
-        level: validatedFields.data.level as UserLevel,
-        onboarded: true,
-      },
-    });
-    revalidatePath("/");
-    return { success: true, message: "Welcome!", errors: {} };
-  } catch (error) {
-    return { success: false, message: "Database error.", errors: {} };
-  }
-}
-
-export async function forgotPassword(prevState: unknown, formData: FormData) {
+export const forgotPassword = async (
+  prevState: unknown,
+  formData: FormData,
+) => {
   try {
     const user = forgotPasswordFormSchema.parse({
       email: formData.get("email"),
@@ -208,7 +208,7 @@ export async function forgotPassword(prevState: unknown, formData: FormData) {
       message: "Something went wrong",
     };
   }
-}
+};
 
 export async function resetPassword(prevState: unknown, formData: FormData) {
   try {
@@ -263,54 +263,45 @@ export async function resetPassword(prevState: unknown, formData: FormData) {
   }
 }
 
-export const stopWordOfTheDay = async () => {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, message: "Authentication required." };
-  }
-
-  try {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        wordOfTheDayStopped: true,
-      },
-    });
-    return { success: true, message: "Word of the day stopped." };
-  } catch (error) {
-    return { success: false, message: "Database error." };
-  }
-};
-
-export const enableWordOfTheDay = async () => {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { success: false, message: "Authentication required." };
-  }
-
-  try {
-    await prisma.user.update({
-      where: { id: session.user.id },
-      data: {
-        wordOfTheDayStopped: false,
-      },
-    });
-    return { success: true, message: "Word of the day enabled." };
-  } catch (error) {
-    return { success: false, message: "Database error." };
-  }
-};
-
-export const getWordOfTheDayPreference = async () => {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { stopped: false };
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { wordOfTheDayStopped: true },
+export const stopWordOfTheDay = async () =>
+  authenticationAction(async (userId) => {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          wordOfTheDayStopped: true,
+        },
+      });
+      return { success: true, message: "Word of the day stopped." };
+    } catch (error) {
+      return { success: false, message: "Database error." };
+    }
   });
 
-  return { stopped: Boolean(user?.wordOfTheDayStopped) };
-};
+export const enableWordOfTheDay = async () =>
+  authenticationAction(async (userId) => {
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          wordOfTheDayStopped: false,
+        },
+      });
+      return { success: true, message: "Word of the day enabled." };
+    } catch (error) {
+      return { success: false, message: "Database error." };
+    }
+  });
+
+export const getWordOfTheDayPreference = async () =>
+  authenticationAction(
+    async (userId) => {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { wordOfTheDayStopped: true },
+      });
+
+      return { stopped: Boolean(user?.wordOfTheDayStopped) };
+    },
+    { stopped: false },
+  );
