@@ -108,6 +108,10 @@ const WordDetail = ({
     });
   };
 
+  // useEffect(() => {
+  //   setCurrent(0)
+  // }, [word])
+
   const currentMeaning = word.meanings[current];
 
   const reviewStatsItems = [

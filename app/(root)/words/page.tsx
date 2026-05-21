@@ -33,12 +33,15 @@ const WordsPage = () => {
       }
     },
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.length === PAGE_SIZE ? allPages.length + 1 : undefined;
+      return lastPage.words.length === PAGE_SIZE
+        ? allPages.length + 1
+        : undefined;
     },
     initialPageParam: 1,
   });
 
-  const allWords = data?.pages.flat() || [];
+  const allWords = data?.pages.flatMap((page) => page.words) || [];
+  const totalCount = data?.pages[0]?.totalCount || 0;
   const { mode } = useLayout();
 
   if (isLoading) {
@@ -93,7 +96,7 @@ const WordsPage = () => {
   return (
     <div className="container mx-auto space-y-2 p-4">
       <h2 className="text-3xl">Word list</h2>
-      <WordList words={allWords} />
+      <WordList words={allWords} totalCount={totalCount} />
       {hasNextPage && (
         <div className="mt-4">
           <Button

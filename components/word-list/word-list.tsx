@@ -8,7 +8,13 @@ import WordGrid from "./word-grid";
 import { useLayout } from "../layout/layout-context";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
-const WordList = ({ words }: { words: WordWithMeanings[] }) => {
+const WordList = ({
+  words,
+  totalCount,
+}: {
+  words: WordWithMeanings[];
+  totalCount: number;
+}) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const word = selectedIndex !== null ? words[selectedIndex] : undefined;
   const { mode, setMode } = useLayout();
@@ -24,13 +30,21 @@ const WordList = ({ words }: { words: WordWithMeanings[] }) => {
 
   return (
     <div>
-      <div className="flex items-center gap-2">
-        <p>
-          Total words:{" "}
-          <span className="text-primary-2 font-bold text-xl">
-            {words.length}
-          </span>
-        </p>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <p>
+            Loaded:{" "}
+            <span className="text-primary-2 font-bold text-lg">
+              {words.length}
+            </span>
+          </p>
+          <p>
+            Total:{" "}
+            <span className="text-primary-2 font-bold text-lg">
+              {totalCount}
+            </span>
+          </p>
+        </div>
 
         <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-sm bg-opacity-30">
           <button
