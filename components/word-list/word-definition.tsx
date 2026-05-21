@@ -4,17 +4,18 @@ import { Dot } from "lucide-react";
 
 const WordDefinition = ({ meanings }: { meanings: string[] }) => {
   const { mode } = useLayout();
+
   if (mode === "grid") {
     return (
-      <div className="flex gap-2 items-center">
-        <div className="">
-          {meanings.map((meaning, index) => (
-            <p key={index} className="text-sm text-white" title={meaning}>
-              {meanings.length > 1 ? <Dot className="inline" /> : ""}
-              {shorten(meaning, 50)}
-            </p>
-          ))}
-        </div>
+      <div className="">
+        <p className="text-sm text-white" title={meanings[0]}>
+          {shorten(meanings[0], 70)}
+        </p>
+        {meanings.length > 1 && (
+          <p className="text-xs text-gray-200  mt-1 italic">
+            ({meanings.length - 1} more)
+          </p>
+        )}
       </div>
     );
   }

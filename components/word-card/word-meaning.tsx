@@ -12,18 +12,23 @@ const WordMeaning = ({
 }) => {
   if (!meaning.examples) return null;
 
-  const examples = meaning.examples.map((example) => (
-    <li key={example} className="text-sm italic">
-      <div
-        dangerouslySetInnerHTML={{
-          __html: example.replace(
-            word,
-            `<span class="text-primary-2">${word}</span>`,
-          ),
-        }}
-      ></div>
-    </li>
-  ));
+  const examples = meaning.examples.map((example) => {
+    // Normalize non-breaking spaces (\u00A0 / &nbsp;) to regular spaces to allow proper browser line wrapping
+    const normalizedExample = example.replace(/\u00A0/g, " ");
+    return (
+      <li key={example} className="text-sm italic">
+        <div
+          dangerouslySetInnerHTML={{
+            __html: normalizedExample.replace(
+              new RegExp(`\\b${word}\\b`, "gi"),
+              (match) => `<span class="text-primary-2">${match}</span>`,
+            ),
+          }}
+        ></div>
+      </li>
+    );
+  });
+
   return (
     <div
       key={meaning.id}

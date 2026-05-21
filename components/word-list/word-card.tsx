@@ -30,6 +30,8 @@ const WordCard = ({
     }
   };
 
+  const uniquePos = [...new Set(word.meanings.map((m) => m.partOfSpeech))];
+
   return (
     <div
       className={`p-3 sm:p-4 rounded-lg shadow-sm shadow-primary bg-primary group relative transition-colors duration-200 md:hover:shadow-md md:hover:bg-primary-2 md:hover:shadow-primary-2 ${
@@ -73,9 +75,7 @@ const WordCard = ({
                 <Dot width={16} height={16} color="white" opacity={0.5} />
               )}
             <p className="font-bold text-sm text-blue-300">
-              {word.type === WordType.Word
-                ? word.meanings[0].partOfSpeech
-                : word.type}
+              {word.type === WordType.Word ? uniquePos.join("/") : word.type}
             </p>
           </div>
         </div>

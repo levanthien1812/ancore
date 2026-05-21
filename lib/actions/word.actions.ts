@@ -15,73 +15,93 @@ import { authenticationAction } from "./_helpers";
 import { buildWordOfTheDayPrompt } from "../ai-prompts/word-of-the-day";
 import { generateWordOfTheDayWithAI } from "@/app/services/generate-word-of-the-day-with-ai";
 
-export async function getWordListByFilter(
-  wordFilter: WordFitler,
-): Promise<WordWithMeanings[]> {
-  const data = await prisma.word.findMany({
-    where: {
-      ...(wordFilter.masteryLevel && { masteryLevel: wordFilter.masteryLevel }),
-      ...(wordFilter.tags && {
-        hasEvery: wordFilter.tags,
-      }),
+export const getWordListByFilter = async (wordFilter: WordFitler) =>
+  authenticationAction(
+    async (userId) => {
+      const where = {
+        userId,
+        ...(wordFilter.masteryLevel && {
+          masteryLevel: wordFilter.masteryLevel,
+        }),
+        ...(wordFilter.tags && {
+          hasEvery: wordFilter.tags,
+        }),
+      };
+
+      const [words, totalCount] = await Promise.all([
+        prisma.word.findMany({
+          where,
+          skip: (wordFilter.page - 1) * wordFilter.limit,
+          take: wordFilter.limit,
+          orderBy: {
+            createdAt: "desc",
+          },
+          include: {
+            meanings: true,
+          },
+        }),
+        prisma.word.count({ where }),
+      ]);
+
+      return { words, totalCount };
     },
-    skip: (wordFilter.page - 1) * wordFilter.limit,
-    take: wordFilter.limit,
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      meanings: true,
-    },
+    { words: [], totalCount: 0 },
+  );
+
+export const getRecentWords = async () =>
+  authenticationAction(async (userId) => {
+    return await prisma.word.findMany({
+      where: { userId },
+      take: 15,
+      orderBy: {
+        updatedAt: "desc",
+      },
+      include: {
+        meanings: true,
+      },
+    });
+  }, []);
+
+export const getWord = async (id: string) =>
+  authenticationAction(async (userId) => {
+    return await prisma.word.findFirst({
+      where: {
+        id,
+        userId,
+      },
+      include: {
+        meanings: true,
+      },
+    });
   });
 
-  return data;
-}
+export const updateWord = async (id: string, data: Partial<Word>) =>
+  authenticationAction(async (userId) => {
+    // Ensure ownership before updating
+    const existingWord = await prisma.word.findFirst({
+      where: { id, userId },
+    });
 
-export async function getRecentWords() {
-  const data = await prisma.word.findMany({
-    take: 15,
-    orderBy: {
-      updatedAt: "desc",
-    },
-    include: {
-      meanings: true,
-    },
+    if (!existingWord) {
+      return null;
+    }
+
+    const updatedData = await prisma.word.update({
+      where: {
+        id,
+      },
+      data,
+    });
+    revalidatePath("/words");
+    return updatedData;
   });
-
-  return data;
-}
-
-export async function getWord(id: string) {
-  const data = await prisma.word.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      meanings: true,
-    },
-  });
-
-  return data;
-}
-
-export async function updateWord(id: string, data: Partial<Word>) {
-  const updatedData = await prisma.word.update({
-    where: {
-      id,
-    },
-    data,
-  });
-  revalidatePath("/words");
-  return updatedData;
-}
 
 export const saveWord = async (prevState: unknown, formData: FormData) =>
   authenticationAction(async (userId) => {
     const wordId = formData.get("id") as string | null;
 
     const validatedFields = saveWordSchema.safeParse({
-      word: formData.get("word")?.toString().toLowerCase(),
+      word: formData.get("word")?.toString()?.toLowerCase(),
       type: formData.get("type"),
       masteryLevel: formData.get("masteryLevel"),
       audioUrl: formData.get("audioUrl"),
@@ -107,8 +127,6 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
 
     try {
       if (wordId) {
-        // --- UPDATE LOGIC ---
-        // Ensure the user owns the word they are trying to update
         const existingWord = await prisma.word.findFirst({
           where: { id: wordId, userId },
         });
@@ -120,7 +138,6 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
           };
         }
 
-        // Transaction to update word, delete old meanings, and create new ones
         await prisma.$transaction([
           prisma.word.update({
             where: { id: wordId },
@@ -135,7 +152,6 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
           }),
         ]);
       } else {
-        // --- CREATE LOGIC ---
         const word = await prisma.word.create({
           data: {
             ...wordData,
@@ -150,13 +166,13 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
 
         if (word) {
           const now = new Date();
-          const initialInterval = 1; // Review again in 1 day
+          const initialInterval = 1;
 
           await prisma.reviewSession.create({
             data: {
               userId: word.userId,
               wordId: word.id,
-              completedAt: null, // Initial session is pending, not completed
+              completedAt: null,
               intervalDays: initialInterval,
               scheduledAt: new Date(
                 now.setDate(now.getDate() + initialInterval),
@@ -177,13 +193,12 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
     }
   });
 
-export async function saveMeaning(meaning: WordMeaning) {
-  const data = await prisma.wordMeaning.create({
-    data: meaning,
+export const saveMeaning = async (meaning: WordMeaning) =>
+  authenticationAction(async () => {
+    return await prisma.wordMeaning.create({
+      data: meaning,
+    });
   });
-
-  return data;
-}
 
 /**
  * Calculates the user's learning streak based on word creation dates.
@@ -250,23 +265,16 @@ export const getWordsCountPerMasteryLevel = async () =>
     );
   });
 
-export async function getLearnStreak() {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return 0;
-  }
-
-  const userId = session.user.id;
-
-  const uniqueDays: { day: Date }[] = await prisma.$queryRaw`
-    SELECT DISTINCT DATE_TRUNC('day', "updatedAt") as day
-    FROM "Word"
-    WHERE "userId" = ${userId}
-    ORDER BY day DESC
-  `;
-  return calculateStreak(uniqueDays);
-}
+export const getLearnStreak = async () =>
+  authenticationAction(async (userId) => {
+    const uniqueDays: { day: Date }[] = await prisma.$queryRaw`
+      SELECT DISTINCT DATE_TRUNC('day', "updatedAt") as day
+      FROM "Word"
+      WHERE "userId" = ${userId}
+      ORDER BY day DESC
+    `;
+    return calculateStreak(uniqueDays);
+  }, 0);
 
 const getStartOfPeriod = (
   period: Period,
@@ -416,31 +424,32 @@ export const getWordsLastWeek = async () =>
     return wordsCount;
   });
 
-export const getWeekComparison = async () => {
-  const [thisWeek, lastWeek] = await Promise.all([
-    getWordsThisWeek(),
-    getWordsLastWeek(),
-  ]);
-  if (thisWeek === null || lastWeek === null) {
+export const getWeekComparison = async () =>
+  authenticationAction(async () => {
+    const [thisWeek, lastWeek] = await Promise.all([
+      getWordsThisWeek(),
+      getWordsLastWeek(),
+    ]);
+    if (thisWeek === null || lastWeek === null) {
+      return {
+        thisWeek: 0,
+        lastWeek: 0,
+        difference: 0,
+        percentageChange: 0,
+      };
+    }
+
+    const difference = thisWeek - lastWeek;
+    const percentageChange =
+      lastWeek > 0 ? (difference / lastWeek) * 100 : thisWeek > 0 ? 100 : 0;
+
     return {
-      thisWeek: 0,
-      lastWeek: 0,
-      difference: 0,
-      percentageChange: 0,
+      thisWeek,
+      lastWeek,
+      difference,
+      percentageChange: Math.round(percentageChange * 100) / 100,
     };
-  }
-
-  const difference = thisWeek - lastWeek;
-  const percentageChange =
-    lastWeek > 0 ? (difference / lastWeek) * 100 : thisWeek > 0 ? 100 : 0;
-
-  return {
-    thisWeek,
-    lastWeek,
-    difference,
-    percentageChange: Math.round(percentageChange * 100) / 100, // Round to 2 decimal places
-  };
-};
+  });
 
 export const getBestDay = async () =>
   authenticationAction(async (userId) => {

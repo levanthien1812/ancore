@@ -13,7 +13,6 @@ const ReviewStats = () => {
     queryKey: ["reviewStats", period],
     queryFn: async () => {
       const responseData = await getReviewStatistics(period);
-      console.log(responseData);
       return responseData;
     },
   });
