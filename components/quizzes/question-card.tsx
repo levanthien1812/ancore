@@ -14,6 +14,7 @@ import {
   CORRECT_ENCOURAGEMENTS,
   INCORRECT_ENCOURAGEMENTS,
 } from "@/lib/constants/constant";
+import { toast } from "sonner";
 
 const AnswerWrapper = ({
   isCorrect,
@@ -90,6 +91,8 @@ const QuestionCard = ({
     if (selectedAnswer) {
       setIsAnswered(true);
       onAnswer(selectedAnswer);
+    } else {
+      toast.warning("Please select an answer or finish your answer first.");
     }
   };
 
@@ -98,6 +101,16 @@ const QuestionCard = ({
     setIsAnswered(true);
     onAnswer(null);
     onNext();
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    if (!isAnswered) {
+      handleCheckAnswer();
+    } else {
+      onNext();
+    }
   };
 
   const renderQuestionBody = () => {
@@ -185,54 +198,60 @@ const QuestionCard = ({
 
   return (
     <Card className="h-full flex flex-col">
-      <CardHeader>
-        {/* Display the direction */}
-        <p className="text-xs py-1 px-2 rounded-full bg-primary text-white w-fit">
-          Question {currentIndex + 1}/{totalQuestions}
-        </p>
-        <p className="text-muted-foreground">{question.direction}</p>
-        {/* Display the main question content, if it exists */}
-        {question.question && (
-          <CardTitle className="text-lg leading-snug pt-2 text-primary">
-            {question.question}
-          </CardTitle>
-        )}
-      </CardHeader>
-      <CardContent className="flex-1 flex flex-col justify-center custom-scrollbar-y">
-        <div className="flex-1 flex flex-col justify-center">
-          {renderQuestionBody()}
-        </div>
-        <div className="mt-4 space-y-2">
-          {isAnswered && !isSubmitting && isCorrect !== null && correctAnswer()}
-          {!isAnswered && (
-            <Button variant={"outline"} onClick={handleSkip} className="w-full">
-              Skip
-            </Button>
+      <form onSubmit={handleSubmit} className="h-full flex flex-col">
+        <CardHeader>
+          {/* Display the direction */}
+          <p className="text-xs py-1 px-2 rounded-full bg-primary text-white w-fit">
+            Question {currentIndex + 1}/{totalQuestions}
+          </p>
+          <p className="text-muted-foreground">{question.direction}</p>
+          {/* Display the main question content, if it exists */}
+          {question.question && (
+            <CardTitle className="text-lg leading-snug pt-2 text-primary">
+              {question.question}
+            </CardTitle>
           )}
-          {!isAnswered && (
-            <Button
-              onClick={handleCheckAnswer}
-              disabled={!selectedAnswer}
-              className="w-full"
-            >
-              Check Answer
-            </Button>
-          )}
-          {isAnswered && (
-            <Button
-              onClick={onNext}
-              className="w-full"
-              isLoading={isSubmitting}
-            >
-              {!isLastQuestion
-                ? isSubmitting
-                  ? "Checking answer..."
-                  : "Next"
-                : "Finish Quiz"}
-            </Button>
-          )}
-        </div>
-      </CardContent>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col justify-center custom-scrollbar-y">
+          <div className="flex-1 flex flex-col justify-center">
+            {renderQuestionBody()}
+          </div>
+          <div className="mt-4 space-y-2">
+            {isAnswered &&
+              !isSubmitting &&
+              isCorrect !== null &&
+              correctAnswer()}
+            {!isAnswered && (
+              <Button
+                type="button"
+                variant={"outline"}
+                onClick={handleSkip}
+                className="w-full"
+              >
+                Skip
+              </Button>
+            )}
+            {!isAnswered && (
+              <Button
+                type="submit"
+                disabled={!selectedAnswer}
+                className="w-full"
+              >
+                Check Answer
+              </Button>
+            )}
+            {isAnswered && (
+              <Button type="submit" className="w-full" isLoading={isSubmitting}>
+                {!isLastQuestion
+                  ? isSubmitting
+                    ? "Checking answer..."
+                    : "Next"
+                  : "Finish Quiz"}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </form>
     </Card>
   );
 };

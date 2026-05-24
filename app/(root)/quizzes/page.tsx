@@ -1,4 +1,7 @@
-import { getWordsToQuiz } from "@/lib/actions/quiz.actions";
+import {
+  getWordsToQuiz,
+  getLatestIncompleteQuiz,
+} from "@/lib/actions/quiz.actions";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import QuizzesTabsWrapper from "@/components/quizzes/quizzes-tabs-wrapper";
 import { Suspense } from "react";
@@ -13,6 +16,8 @@ const QuizzesPage = async ({ searchParams }: QuizzesPageProps) => {
 
   let words: WordWithMeanings[] = [];
   let estimatedTimeInMinutes = 0;
+
+  const incompleteQuiz = await getLatestIncompleteQuiz();
 
   if (wordsParam) {
     // Parse the words from URL parameter (comma-separated)
@@ -35,6 +40,7 @@ const QuizzesPage = async ({ searchParams }: QuizzesPageProps) => {
           estimatedTimeInMinutes={estimatedTimeInMinutes}
           wordsParam={wordsParam}
           initialTab={params.tab || "start"}
+          incompleteQuiz={incompleteQuiz}
         />
       </Suspense>
     </div>
