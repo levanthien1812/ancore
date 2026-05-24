@@ -34,6 +34,7 @@ const MultipleChoiceBody = ({
       {shuffledOptions.map((option) => (
         <Button
           key={option}
+          type="button"
           variant={isSelected(option) ? "default" : "outline"}
           onClick={() => setSelectedAnswer(option)}
           className={cn("h-auto py-3 whitespace-normal justify-start", {

@@ -151,6 +151,7 @@ const MatchingBody = ({
           {!question.answer && (
             <div className="flex justify-end">
               <Button
+                type="button"
                 className="text-sm p-0"
                 variant={"link"}
                 onClick={handleReset}

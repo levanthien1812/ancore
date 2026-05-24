@@ -4,7 +4,13 @@ import { quizQuestionSchema } from "../validators";
 import { buildDistractorGenerationPrompt } from "../ai-prompts/distractor-generation";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
-import { MasteryLevel, QuestionType, QuizStatus } from "@prisma/client";
+import {
+  MasteryLevel,
+  QuestionType,
+  QuizQuestion,
+  QuizStatus,
+  WordMeaning,
+} from "@prisma/client";
 import { generateDistractorsWithAi } from "@/app/services/generate-distractors-with-ai";
 import { QuizAnswerWithQuestion, QuizWithAnswers } from "../type";
 import { authenticationAction } from "./_helpers";
@@ -58,7 +64,7 @@ export const createQuizSession = async (
     // This is for single-word questions.
     const existingSingleWordQuestionsMap = new Map<
       string,
-      Map<QuestionType, any>
+      Map<QuestionType, QuizQuestion>
     >();
     existingQuestions.forEach((q) => {
       const linkedWordsInQuiz = q.words.filter((w) =>
@@ -74,7 +80,7 @@ export const createQuizSession = async (
         if (!existingSingleWordQuestionsMap.has(wordId)) {
           existingSingleWordQuestionsMap.set(
             wordId,
-            new Map<QuestionType, any>(),
+            new Map<QuestionType, QuizQuestion>(),
           );
         }
         existingSingleWordQuestionsMap.get(wordId)!.set(q.type, q);
@@ -86,7 +92,7 @@ export const createQuizSession = async (
     const aiCallContexts: Array<{
       word: WordWithMeanings;
       questionType: QuestionType;
-      mainMeaning: any;
+      mainMeaning: WordMeaning;
       isSynonym?: boolean;
       correctAnswer?: string;
       directionText?: string;
@@ -97,159 +103,165 @@ export const createQuizSession = async (
       const mainMeaning = word.meanings[0];
       if (!mainMeaning) continue;
 
-      const randomQuestionType: QuestionType = shuffleArray([
-        QuestionType.MultipleChoice_DefinitionToWord,
-        QuestionType.FillInTheBlank,
-        QuestionType.MultipleChoice_WordToSynonym,
-      ])[0]; // Pick one randomly
+      // Determine valid question types for this word based on available data
+      const validTypes: QuestionType[] = [];
 
-      // Check for existing question using the pre-fetched map
-      const existingQuestionForType = existingSingleWordQuestionsMap
-        .get(word.id)
-        ?.get(randomQuestionType);
+      // Type 1: Definition
+      if (mainMeaning.definition) {
+        validTypes.push(QuestionType.MultipleChoice_DefinitionToWord);
+      }
 
-      if (existingQuestionForType) {
-        questionsToLink.push({ questionId: existingQuestionForType.id });
-        wordsUsedInSingleQuestions.add(word.word);
-      } else {
-        switch (randomQuestionType) {
-          // --- Question Type 1: Give Definition -> Choose Word ---
-          case QuestionType.MultipleChoice_DefinitionToWord:
-            if (mainMeaning.definition) {
-              const filteredPool = distractorPool.filter(
-                (w) => w.toLowerCase() !== word.word.toLowerCase(),
-              );
+      // Type 2: Synonym/Antonym
+      const synonyms =
+        mainMeaning.synonyms
+          ?.split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0) || [];
+      const antonyms =
+        mainMeaning.antonyms
+          ?.split(",")
+          .map((a) => a.trim())
+          .filter((a) => a.length > 0) || [];
 
-              const prompt = buildDistractorGenerationPrompt(
-                word.word,
-                filteredPool,
-              );
-              aiCallPromises.push(generateDistractorsWithAi(prompt));
-              aiCallContexts.push({
-                word,
-                questionType: randomQuestionType,
-                mainMeaning,
-              });
-              wordsUsedInSingleQuestions.add(word.word);
-            }
-            break;
-          // --- Question Type 2: Give Word -> Choose Synonym/Antonym ---
-          case QuestionType.MultipleChoice_WordToSynonym:
-            const synonyms = mainMeaning.synonyms
-              ?.split(",")
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0);
-            const antonyms = mainMeaning.antonyms
-              ?.split(",")
-              .map((a) => a.trim())
-              .filter((a) => a.length > 0);
+      if (synonyms.length > 0 || antonyms.length > 0) {
+        validTypes.push(QuestionType.MultipleChoice_WordToSynonym);
+      }
 
-            // Randomly decide to create a synonym or antonym question if both are available
-            const canCreateSynonym = synonyms && synonyms.length > 0;
-            const canCreateAntonym = antonyms && antonyms.length > 0;
-            let questionType: "synonym" | "antonym" | null = null;
+      // Type 3: Fill in the Blank
+      const validExamples =
+        mainMeaning.examples?.filter((ex) =>
+          new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
+        ) || [];
 
-            if (canCreateSynonym && canCreateAntonym) {
-              questionType = Math.random() > 0.5 ? "synonym" : "antonym";
-            } else if (canCreateSynonym) {
-              questionType = "synonym";
-            } else if (canCreateAntonym) {
-              questionType = "antonym";
-            } else {
-              break;
-            }
+      if (validExamples.length > 0) {
+        validTypes.push(QuestionType.FillInTheBlank);
+      }
 
-            if (questionType) {
-              const isSynonym = questionType === "synonym";
-              const correctAnswers = (
-                isSynonym ? synonyms : antonyms
-              ) as string[];
-              const correctAnswer = correctAnswers[0]; // Pick the first one as the answer
-              const directionText = `Which of the following is a${
-                isSynonym ? " synonym" : "n antonym"
-              } for the word below?`;
+      if (validTypes.length === 0) continue;
 
-              const filteredPool = distractorPool.filter(
-                (w) =>
-                  w.toLowerCase() !== word.word.toLowerCase() &&
-                  w.toLowerCase() !== correctAnswer.toLowerCase(),
-              );
+      // Shuffle the valid types to pick one randomly
+      const shuffledValidTypes = shuffleArray([...validTypes]);
 
-              const prompt = buildDistractorGenerationPrompt(
-                correctAnswer,
-                filteredPool,
-                word.word,
-              );
-              aiCallPromises.push(generateDistractorsWithAi(prompt));
-              aiCallContexts.push({
-                word,
-                questionType: randomQuestionType,
-                mainMeaning,
-                isSynonym,
-                correctAnswer,
-                directionText,
-              });
-              wordsUsedInSingleQuestions.add(word.word);
-            }
-            break;
-          // --- Question Type 3: Fill in the Blank ---
-          case QuestionType.FillInTheBlank: // No AI call needed for this type
-            if (!mainMeaning.examples || mainMeaning.examples.length === 0) {
-              break;
-            }
-            const randomIndex = Math.floor(
-              Math.random() * mainMeaning.examples.length,
-            );
-            const example = mainMeaning.examples[randomIndex];
-            if (!example.includes(word.word)) {
-              break;
-            }
-            const questionText = example.replace(
-              new RegExp(`\\b${word.word}\\b`, "gi"),
-              "_____",
+      for (const selectedType of shuffledValidTypes) {
+        // Check for existing question using the pre-fetched map
+        const existingQuestionForType = existingSingleWordQuestionsMap
+          .get(word.id)
+          ?.get(selectedType);
+
+        if (existingQuestionForType) {
+          questionsToLink.push({ questionId: existingQuestionForType.id });
+          wordsUsedInSingleQuestions.add(word.word);
+          break;
+        }
+
+        // If no existing question, try to generate data for the selected type
+        if (selectedType === QuestionType.MultipleChoice_DefinitionToWord) {
+          const filteredPool = distractorPool.filter(
+            (w) => w.toLowerCase() !== word.word.toLowerCase(),
+          );
+
+          const prompt = buildDistractorGenerationPrompt(
+            word.word,
+            filteredPool,
+          );
+          aiCallPromises.push(generateDistractorsWithAi(prompt));
+          aiCallContexts.push({
+            word,
+            questionType: selectedType,
+            mainMeaning,
+          });
+          wordsUsedInSingleQuestions.add(word.word);
+          break;
+        }
+
+        if (selectedType === QuestionType.MultipleChoice_WordToSynonym) {
+          // Randomly decide to create a synonym or antonym question if both are available
+          const canCreateSynonym = synonyms.length > 0;
+          const canCreateAntonym = antonyms.length > 0;
+          let subQuestionType: "synonym" | "antonym" | null = null;
+
+          if (canCreateSynonym && canCreateAntonym) {
+            subQuestionType = Math.random() > 0.5 ? "synonym" : "antonym";
+          } else if (canCreateSynonym) {
+            subQuestionType = "synonym";
+          } else if (canCreateAntonym) {
+            subQuestionType = "antonym";
+          }
+
+          if (subQuestionType) {
+            const isSynonym = subQuestionType === "synonym";
+            const correctAnswers = isSynonym ? synonyms : antonyms;
+            const correctAnswer = correctAnswers[0]; // Pick the first one as the answer
+            const directionText = `Which of the following is a${
+              isSynonym ? " synonym" : "n antonym"
+            } for the word below?`;
+
+            const filteredPool = distractorPool.filter(
+              (w) =>
+                w.toLowerCase() !== word.word.toLowerCase() &&
+                w.toLowerCase() !== correctAnswer.toLowerCase(),
             );
 
-            const wordLength = word.word.length;
-            const generatedGapHintArray = Array(wordLength).fill("_");
+            const prompt = buildDistractorGenerationPrompt(
+              correctAnswer,
+              filteredPool,
+              word.word,
+            );
+            aiCallPromises.push(generateDistractorsWithAi(prompt));
+            aiCallContexts.push({
+              word,
+              questionType: selectedType,
+              mainMeaning,
+              isSynonym,
+              correctAnswer,
+              directionText,
+            });
+            wordsUsedInSingleQuestions.add(word.word);
+            break;
+          }
+        }
 
-            if (wordLength > 0) {
-              // Always show the first letter
-              generatedGapHintArray[0] = word.word[0];
+        if (selectedType === QuestionType.FillInTheBlank) {
+          const example = shuffleArray([...validExamples])[0];
 
-              // Determine how many additional hints to show (e.g., 30% of the word length)
-              const additionalHintCount = Math.floor(wordLength * 0.3);
-              let hintsAdded = 0;
+          const questionText = example.replace(
+            new RegExp(`\\b${word.word}\\b`, "gi"),
+            "_____",
+          );
 
-              // Add random hints, ensuring they are not the first letter and not duplicates
-              while (hintsAdded < additionalHintCount) {
-                const randomIndex = Math.floor(Math.random() * wordLength);
-                if (
-                  randomIndex !== 0 &&
-                  generatedGapHintArray[randomIndex] === "_"
-                ) {
-                  generatedGapHintArray[randomIndex] = word.word[randomIndex];
-                  hintsAdded++;
-                }
+          const wordLength = word.word.length;
+          const generatedGapHintArray = Array(wordLength).fill("_");
+
+          if (wordLength > 0) {
+            generatedGapHintArray[0] = word.word[0];
+            const additionalHintCount = Math.floor(wordLength * 0.3);
+            let hintsAdded = 0;
+
+            while (hintsAdded < additionalHintCount) {
+              const randomIndex = Math.floor(Math.random() * wordLength);
+              if (
+                randomIndex !== 0 &&
+                generatedGapHintArray[randomIndex] === "_"
+              ) {
+                generatedGapHintArray[randomIndex] = word.word[randomIndex];
+                hintsAdded++;
               }
             }
-            const gapHint = generatedGapHintArray.join("");
+          }
+          const gapHint = generatedGapHintArray.join("");
 
-            if (questionText !== example) {
-              // Ensure the word was actually in the sentence
-              questionsToLink.push({
-                newData: quizQuestionSchema.parse({
-                  wordIds: [word.id],
-                  direction: "Fill in the blank with the correct word.",
-                  question: questionText,
-                  type: QuestionType.FillInTheBlank,
-                  answer: word.word,
-                  gapHint,
-                }),
-              });
-              wordsUsedInSingleQuestions.add(word.word);
-            }
-
-            break;
+          questionsToLink.push({
+            newData: quizQuestionSchema.parse({
+              wordIds: [word.id],
+              direction: "Fill in the blank with the correct word.",
+              question: questionText,
+              type: QuestionType.FillInTheBlank,
+              answer: word.word,
+              gapHint,
+            }),
+          });
+          wordsUsedInSingleQuestions.add(word.word);
+          break;
         }
       }
     }
@@ -772,4 +784,46 @@ export const retryQuizSession = async (quizId: string) =>
       console.error("Retry quiz error:", error);
       return { success: false, message: "Failed to create retry session." };
     }
+  });
+
+export const getLatestIncompleteQuiz = async () =>
+  authenticationAction(async (userId) => {
+    const quiz = await prisma.quiz.findFirst({
+      where: {
+        userId,
+        completedAt: null,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        quizAnswers: {
+          select: {
+            userAnswer: true,
+          },
+        },
+      },
+    });
+
+    if (!quiz) return null;
+
+    const answeredCount = quiz.quizAnswers.filter(
+      (a) => a.userAnswer !== null,
+    ).length;
+
+    return {
+      id: quiz.id,
+      answeredCount,
+      totalQuestions: quiz.totalQuestions,
+      createdAt: quiz.createdAt,
+    };
+  });
+
+export const deleteQuiz = async (quizId: string) =>
+  authenticationAction(async (userId) => {
+    await prisma.$transaction([
+      prisma.quizAnswer.deleteMany({ where: { quizId } }),
+      prisma.quiz.delete({ where: { id: quizId, userId } }),
+    ]);
+    return { success: true };
   });
