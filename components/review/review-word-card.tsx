@@ -4,7 +4,7 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { cn } from "@/lib/utils";
 import FrontFace from "./front-face";
 import BackFace from "./back-face";
-import { PerformanceSummary } from "./review-carousel";
+import { ReviewPerformance } from "@prisma/client";
 
 const ReviewWordCard = ({
   word,
@@ -12,7 +12,7 @@ const ReviewWordCard = ({
   reviewLogId,
 }: {
   word: WordWithMeanings;
-  onPerformanceUpdate: (performance: keyof PerformanceSummary) => void;
+  onPerformanceUpdate: (performance: ReviewPerformance) => void;
   reviewLogId?: string;
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
