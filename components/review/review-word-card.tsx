@@ -9,9 +9,11 @@ import { PerformanceSummary } from "./review-carousel";
 const ReviewWordCard = ({
   word,
   onPerformanceUpdate,
+  reviewLogId,
 }: {
   word: WordWithMeanings;
   onPerformanceUpdate: (performance: keyof PerformanceSummary) => void;
+  reviewLogId?: string;
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -29,6 +31,7 @@ const ReviewWordCard = ({
             word={word}
             setIsFlipped={setIsFlipped}
             onPerformanceUpdate={onPerformanceUpdate}
+            reviewLogId={reviewLogId}
           />
         </div>
 

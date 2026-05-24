@@ -9,18 +9,11 @@ import type { CarouselApi } from "@/components/ui/carousel";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { useEffect, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
-import { logReviewSession } from "@/lib/actions/review.actions";
+import { logReviewSession, startReviewLog } from "@/lib/actions/review.actions";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
-
-export type PerformanceSummary = {
-  Forgot: string[];
-  Hard: string[];
-  Medium: string[];
-  Good: string[];
-  Easy: string[];
-};
+import { ReviewLogWithReviewSessions } from "@/lib/type";
 
 const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
   const [api, setApi] = useState<CarouselApi>();
@@ -29,13 +22,19 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
   const [isPending, startTransition] = useTransition();
   const [sessionFinished, setSessionFinished] = useState(false);
   const [isAllWordsReviewed, setIsAllWordsReviewed] = useState(false);
-  const [summary, setSummary] = useState<PerformanceSummary>({
-    Forgot: [],
-    Hard: [],
-    Medium: [],
-    Good: [],
-    Easy: [],
-  });
+  const [reviewLogId, setReviewLogId] = useState<string | null>(null);
+  const [reviewLog, setReviewLog] =
+    useState<ReviewLogWithReviewSessions | null>(null);
+
+  useEffect(() => {
+    const initLog = async () => {
+      const id = await startReviewLog();
+      if (typeof id === "string") {
+        setReviewLogId(id);
+      }
+    };
+    initLog();
+  }, []);
 
   useEffect(() => {
     if (!api) {
@@ -69,14 +68,9 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
     }
   }, [current, words, sessionFinished]);
 
-  const handlePerformanceUpdate = (performance: keyof PerformanceSummary) => {
+  const handlePerformanceUpdate = () => {
     const currentWord = words[current];
     if (!currentWord) return;
-
-    setSummary((prev) => ({
-      ...prev,
-      [performance]: [...prev[performance], currentWord.word],
-    }));
 
     if (current + 1 === words.length) {
       setIsAllWordsReviewed(true);
@@ -88,23 +82,18 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
       (new Date().getTime() - startTime.getTime()) / 1000,
     );
     startTransition(async () => {
-      const performanceSummaryForLog = Object.entries(summary).reduce(
-        (acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        },
-        {} as Record<string, string[]>,
-      );
-      await logReviewSession({
-        durationSeconds,
-        performanceSummary: performanceSummaryForLog,
-      });
+      if (reviewLogId) {
+        const reviewLog = await logReviewSession(reviewLogId, {
+          durationSeconds,
+        });
+        setReviewLog(reviewLog);
+      }
       setSessionFinished(true);
     });
   };
 
-  if (sessionFinished) {
-    return <ReviewSummary summary={summary} />;
+  if (sessionFinished && reviewLog) {
+    return <ReviewSummary reviewLog={reviewLog} />;
   }
   if (words.length === 0) return null;
 
@@ -132,6 +121,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
               <ReviewWordCard
                 word={word}
                 onPerformanceUpdate={handlePerformanceUpdate}
+                reviewLogId={reviewLogId ?? undefined}
               />
             </CarouselItem>
           ))}

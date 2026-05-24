@@ -1,7 +1,6 @@
 "use server";
 import { prisma } from "@/db/prisma";
 import { saveWordSchema } from "../validators";
-import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel } from "../constants/enums";
@@ -528,14 +527,14 @@ export const getWordsToReview = async (limit: number = 10) =>
 
 export const getWordsToReviewCount = async () =>
   authenticationAction(async (userId) => {
-    const reviews = await prisma.reviewSession.findMany({
+    const reviews = await prisma.reviewSession.groupBy({
+      by: ["wordId"],
       where: {
         userId,
         scheduledAt: {
           lte: new Date(), // Count all words due today or in the past
         },
       },
-      distinct: ["wordId"],
     });
 
     return reviews.length;

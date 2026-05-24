@@ -7,7 +7,6 @@ import { convertSecondsToHHMM } from "@/lib/utils/time-convert";
 import {
   REVIEW_PERFORMANCE_COLOR,
   REVIEW_PERIOD_LABEL,
-  ReviewPerformance,
 } from "@/lib/constants/enums";
 import {
   ChartConfig,
@@ -31,6 +30,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { ReviewPerformance } from "@prisma/client";
 
 const ReviewStatsContent = ({
   reviewStats,
@@ -75,10 +75,9 @@ const ReviewStatsContent = ({
       label: "Accuracy",
       highlight: () => {
         if (!reviewStats.periodComparison) return null;
-        const previousStat = reviewStats.accuracyPercentage;
-        const currentStat = reviewStats.accuracyPercentage;
-        const increase = currentStat - previousStat;
-        return `${increase > 0 ? "+" : ""}${increase}% vs last ${REVIEW_PERIOD_LABEL[period]}`;
+        const changedAmount =
+          reviewStats.periodComparison.accuracyChangePercentage;
+        return `${changedAmount > 0 ? "+" : ""}${changedAmount}% vs last ${REVIEW_PERIOD_LABEL[period]}`;
       },
     },
     {
@@ -97,11 +96,9 @@ const ReviewStatsContent = ({
       label: "Study time",
       highlight: () => {
         if (!reviewStats.periodComparison) return null;
-        const previousStat =
-          reviewStats.periodComparison?.previousTotalStudyTimeSeconds || 0;
-        const currentStat = reviewStats.totalStudyTimeSeconds;
-        const increase = currentStat - previousStat;
-        return `${increase > 0 ? "+" : ""}${convertSecondsToHHMM(increase)} vs last ${REVIEW_PERIOD_LABEL[period]}`;
+        const changedAmount =
+          reviewStats.periodComparison.studyTimeChangeAmount;
+        return `${changedAmount > 0 ? "+" : ""}${convertSecondsToHHMM(changedAmount)} vs last ${REVIEW_PERIOD_LABEL[period]}`;
       },
     },
     {

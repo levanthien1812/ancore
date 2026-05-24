@@ -14,7 +14,6 @@ import {
   getReviewLogsByMonth,
 } from "@/lib/actions/review.actions";
 import ReviewSummaryDetail from "./review-summary-detail";
-import { PerformanceSummary } from "./review-carousel";
 import { format } from "date-fns";
 import { Badge } from "../ui/badge";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
@@ -101,9 +100,7 @@ const ReviewHistory = () => {
                   </Badge>
                 </div>
               )}
-              <ReviewSummaryDetail
-                summary={log.performanceSummary as PerformanceSummary}
-              />
+              <ReviewSummaryDetail reviewLog={log} />
             </div>
           ))}
         </div>

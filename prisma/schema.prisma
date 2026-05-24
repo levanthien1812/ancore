@@ -179,7 +179,6 @@ model Quiz {
   createdAt          DateTime   @default(now())
   completedAt        DateTime?
   status             QuizStatus @default(InProgress)
-  performanceSummary Json?
 
   quizAnswers QuizAnswer[]
 }
@@ -215,26 +214,29 @@ enum QuestionType {
 }
 
 model ReviewSession {
-  id        String   @id @default(cuid())
-  wordId    String
-  word      Word     @relation(fields: [wordId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id          String     @id @default(cuid())
+  wordId      String
+  word        Word       @relation(fields: [wordId], references: [id])
+  userId      String
+  user        User       @relation(fields: [userId], references: [id])
+  createdAt   DateTime   @default(now())
+  reviewLogId String?
+  reviewLog   ReviewLog? @relation(fields: [reviewLogId], references: [id])
 
   scheduledAt  DateTime
   completedAt  DateTime?
   intervalDays Int
+  performance  ReviewPerformance?
 }
 
 model ReviewLog {
-  id                 String    @id @default(cuid())
+  id                 String          @id @default(cuid())
   userId             String
-  user               User      @relation(fields: [userId], references: [id])
+  user               User            @relation(fields: [userId], references: [id])
   completedAt        DateTime?
   durationSeconds    Int
-  wordsReviewedCount Int
-  performanceSummary Json
+  wordsReviewedCount Int?
+  reviewSessions     ReviewSession[]
 
   @@index([userId])
 }
@@ -273,4 +275,12 @@ model TalkMessage {
   evaluation          String?     @db.Text
   speakingSuggestions String[]    @default([])
   createdAt           DateTime    @default(now())
+}
+
+enum ReviewPerformance {
+  Forgot
+  Hard
+  Medium
+  Good
+  Easy
 }
