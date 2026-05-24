@@ -7,11 +7,9 @@ import { CircleCheckBig, Lightbulb, Sun } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
 import { useSession } from "next-auth/react";
-import { User, Word, WordMeaning } from "@prisma/client";
+import { ReviewPerformance, User, Word, WordMeaning } from "@prisma/client";
 import { updateReviewSession } from "@/lib/actions/review.actions";
-import { ReviewPerformance } from "@/lib/constants/enums";
 import { useCarousel } from "../ui/carousel";
-import { PerformanceSummary } from "./review-carousel";
 
 type Hint = Partial<
   Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
@@ -25,6 +23,7 @@ type HintList = {
 
 const FieldLabelMap: Record<HintLevel, string> = {
   tags: "Tags/Topics",
+
   examples: "Example",
   synonyms: "Synonyms",
   antonyms: "Antonyms",
@@ -41,10 +40,12 @@ const FrontFace = ({
   word,
   setIsFlipped,
   onPerformanceUpdate,
+  reviewLogId,
 }: {
   word: WordWithMeanings;
   setIsFlipped: (value: boolean) => void;
-  onPerformanceUpdate: (performance: keyof PerformanceSummary) => void;
+  onPerformanceUpdate: (performance: ReviewPerformance) => void;
+  reviewLogId?: string;
 }) => {
   const [showHint, setShowHint] = React.useState(false);
   const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
@@ -106,7 +107,7 @@ const FrontFace = ({
   const { isPending: isUpdatingReviewSession, mutate: reviewSessionMutate } =
     useMutation({
       mutationFn: async (performance: ReviewPerformance) => {
-        await updateReviewSession(word.id, performance);
+        await updateReviewSession(word.id, performance, reviewLogId);
       },
       mutationKey: ["updateReviewSession"],
     });
@@ -143,7 +144,7 @@ const FrontFace = ({
   const handleForgotWord = () => {
     setShowHint(false);
     setHintLevel(null);
-    reviewSessionMutate(ReviewPerformance.FORGOT);
+    reviewSessionMutate(ReviewPerformance.Forgot);
     onPerformanceUpdate("Forgot");
     setIsReviewed(true);
     setIsFlipped(true);
@@ -163,20 +164,20 @@ const FrontFace = ({
   const handleClickMarkAsFamiliar = () => {
     switch (hintLevel) {
       case "tags":
-        reviewSessionMutate(ReviewPerformance.GOOD);
+        reviewSessionMutate(ReviewPerformance.Good);
         onPerformanceUpdate("Good");
         break;
       case "synonyms":
       case "antonyms":
-        reviewSessionMutate(ReviewPerformance.MEDIUM);
+        reviewSessionMutate(ReviewPerformance.Medium);
         onPerformanceUpdate("Medium");
         break;
       case "examples":
-        reviewSessionMutate(ReviewPerformance.HARD);
+        reviewSessionMutate(ReviewPerformance.Hard);
         onPerformanceUpdate("Hard");
         break;
       default:
-        reviewSessionMutate(ReviewPerformance.EASY);
+        reviewSessionMutate(ReviewPerformance.Easy);
         onPerformanceUpdate("Easy");
         break;
     }

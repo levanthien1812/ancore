@@ -1,3 +1,4 @@
+import { ReviewPerformance } from "@prisma/client";
 import { ReviewPeriod } from "../utils/date-helpers";
 
 export enum CEFRLevel {
@@ -68,14 +69,6 @@ export const SAMPLE_TOPICS = [
   "Science",
   "Emotions & Personality",
 ];
-
-export enum ReviewPerformance {
-  FORGOT = "Forgot",
-  HARD = "Hard",
-  MEDIUM = "Medium",
-  GOOD = "Good",
-  EASY = "Easy",
-}
 
 export enum QuizQuestionType {
   MultipleChoice_DefinitionToWord = "MultipleChoice_DefinitionToWord",
@@ -162,9 +155,9 @@ export const REVIEW_PERIOD_LABEL: Record<ReviewPeriod, string> = {
 };
 
 export const REVIEW_PERFORMANCE_COLOR: Record<ReviewPerformance, string> = {
-  [ReviewPerformance.FORGOT]: "#FF5555",
-  [ReviewPerformance.HARD]: "#3B82F6",
-  [ReviewPerformance.MEDIUM]: "#F59E0B",
-  [ReviewPerformance.GOOD]: "#8B5CF6",
-  [ReviewPerformance.EASY]: "#22C55E",
+  [ReviewPerformance.Forgot]: "#FF5555",
+  [ReviewPerformance.Hard]: "#3B82F6",
+  [ReviewPerformance.Medium]: "#F59E0B",
+  [ReviewPerformance.Good]: "#8B5CF6",
+  [ReviewPerformance.Easy]: "#22C55E",
 };

@@ -1,15 +1,12 @@
 "use server";
 import { prisma } from "@/db/prisma";
-import {
-  MasteryLevel,
-  ReviewPerformance,
-  WordReviewInfo,
-} from "../constants/enums";
+import { MasteryLevel, WordReviewInfo } from "../constants/enums";
 import { dateFilter } from "../utils/date-filter"; // Keep this for getReviewLogs
 import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers"; // New import
 import { startOfDay, subDays, addDays, format } from "date-fns"; // New imports
 import { revalidatePath } from "next/cache";
 import { authenticationAction } from "./_helpers";
+import { ReviewPerformance } from "@prisma/client";
 
 /**
  * Updates the schedule for a single word based on user performance.
@@ -17,6 +14,7 @@ import { authenticationAction } from "./_helpers";
 export const updateReviewSession = async (
   wordId: string,
   performance: ReviewPerformance,
+  reviewLogId?: string,
 ) =>
   authenticationAction(async (userId) => {
     const word = await prisma.word.findUnique({ where: { id: wordId } });
@@ -54,19 +52,19 @@ export const updateReviewSession = async (
     let newInterval: number;
 
     switch (performance) {
-      case ReviewPerformance.FORGOT:
+      case ReviewPerformance.Forgot:
         newInterval = 1; // Reset interval to 1 day
         break;
-      case ReviewPerformance.HARD:
+      case ReviewPerformance.Hard:
         newInterval = Math.max(1, Math.floor(currentInterval * 1.2));
         break;
-      case ReviewPerformance.MEDIUM:
+      case ReviewPerformance.Medium:
         newInterval = Math.max(1, Math.floor(currentInterval * 2));
         break;
-      case ReviewPerformance.GOOD:
+      case ReviewPerformance.Good:
         newInterval = Math.floor(currentInterval * 3);
         break;
-      case ReviewPerformance.EASY:
+      case ReviewPerformance.Easy:
         newInterval = Math.floor(currentInterval * 4);
         break;
       default:
@@ -83,19 +81,19 @@ export const updateReviewSession = async (
         newMasteryLevel = MasteryLevel.Learning;
         break;
       case MasteryLevel.Learning:
-        if (performance >= ReviewPerformance.GOOD) {
+        if (performance >= ReviewPerformance.Good) {
           newMasteryLevel = MasteryLevel.Familiar;
         }
         break;
       case MasteryLevel.Familiar:
-        if (performance === ReviewPerformance.FORGOT) {
+        if (performance === ReviewPerformance.Forgot) {
           newMasteryLevel = MasteryLevel.Learning; // Demote
-        } else if (performance >= ReviewPerformance.GOOD) {
+        } else if (performance >= ReviewPerformance.Good) {
           newMasteryLevel = MasteryLevel.Mastered;
         }
         break;
       case MasteryLevel.Mastered:
-        if (performance <= ReviewPerformance.HARD) {
+        if (performance <= ReviewPerformance.Hard) {
           newMasteryLevel = MasteryLevel.Familiar; // Demote if user struggles
         }
         break;
@@ -109,7 +107,12 @@ export const updateReviewSession = async (
       transactionOperations.push(
         prisma.reviewSession.update({
           where: { id: currentPendingReviewSession.id },
-          data: { completedAt: now },
+          data: {
+            completedAt: now,
+            // Save the performance rating for this specific review session
+            performance: performance,
+            reviewLogId: reviewLogId,
+          },
         }),
       );
     }
@@ -135,28 +138,51 @@ export const updateReviewSession = async (
   });
 
 /**
- * Logs the summary of a completed review session.
+ * Creates an initial review log at the start of a session.
  */
-export const logReviewSession = async (summary: {
-  durationSeconds: number;
-  performanceSummary: Record<string, string[]>;
-}) =>
+export const startReviewLog = async () =>
   authenticationAction(async (userId) => {
-    const wordsReviewedCount = Object.values(summary.performanceSummary).reduce(
-      (sum, count) => sum + count.length,
-      0,
-    );
-
-    await prisma.reviewLog.create({
+    const log = await prisma.reviewLog.create({
       data: {
         userId,
+        completedAt: null,
+        durationSeconds: 0,
+      },
+    });
+    return log.id;
+  });
+
+/**
+ * Updates the summary of a completed review log.
+ */
+export const logReviewSession = async (
+  logId: string,
+  summary: {
+    durationSeconds: number;
+  },
+) =>
+  authenticationAction(async (userId) => {
+    const log = await prisma.reviewLog.update({
+      where: { id: logId, userId },
+      data: {
         completedAt: new Date(),
         ...summary,
-        wordsReviewedCount,
+      },
+      include: {
+        reviewSessions: {
+          include: {
+            word: {
+              include: {
+                meanings: true,
+              },
+            },
+          },
+        },
       },
     });
 
     revalidatePath("/review");
+    return log;
   });
 
 export const getReviewLogs = async (date: Date) =>
@@ -165,6 +191,17 @@ export const getReviewLogs = async (date: Date) =>
       where: {
         userId,
         completedAt: dateFilter(date),
+      },
+      include: {
+        reviewSessions: {
+          include: {
+            word: {
+              include: {
+                meanings: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -356,29 +393,26 @@ interface ReviewMetrics {
 
 function calculatePerformanceMetrics(
   logs: {
-    performanceSummary: any;
     durationSeconds: number;
+    reviewSessions: { performance: ReviewPerformance | null }[];
   }[],
 ): ReviewMetrics {
   let totalWordsReviewed = 0;
   let totalStudyTimeSeconds = 0;
   const performanceCounts: Record<ReviewPerformance, number> = {
-    [ReviewPerformance.FORGOT]: 0,
-    [ReviewPerformance.HARD]: 0,
-    [ReviewPerformance.MEDIUM]: 0,
-    [ReviewPerformance.GOOD]: 0,
-    [ReviewPerformance.EASY]: 0,
-  };
+    Forgot: 0,
+    Hard: 0,
+    Medium: 0,
+    Good: 0,
+    Easy: 0,
+  } as Record<ReviewPerformance, number>;
 
   for (const log of logs) {
     totalStudyTimeSeconds += log.durationSeconds;
-    const summary = log.performanceSummary as Record<string, string[]>;
-    for (const performanceKey in summary) {
-      const performance = performanceKey as ReviewPerformance;
-      const words = summary[performanceKey];
-      if (words) {
-        totalWordsReviewed += words.length;
-        performanceCounts[performance] += words.length;
+    for (const session of log.reviewSessions) {
+      if (session.performance) {
+        totalWordsReviewed++;
+        performanceCounts[session.performance]++;
       }
     }
   }
@@ -396,8 +430,10 @@ export interface ReviewStatistics {
   periodComparison: {
     previousTotalWordsReviewed: number;
     previousTotalStudyTimeSeconds: number;
+    previousAccuracyPercentage: number;
     wordsReviewedChangePercentage: number;
-    studyTimeChangePercentage: number;
+    studyTimeChangeAmount: number;
+    accuracyChangePercentage: number;
   } | null;
   dailyPerformanceTrend: Array<{
     date: string;
@@ -427,8 +463,10 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       },
       select: {
         durationSeconds: true,
-        performanceSummary: true,
         completedAt: true,
+        reviewSessions: {
+          select: { performance: true },
+        },
       },
       orderBy: {
         completedAt: "asc", // For daily trend
@@ -442,8 +480,8 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
     let accuracyPercentage = 0;
     if (totalWordsInCurrentPeriod > 0) {
       const goodEasyWords =
-        currentMetrics.performanceCounts[ReviewPerformance.GOOD] +
-        currentMetrics.performanceCounts[ReviewPerformance.EASY];
+        currentMetrics.performanceCounts[ReviewPerformance.Good] +
+        currentMetrics.performanceCounts[ReviewPerformance.Easy];
       accuracyPercentage = (goodEasyWords / totalWordsInCurrentPeriod) * 100;
     }
 
@@ -483,7 +521,9 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
         },
         select: {
           durationSeconds: true,
-          performanceSummary: true,
+          reviewSessions: {
+            select: { performance: true },
+          },
         },
       });
       previousMetrics = calculatePerformanceMetrics(previousLogs);
@@ -498,14 +538,27 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
         ? 100
         : 0; // If previous was 0 and current > 0, 100% increase
 
-    const studyTimeChangePercentage = previousMetrics?.totalStudyTimeSeconds
-      ? ((currentMetrics.totalStudyTimeSeconds -
-          previousMetrics.totalStudyTimeSeconds) /
-          previousMetrics.totalStudyTimeSeconds) *
-        100
-      : currentMetrics.totalStudyTimeSeconds > 0
-        ? 100
-        : 0; // If previous was 0 and current > 0, 100% increase
+    const studyTimeChangeAmount =
+      currentMetrics.totalStudyTimeSeconds -
+      (previousMetrics?.totalStudyTimeSeconds || 0);
+
+    let previousAccuracyPercentage = 0;
+    if (previousMetrics && previousMetrics.totalWordsReviewed > 0) {
+      const prevGoodEasyWords =
+        previousMetrics.performanceCounts[ReviewPerformance.Good] +
+        previousMetrics.performanceCounts[ReviewPerformance.Easy];
+      previousAccuracyPercentage =
+        (prevGoodEasyWords / previousMetrics.totalWordsReviewed) * 100;
+    }
+
+    const accuracyChangePercentage =
+      previousAccuracyPercentage > 0
+        ? ((accuracyPercentage - previousAccuracyPercentage) /
+            previousAccuracyPercentage) *
+          100
+        : accuracyPercentage > 0
+          ? 100
+          : 0;
 
     // Calculate review streak
     const { currentStreak, bestStreak } = await calculateReviewStreak(userId);
@@ -530,17 +583,14 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
         dailyDataMap.set(dateKey, { totalWords: 0, goodEasyWords: 0 });
       }
       const dailyStats = dailyDataMap.get(dateKey)!;
-      const summary = log.performanceSummary as Record<string, string[]>;
-      for (const performanceKey in summary) {
-        const performance = performanceKey as ReviewPerformance;
-        const words = summary[performanceKey];
-        if (words) {
-          dailyStats.totalWords += words.length;
+      for (const session of log.reviewSessions) {
+        if (session.performance) {
+          dailyStats.totalWords++;
           if (
-            performance === ReviewPerformance.GOOD ||
-            performance === ReviewPerformance.EASY
+            session.performance === ReviewPerformance.Good ||
+            session.performance === ReviewPerformance.Easy
           ) {
-            dailyStats.goodEasyWords += words.length;
+            dailyStats.goodEasyWords++;
           }
         }
       }
@@ -580,12 +630,14 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
                 previousMetrics?.totalWordsReviewed || 0,
               previousTotalStudyTimeSeconds:
                 previousMetrics?.totalStudyTimeSeconds || 0,
-              wordsReviewedChangePercentage: parseFloat(
-                wordsReviewedChangePercentage.toFixed(2),
+              previousAccuracyPercentage: Math.round(
+                previousAccuracyPercentage,
               ),
-              studyTimeChangePercentage: parseFloat(
-                studyTimeChangePercentage.toFixed(2),
+              wordsReviewedChangePercentage: Math.round(
+                wordsReviewedChangePercentage,
               ),
+              studyTimeChangeAmount: Math.round(studyTimeChangeAmount),
+              accuracyChangePercentage: Math.round(accuracyChangePercentage),
             },
       dailyPerformanceTrend,
       performanceCounts: currentMetrics.performanceCounts,

@@ -1,6 +1,4 @@
 import React from "react";
-import { PerformanceSummary } from "./review-carousel";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import {
@@ -14,8 +12,23 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import RoadSign from "@/public/images/road-sign.png";
+import { WordWithMeanings } from "../add-word/add-word-form";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "../ui/hover-card";
+import WordDetail from "../word-card/word-detail";
+import { ReviewLogWithReviewSessions } from "@/lib/type";
+import { ReviewPerformance } from "@prisma/client";
 
-const WordList = ({ title, words }: { title: string; words: string[] }) => {
+const WordList = ({
+  title,
+  words,
+}: {
+  title: string;
+  words: WordWithMeanings[];
+}) => {
   if (words.length === 0) return null;
 
   const colorMap: Record<string, string> = {
@@ -54,13 +67,22 @@ const WordList = ({ title, words }: { title: string; words: string[] }) => {
           {title} ({words.length})
         </h3>
         <div className="flex flex-wrap gap-1 mt-1">
-          {words.map((word, index) => (
-            <div
-              key={`${word}-${index}`}
-              className={`border text-sm px-2 py-1 ${colorMap[title]} rounded-md`}
-            >
-              {word}
-            </div>
+          {words.map((wordObj, index) => (
+            <HoverCard key={`${wordObj.id}-${index}`}>
+              <HoverCardTrigger asChild>
+                <div
+                  className={`border text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-help`}
+                >
+                  {wordObj.word}
+                </div>
+              </HoverCardTrigger>
+              <HoverCardContent
+                className="w-120 overflow-hidden bg-primary p-4"
+                side="top"
+              >
+                <WordDetail word={wordObj} showReviewStats={false} />
+              </HoverCardContent>
+            </HoverCard>
           ))}
         </div>
       </div>
@@ -68,7 +90,30 @@ const WordList = ({ title, words }: { title: string; words: string[] }) => {
   );
 };
 
-const ReviewSummaryDetail = ({ summary }: { summary: PerformanceSummary }) => {
+const ReviewSummaryDetail = ({
+  reviewLog,
+}: {
+  reviewLog?: ReviewLogWithReviewSessions;
+}) => {
+  const summary = React.useMemo(() => {
+    const s: Record<ReviewPerformance, WordWithMeanings[]> = {
+      Forgot: [],
+      Hard: [],
+      Medium: [],
+      Good: [],
+      Easy: [],
+    };
+
+    if (reviewLog?.reviewSessions) {
+      reviewLog.reviewSessions.forEach((session) => {
+        if (session.performance && session.word) {
+          s[session.performance].push(session.word);
+        }
+      });
+    }
+    return s;
+  }, [reviewLog]);
+
   const total = Object.values(summary).reduce(
     (acc, words) => acc + words.length,
     0,
@@ -76,7 +121,7 @@ const ReviewSummaryDetail = ({ summary }: { summary: PerformanceSummary }) => {
 
   // Collect all words from the performance summary
   const allWords = Object.values(summary).flat();
-  const wordsParam = allWords.join(",");
+  const wordsParam = allWords.map((w) => w.word).join(",");
 
   return (
     <div className="shadow-lg rounded-2xl border-primary p-4 space-y-2 bg-linear-to-b from-[#2563eb]/20 to-white">

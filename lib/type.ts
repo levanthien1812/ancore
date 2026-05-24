@@ -1,3 +1,4 @@
+import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import {
   MasteryLevel,
   QuizAnswer,
@@ -6,6 +7,8 @@ import {
   Word,
   TalkSession,
   TalkMessage,
+  ReviewLog,
+  ReviewSession,
 } from "@prisma/client";
 
 export type WordsCountByMasteryLevel = {
@@ -52,3 +55,11 @@ export type TalkSessionWithMessages = TalkSession & {
 };
 
 export type Message = Omit<TalkMessage, "id" | "sessionId">;
+
+export type ReviewSessionWithWord = ReviewSession & {
+  word: WordWithMeanings;
+};
+
+export type ReviewLogWithReviewSessions = ReviewLog & {
+  reviewSessions: ReviewSessionWithWord[];
+};
