@@ -7,8 +7,6 @@ import ReviewStats from "@/components/review/review-stats";
 const ReviewPage = async () => {
   const wordsToReviewCount = await getWordsToReviewCount();
 
-  if (!wordsToReviewCount) return null;
-
   return (
     <div className="w-full max-w-[520px] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
       <Tabs defaultValue="start" className="h-full flex flex-col">

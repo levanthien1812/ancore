@@ -9,11 +9,11 @@ import { ReviewPerformance } from "@prisma/client";
 const ReviewWordCard = ({
   word,
   onPerformanceUpdate,
-  reviewLogId,
+  studySessionId,
 }: {
   word: WordWithMeanings;
   onPerformanceUpdate: (performance: ReviewPerformance) => void;
-  reviewLogId?: string;
+  studySessionId?: string;
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -31,7 +31,7 @@ const ReviewWordCard = ({
             word={word}
             setIsFlipped={setIsFlipped}
             onPerformanceUpdate={onPerformanceUpdate}
-            reviewLogId={reviewLogId}
+            studySessionId={studySessionId}
           />
         </div>
 

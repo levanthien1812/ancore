@@ -24,9 +24,9 @@ async function main() {
   try {
     await prisma.quizQuestion.deleteMany({ where: { userId: user.id } });
     await prisma.quiz.deleteMany({ where: { userId: user.id } });
-    await prisma.reviewLog.deleteMany({ where: { userId: user.id } });
+    await prisma.studySession.deleteMany({ where: { userId: user.id } });
     await prisma.wordMeaning.deleteMany({ where: { wordId: { not: "" } } });
-    await prisma.reviewSession.deleteMany({ where: { userId: user.id } });
+    await prisma.wordReview.deleteMany({ where: { userId: user.id } });
     await prisma.word.deleteMany({ where: { userId: user.id } });
 
     // 1. Read and parse the sample data file
@@ -64,7 +64,7 @@ async function main() {
       // 3. Create a corresponding review session for the new word
       const now = new Date();
       const initialInterval = 0; // Review again in 1 day
-      await prisma.reviewSession.create({
+      await prisma.wordReview.create({
         data: {
           userId: newWord.userId,
           wordId: newWord.id,

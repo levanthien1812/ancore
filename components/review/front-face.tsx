@@ -8,7 +8,7 @@ import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
 import { useSession } from "next-auth/react";
 import { ReviewPerformance, User, Word, WordMeaning } from "@prisma/client";
-import { updateReviewSession } from "@/lib/actions/review.actions";
+import { updateWordReview } from "@/lib/actions/review.actions";
 import { useCarousel } from "../ui/carousel";
 
 type Hint = Partial<
@@ -40,12 +40,12 @@ const FrontFace = ({
   word,
   setIsFlipped,
   onPerformanceUpdate,
-  reviewLogId,
+  studySessionId,
 }: {
   word: WordWithMeanings;
   setIsFlipped: (value: boolean) => void;
   onPerformanceUpdate: (performance: ReviewPerformance) => void;
-  reviewLogId?: string;
+  studySessionId?: string;
 }) => {
   const [showHint, setShowHint] = React.useState(false);
   const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
@@ -104,12 +104,12 @@ const FrontFace = ({
       },
     });
 
-  const { isPending: isUpdatingReviewSession, mutate: reviewSessionMutate } =
+  const { isPending: isUpdatingWordReview, mutate: wordReviewMutate } =
     useMutation({
       mutationFn: async (performance: ReviewPerformance) => {
-        await updateReviewSession(word.id, performance, reviewLogId);
+        await updateWordReview(word.id, performance, studySessionId);
       },
-      mutationKey: ["updateReviewSession"],
+      mutationKey: ["updateWordReview"],
     });
 
   const handleClickShowHint = () => {
@@ -144,7 +144,7 @@ const FrontFace = ({
   const handleForgotWord = () => {
     setShowHint(false);
     setHintLevel(null);
-    reviewSessionMutate(ReviewPerformance.Forgot);
+    wordReviewMutate(ReviewPerformance.Forgot);
     onPerformanceUpdate("Forgot");
     setIsReviewed(true);
     setIsFlipped(true);
@@ -164,20 +164,20 @@ const FrontFace = ({
   const handleClickMarkAsFamiliar = () => {
     switch (hintLevel) {
       case "tags":
-        reviewSessionMutate(ReviewPerformance.Good);
+        wordReviewMutate(ReviewPerformance.Good);
         onPerformanceUpdate("Good");
         break;
       case "synonyms":
       case "antonyms":
-        reviewSessionMutate(ReviewPerformance.Medium);
+        wordReviewMutate(ReviewPerformance.Medium);
         onPerformanceUpdate("Medium");
         break;
       case "examples":
-        reviewSessionMutate(ReviewPerformance.Hard);
+        wordReviewMutate(ReviewPerformance.Hard);
         onPerformanceUpdate("Hard");
         break;
       default:
-        reviewSessionMutate(ReviewPerformance.Easy);
+        wordReviewMutate(ReviewPerformance.Easy);
         onPerformanceUpdate("Easy");
         break;
     }
@@ -216,7 +216,7 @@ const FrontFace = ({
             <Button
               className="border border-white bg-transparent flex-1"
               onClick={handleClickMarkAsFamiliar}
-              disabled={isUpdatingReviewSession}
+              disabled={isUpdatingWordReview}
             >
               <CircleCheckBig
                 width={14}
@@ -273,7 +273,7 @@ const FrontFace = ({
             variant={"link"}
             size={"sm"}
             className="mx-auto text-white bg-transparent mt-2"
-            disabled={isUpdatingReviewSession}
+            disabled={isUpdatingWordReview}
           >
             I forgot this word.
           </Button>

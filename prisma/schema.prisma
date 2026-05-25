@@ -33,15 +33,15 @@ model User {
   resetTokenExpiry    DateTime?
   createdAt           DateTime  @default(now())
 
-  words      Word[]
-  reviews    ReviewSession[]
-  quizzes    QuizQuestion[]
-  reviewLogs ReviewLog[]
-  accounts   Account[]
-  sessions   Session[]
-  quiz       Quiz[]
-  notes      Note[]
-  talks      TalkSession[]
+  words         Word[]
+  reviews       WordReview[]
+  quizzes       QuizQuestion[]
+  studySessions StudySession[]
+  accounts      Account[]
+  sessions      Session[]
+  quiz          Quiz[]
+  notes         Note[]
+  talks         TalkSession[]
 }
 
 model Account {
@@ -104,8 +104,8 @@ model Word {
   updatedAt    DateTime     @updatedAt
 
   meanings WordMeaning[]
-  reviews  ReviewSession[]
-  quizzes  QuizQuestion[]  @relation("WordToQuizQuestion")
+  reviews  WordReview[]
+  quizzes  QuizQuestion[] @relation("WordToQuizQuestion")
 }
 
 enum WordType {
@@ -213,15 +213,15 @@ enum QuestionType {
   FillInTheBlank
 }
 
-model ReviewSession {
-  id          String     @id @default(cuid())
-  wordId      String
-  word        Word       @relation(fields: [wordId], references: [id])
-  userId      String
-  user        User       @relation(fields: [userId], references: [id])
-  createdAt   DateTime   @default(now())
-  reviewLogId String?
-  reviewLog   ReviewLog? @relation(fields: [reviewLogId], references: [id])
+model WordReview {
+  id             String        @id @default(cuid())
+  wordId         String
+  word           Word          @relation(fields: [wordId], references: [id])
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  createdAt      DateTime      @default(now())
+  studySessionId String?
+  studySession   StudySession? @relation(fields: [studySessionId], references: [id])
 
   scheduledAt  DateTime
   completedAt  DateTime?
@@ -229,14 +229,14 @@ model ReviewSession {
   performance  ReviewPerformance?
 }
 
-model ReviewLog {
-  id                 String          @id @default(cuid())
+model StudySession {
+  id                 String       @id @default(cuid())
   userId             String
-  user               User            @relation(fields: [userId], references: [id])
+  user               User         @relation(fields: [userId], references: [id])
   completedAt        DateTime?
   durationSeconds    Int
   wordsReviewedCount Int?
-  reviewSessions     ReviewSession[]
+  reviews            WordReview[]
 
   @@index([userId])
 }

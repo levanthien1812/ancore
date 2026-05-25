@@ -1,4 +1,4 @@
-import React from "react";
+"use client";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import WordDetail from "../word-card/word-detail";
 import { useCarousel } from "../ui/carousel";

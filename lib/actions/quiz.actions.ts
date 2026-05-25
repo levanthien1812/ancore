@@ -620,7 +620,7 @@ export const logQuizResult = async (quizId: string, durationSeconds: number) =>
     try {
       // Fetch the questions from the log to calculate the final score
 
-      const answersInLog = await prisma.quizAnswer.findMany({
+      const answersInSession = await prisma.quizAnswer.findMany({
         where: {
           quizId: quizId,
           quiz: { userId },
@@ -634,11 +634,13 @@ export const logQuizResult = async (quizId: string, durationSeconds: number) =>
         },
       });
 
-      const totalQuestions = answersInLog.length;
-      const correctAnswers = answersInLog.filter((a) => a.isCorrect).length;
-      const skippedQuestions = answersInLog.filter((a) => a.isSkipped).length;
-      const wrongAnswers = answersInLog.filter((a) => a.isWrong).length;
-      const unreachedQuestions = answersInLog.filter(
+      const totalQuestions = answersInSession.length;
+      const correctAnswers = answersInSession.filter((a) => a.isCorrect).length;
+      const skippedQuestions = answersInSession.filter(
+        (a) => a.isSkipped,
+      ).length;
+      const wrongAnswers = answersInSession.filter((a) => a.isWrong).length;
+      const unreachedQuestions = answersInSession.filter(
         (a) => a.isUnreached,
       ).length;
 
@@ -659,7 +661,7 @@ export const logQuizResult = async (quizId: string, durationSeconds: number) =>
         }
       }
       // Update the main quiz log with the final details
-      const updatedLog = await prisma.quiz.update({
+      const updatedSession = await prisma.quiz.update({
         where: { id: quizId, userId },
         data: {
           completedAt: new Date(),
@@ -682,7 +684,7 @@ export const logQuizResult = async (quizId: string, durationSeconds: number) =>
         },
       });
 
-      return updatedLog as QuizWithAnswers;
+      return updatedSession as QuizWithAnswers;
     } catch (error) {
       console.error("Failed to log quiz result:", error);
     }
@@ -744,31 +746,31 @@ export const retryQuizSession = async (quizId: string) =>
   authenticationAction(async (userId) => {
     try {
       // 1. Find the original quiz log and its associated questions
-      const originalLog = await prisma.quiz.findUnique({
+      const originalSession = await prisma.quiz.findUnique({
         where: { id: quizId, userId },
         include: { quizAnswers: true },
       });
 
-      if (!originalLog) {
+      if (!originalSession) {
         return { success: false, message: "Original quiz session not found." };
       }
 
       // 2. Create the new session and answers in a transaction
       const result = await prisma.$transaction(async (tx) => {
         // Create a new InProgress session
-        const newLog = await tx.quiz.create({
+        const newSession = await tx.quiz.create({
           data: {
             userId,
-            totalQuestions: originalLog.totalQuestions,
-            totalWords: originalLog.totalWords,
+            totalQuestions: originalSession.totalQuestions,
+            totalWords: originalSession.totalWords,
             status: "InProgress",
             durationSeconds: 0,
           },
         });
 
         // Create new answer placeholders linked to the original questions
-        const newAnswersData = originalLog.quizAnswers.map((ans) => ({
-          quizId: newLog.id,
+        const newAnswersData = originalSession.quizAnswers.map((ans) => ({
+          quizId: newSession.id,
           quizQuestionId: ans.quizQuestionId,
         }));
 
@@ -776,7 +778,7 @@ export const retryQuizSession = async (quizId: string) =>
           data: newAnswersData,
         });
 
-        return newLog;
+        return newSession;
       });
 
       return { success: true, quizId: result.id };

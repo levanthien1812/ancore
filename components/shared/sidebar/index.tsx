@@ -96,7 +96,7 @@ const Sidebar = () => {
   const pathname = usePathname();
 
   // Simulate having a review session (in a real app, this would come from data)
-  const [hasReviewSession, setHasReviewSession] = useState(true);
+  const [hasWordReview, setHasWordReview] = useState(true);
   // State to track if the notification has been dismissed by the user
   const [isReviewNotificationDismissed, setIsReviewNotificationDismissed] =
     useState(false);
@@ -129,7 +129,7 @@ const Sidebar = () => {
         title: "Review",
         icon: <Star width={22} />,
         path: "/review",
-        showPopover: hasReviewSession && !isReviewNotificationDismissed,
+        showPopover: hasWordReview && !isReviewNotificationDismissed,
         onDismiss: handleDismissNotification,
         popoverContent: "You have a review session",
       },
@@ -149,7 +149,7 @@ const Sidebar = () => {
         path: "/talk",
       },
     ];
-  }, [hasReviewSession, isReviewNotificationDismissed]);
+  }, [hasWordReview, isReviewNotificationDismissed]);
 
   return (
     <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 md:ps-0 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">

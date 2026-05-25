@@ -7,8 +7,8 @@ import {
   Word,
   TalkSession,
   TalkMessage,
-  ReviewLog,
-  ReviewSession,
+  StudySession,
+  WordReview,
 } from "@prisma/client";
 
 export type WordsCountByMasteryLevel = {
@@ -56,10 +56,10 @@ export type TalkSessionWithMessages = TalkSession & {
 
 export type Message = Omit<TalkMessage, "id" | "sessionId">;
 
-export type ReviewSessionWithWord = ReviewSession & {
+export type WordReviewWithWord = WordReview & {
   word: WordWithMeanings;
 };
 
-export type ReviewLogWithReviewSessions = ReviewLog & {
-  reviewSessions: ReviewSessionWithWord[];
+export type StudySessionWithWordReviews = StudySession & {
+  reviews: WordReviewWithWord[];
 };

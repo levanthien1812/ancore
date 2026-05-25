@@ -9,11 +9,11 @@ import type { CarouselApi } from "@/components/ui/carousel";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { useEffect, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
-import { logReviewSession, startReviewLog } from "@/lib/actions/review.actions";
+import { logWordReview, startStudySession } from "@/lib/actions/review.actions";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
-import { ReviewLogWithReviewSessions } from "@/lib/type";
+import { StudySessionWithWordReviews } from "@/lib/type";
 
 const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
   const [api, setApi] = useState<CarouselApi>();
@@ -22,15 +22,15 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
   const [isPending, startTransition] = useTransition();
   const [sessionFinished, setSessionFinished] = useState(false);
   const [isAllWordsReviewed, setIsAllWordsReviewed] = useState(false);
-  const [reviewLogId, setReviewLogId] = useState<string | null>(null);
-  const [reviewLog, setReviewLog] =
-    useState<ReviewLogWithReviewSessions | null>(null);
+  const [studySessionId, setStudySessionId] = useState<string | null>(null);
+  const [studySession, setStudySession] =
+    useState<StudySessionWithWordReviews | null>(null);
 
   useEffect(() => {
     const initLog = async () => {
-      const id = await startReviewLog();
+      const id = await startStudySession();
       if (typeof id === "string") {
-        setReviewLogId(id);
+        setStudySessionId(id);
       }
     };
     initLog();
@@ -82,18 +82,18 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
       (new Date().getTime() - startTime.getTime()) / 1000,
     );
     startTransition(async () => {
-      if (reviewLogId) {
-        const reviewLog = await logReviewSession(reviewLogId, {
+      if (studySessionId) {
+        const studySession = await logWordReview(studySessionId, {
           durationSeconds,
         });
-        setReviewLog(reviewLog);
+        setStudySession(studySession);
       }
       setSessionFinished(true);
     });
   };
 
-  if (sessionFinished && reviewLog) {
-    return <ReviewSummary reviewLog={reviewLog} />;
+  if (sessionFinished && studySession) {
+    return <ReviewSummary studySession={studySession} />;
   }
   if (words.length === 0) return null;
 
@@ -121,7 +121,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
               <ReviewWordCard
                 word={word}
                 onPerformanceUpdate={handlePerformanceUpdate}
-                reviewLogId={reviewLogId ?? undefined}
+                studySessionId={studySessionId ?? undefined}
               />
             </CarouselItem>
           ))}

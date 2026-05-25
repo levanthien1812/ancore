@@ -16,9 +16,9 @@ async function main() {
   const masteryLevels = Object.values(MasteryLevel);
   const partsOfSpeech = ["noun", "verb", "adjective", "adverb"];
 
-  await prisma.reviewLog.deleteMany({ where: { userId: user.id } });
+  await prisma.studySession.deleteMany({ where: { userId: user.id } });
   await prisma.wordMeaning.deleteMany({ where: { wordId: { not: "" } } });
-  await prisma.reviewSession.deleteMany({ where: { userId: user.id } });
+  await prisma.wordReview.deleteMany({ where: { userId: user.id } });
   await prisma.word.deleteMany({ where: { userId: user.id } });
 
   console.log("Generating 50 words...");
@@ -65,7 +65,7 @@ async function main() {
       });
       const intervalDays = faker.number.int({ min: 1, max: 5 });
 
-      await prisma.reviewSession.create({
+      await prisma.wordReview.create({
         data: {
           completedAt: new Date(),
           intervalDays: intervalDays,

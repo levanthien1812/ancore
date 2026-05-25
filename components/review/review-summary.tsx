@@ -5,12 +5,12 @@ import Link from "next/link";
 import Congrats from "@/public/images/congrats.png";
 import Image from "next/image";
 import ReviewSummaryDetail from "./review-summary-detail";
-import { ReviewLogWithReviewSessions } from "@/lib/type";
+import { StudySessionWithWordReviews } from "@/lib/type";
 
 const ReviewSummary = ({
-  reviewLog,
+  studySession,
 }: {
-  reviewLog: ReviewLogWithReviewSessions;
+  studySession: StudySessionWithWordReviews;
 }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full">
@@ -22,7 +22,7 @@ const ReviewSummary = ({
           <div className="flex justify-center items-center">
             <Image src={Congrats} alt="congrats" width={240} />
           </div>
-          <ReviewSummaryDetail reviewLog={reviewLog} />
+          <ReviewSummaryDetail studySession={studySession} />
           <div className="flex gap-4 justify-center pt-4">
             <Button asChild>
               <Link href="/review">Review More</Link>
