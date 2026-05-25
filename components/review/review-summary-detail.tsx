@@ -19,7 +19,7 @@ import {
   HoverCardTrigger,
 } from "../ui/hover-card";
 import WordDetail from "../word-card/word-detail";
-import { ReviewLogWithReviewSessions } from "@/lib/type";
+import { StudySessionWithWordReviews } from "@/lib/type";
 import { ReviewPerformance } from "@prisma/client";
 
 const WordList = ({
@@ -91,9 +91,9 @@ const WordList = ({
 };
 
 const ReviewSummaryDetail = ({
-  reviewLog,
+  studySession,
 }: {
-  reviewLog?: ReviewLogWithReviewSessions;
+  studySession?: StudySessionWithWordReviews;
 }) => {
   const summary = React.useMemo(() => {
     const s: Record<ReviewPerformance, WordWithMeanings[]> = {
@@ -104,15 +104,15 @@ const ReviewSummaryDetail = ({
       Easy: [],
     };
 
-    if (reviewLog?.reviewSessions) {
-      reviewLog.reviewSessions.forEach((session) => {
+    if (studySession?.reviews) {
+      studySession.reviews.forEach((session) => {
         if (session.performance && session.word) {
           s[session.performance].push(session.word);
         }
       });
     }
     return s;
-  }, [reviewLog]);
+  }, [studySession]);
 
   const total = Object.values(summary).reduce(
     (acc, words) => acc + words.length,

@@ -1,20 +1,23 @@
 "use server";
 import { prisma } from "@/db/prisma";
 import { MasteryLevel, WordReviewInfo } from "../constants/enums";
-import { dateFilter } from "../utils/date-filter"; // Keep this for getReviewLogs
-import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers"; // New import
-import { startOfDay, subDays, addDays, format } from "date-fns"; // New imports
+import { dateFilter } from "../utils/date-filter"; // Keep this for getStudySessions
+import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers";
+import {
+  startOfDay,
+  subDays,
+  addDays,
+  format,
+  differenceInCalendarDays,
+} from "date-fns";
 import { revalidatePath } from "next/cache";
 import { authenticationAction } from "./_helpers";
 import { ReviewPerformance } from "@prisma/client";
 
-/**
- * Updates the schedule for a single word based on user performance.
- */
-export const updateReviewSession = async (
+export const updateWordReview = async (
   wordId: string,
   performance: ReviewPerformance,
-  reviewLogId?: string,
+  studySessionId?: string,
 ) =>
   authenticationAction(async (userId) => {
     const word = await prisma.word.findUnique({ where: { id: wordId } });
@@ -24,14 +27,14 @@ export const updateReviewSession = async (
 
     // Find the most recent completed review session to determine the current interval for the algorithm.
     // This is distinct from the session being marked as completed *now*.
-    const lastCompletedReview = await prisma.reviewSession.findFirst({
+    const lastCompletedReview = await prisma.wordReview.findFirst({
       where: { wordId, userId, completedAt: { not: null } },
       orderBy: { completedAt: "desc" },
     });
 
     const now = new Date();
     // Find the specific review session that is currently being completed (i.e., the pending one that was due)
-    const currentPendingReviewSession = await prisma.reviewSession.findFirst({
+    const currentPendingWordReview = await prisma.wordReview.findFirst({
       where: {
         wordId,
         userId,
@@ -74,6 +77,13 @@ export const updateReviewSession = async (
     const newScheduledAt = new Date(now.getTime());
     newScheduledAt.setDate(newScheduledAt.getDate() + newInterval);
 
+    const isPositiveResult =
+      performance === ReviewPerformance.Good ||
+      performance === ReviewPerformance.Easy;
+    const isNegativeResult =
+      performance === ReviewPerformance.Forgot ||
+      performance === ReviewPerformance.Hard;
+
     // --- Mastery Level Update Algorithm ---
     let newMasteryLevel = word.masteryLevel;
     switch (word.masteryLevel) {
@@ -81,19 +91,19 @@ export const updateReviewSession = async (
         newMasteryLevel = MasteryLevel.Learning;
         break;
       case MasteryLevel.Learning:
-        if (performance >= ReviewPerformance.Good) {
+        if (isPositiveResult) {
           newMasteryLevel = MasteryLevel.Familiar;
         }
         break;
       case MasteryLevel.Familiar:
         if (performance === ReviewPerformance.Forgot) {
           newMasteryLevel = MasteryLevel.Learning; // Demote
-        } else if (performance >= ReviewPerformance.Good) {
+        } else if (isPositiveResult) {
           newMasteryLevel = MasteryLevel.Mastered;
         }
         break;
       case MasteryLevel.Mastered:
-        if (performance <= ReviewPerformance.Hard) {
+        if (isNegativeResult) {
           newMasteryLevel = MasteryLevel.Familiar; // Demote if user struggles
         }
         break;
@@ -102,16 +112,16 @@ export const updateReviewSession = async (
     // --- Database Update ---
     const transactionOperations = [];
 
-    if (currentPendingReviewSession) {
+    if (currentPendingWordReview) {
       // 1. Mark the current pending review session as completed
       transactionOperations.push(
-        prisma.reviewSession.update({
-          where: { id: currentPendingReviewSession.id },
+        prisma.wordReview.update({
+          where: { id: currentPendingWordReview.id },
           data: {
             completedAt: now,
             // Save the performance rating for this specific review session
             performance: performance,
-            reviewLogId: reviewLogId,
+            studySessionId: studySessionId,
           },
         }),
       );
@@ -119,7 +129,7 @@ export const updateReviewSession = async (
 
     // 2. Create a new review session record for the *next* scheduled review
     transactionOperations.push(
-      prisma.reviewSession.create({
+      prisma.wordReview.create({
         data: {
           wordId,
           userId,
@@ -137,12 +147,9 @@ export const updateReviewSession = async (
     await prisma.$transaction(transactionOperations);
   });
 
-/**
- * Creates an initial review log at the start of a session.
- */
-export const startReviewLog = async () =>
+export const startStudySession = async () =>
   authenticationAction(async (userId) => {
-    const log = await prisma.reviewLog.create({
+    const log = await prisma.studySession.create({
       data: {
         userId,
         completedAt: null,
@@ -152,24 +159,21 @@ export const startReviewLog = async () =>
     return log.id;
   });
 
-/**
- * Updates the summary of a completed review log.
- */
-export const logReviewSession = async (
+export const logWordReview = async (
   logId: string,
   summary: {
     durationSeconds: number;
   },
 ) =>
   authenticationAction(async (userId) => {
-    const log = await prisma.reviewLog.update({
+    const log = await prisma.studySession.update({
       where: { id: logId, userId },
       data: {
         completedAt: new Date(),
         ...summary,
       },
       include: {
-        reviewSessions: {
+        reviews: {
           include: {
             word: {
               include: {
@@ -185,15 +189,15 @@ export const logReviewSession = async (
     return log;
   });
 
-export const getReviewLogs = async (date: Date) =>
+export const getStudySessions = async (date: Date) =>
   authenticationAction(async (userId) => {
-    const logs = await prisma.reviewLog.findMany({
+    const logs = await prisma.studySession.findMany({
       where: {
         userId,
         completedAt: dateFilter(date),
       },
       include: {
-        reviewSessions: {
+        reviews: {
           include: {
             word: {
               include: {
@@ -208,13 +212,13 @@ export const getReviewLogs = async (date: Date) =>
     return logs;
   }, []);
 
-export const getReviewLogsByMonth = async (year: number, month: number) =>
+export const getStudySessionsByMonth = async (year: number, month: number) =>
   authenticationAction(async (userId) => {
     // Create date range for the entire month (start of first day to end of last day)
     const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
     const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-    const logs = await prisma.reviewLog.findMany({
+    const logs = await prisma.studySession.findMany({
       where: {
         userId,
         completedAt: {
@@ -228,17 +232,11 @@ export const getReviewLogsByMonth = async (year: number, month: number) =>
     });
 
     // Extract unique dates that have logs
-    const datesWithLogs = new Set(
-      logs.map((log) => {
-        const date = new Date(log.completedAt!);
-        const year = date.getUTCFullYear();
-        const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-        const day = String(date.getUTCDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
-      }),
+    const datesWithSessions = new Set(
+      logs.map((log) => format(log.completedAt!, "yyyy-MM-dd")),
     );
 
-    return Array.from(datesWithLogs);
+    return Array.from(datesWithSessions);
   }, []);
 
 export const getReviewInfo = async (wordId: string) => {
@@ -260,19 +258,19 @@ export const getReviewInfo = async (wordId: string) => {
     };
 
     // 1. Get reviewed times and last review date from completed sessions
-    const completedReviews = await prisma.reviewSession.findFirst({
+    const completedReviews = await prisma.wordReview.findFirst({
       where: { wordId, userId, completedAt: { not: null } },
       orderBy: { completedAt: "desc" }, // Most recent completed review first
     });
 
-    info.reviewedTimes = await prisma.reviewSession.count({
+    info.reviewedTimes = await prisma.wordReview.count({
       where: { wordId, userId, completedAt: { not: null } },
     });
 
     info.lastReviewAt = completedReviews?.completedAt || null;
 
     // 2. Get next review date from the earliest uncompleted session
-    const nextScheduledReview = await prisma.reviewSession.findFirst({
+    const nextScheduledReview = await prisma.wordReview.findFirst({
       where: { wordId, userId, completedAt: null }, // Look for uncompleted
       orderBy: { scheduledAt: "asc" }, // Get the earliest scheduled one
     });
@@ -303,7 +301,7 @@ async function calculateReviewStreak(
 ): Promise<{ currentStreak: number; bestStreak: number }> {
   const reviewDays: { day: Date }[] = await prisma.$queryRaw`
     SELECT DISTINCT DATE_TRUNC('day', "completedAt") as day
-    FROM "ReviewLog"
+    FROM "StudySession"
     WHERE "userId" = ${userId} AND "completedAt" IS NOT NULL
     ORDER BY day DESC
   `;
@@ -394,7 +392,7 @@ interface ReviewMetrics {
 function calculatePerformanceMetrics(
   logs: {
     durationSeconds: number;
-    reviewSessions: { performance: ReviewPerformance | null }[];
+    reviews: { performance: ReviewPerformance | null }[];
   }[],
 ): ReviewMetrics {
   let totalWordsReviewed = 0;
@@ -409,7 +407,7 @@ function calculatePerformanceMetrics(
 
   for (const log of logs) {
     totalStudyTimeSeconds += log.durationSeconds;
-    for (const session of log.reviewSessions) {
+    for (const session of log.reviews) {
       if (session.performance) {
         totalWordsReviewed++;
         performanceCounts[session.performance]++;
@@ -453,7 +451,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
     } = getPeriodDateRange(period);
 
     // Fetch current period logs
-    const currentLogs = await prisma.reviewLog.findMany({
+    const currentSessions = await prisma.studySession.findMany({
       where: {
         userId,
         completedAt: {
@@ -464,7 +462,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       select: {
         durationSeconds: true,
         completedAt: true,
-        reviewSessions: {
+        reviews: {
           select: { performance: true },
         },
       },
@@ -473,7 +471,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       },
     });
 
-    const currentMetrics = calculatePerformanceMetrics(currentLogs);
+    const currentMetrics = calculatePerformanceMetrics(currentSessions);
 
     // Calculate accuracy percentage
     const totalWordsInCurrentPeriod = currentMetrics.totalWordsReviewed;
@@ -488,22 +486,23 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
     // Calculate words per day
     let wordsPerDay = 0;
     if (period !== "all_time" && totalWordsInCurrentPeriod > 0) {
-      const diffTime = Math.abs(
-        currentPeriodEnd.getTime() - currentPeriodStart.getTime(),
+      // Use date-fns to get actual calendar days difference
+      const diffDays = Math.max(
+        1,
+        differenceInCalendarDays(currentPeriodEnd, currentPeriodStart),
       );
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       wordsPerDay = totalWordsInCurrentPeriod / diffDays;
     } else if (period === "all_time" && totalWordsInCurrentPeriod > 0) {
-      const firstReview = await prisma.reviewLog.findFirst({
+      const firstReview = await prisma.studySession.findFirst({
         where: { userId, completedAt: { not: null } },
         orderBy: { completedAt: "asc" },
         select: { completedAt: true },
       });
       if (firstReview && firstReview.completedAt) {
-        const diffTime = Math.abs(
-          currentPeriodEnd.getTime() - firstReview.completedAt.getTime(),
+        const diffDays = differenceInCalendarDays(
+          currentPeriodEnd,
+          firstReview.completedAt,
         );
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         if (diffDays > 0) wordsPerDay = totalWordsInCurrentPeriod / diffDays;
       }
     }
@@ -511,7 +510,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
     // Fetch previous period logs for comparison
     let previousMetrics: ReviewMetrics | null = null;
     if (previousPeriodStart && previousPeriodEnd) {
-      const previousLogs = await prisma.reviewLog.findMany({
+      const previousSessions = await prisma.studySession.findMany({
         where: {
           userId,
           completedAt: {
@@ -521,12 +520,12 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
         },
         select: {
           durationSeconds: true,
-          reviewSessions: {
+          reviews: {
             select: { performance: true },
           },
         },
       });
-      previousMetrics = calculatePerformanceMetrics(previousLogs);
+      previousMetrics = calculatePerformanceMetrics(previousSessions);
     }
 
     const wordsReviewedChangePercentage = previousMetrics?.totalWordsReviewed
@@ -574,7 +573,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       { totalWords: number; goodEasyWords: number }
     >();
 
-    for (const log of currentLogs) {
+    for (const log of currentSessions) {
       const dateKey = format(
         startOfDay(log.completedAt || new Date()),
         "dd/MM",
@@ -583,7 +582,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
         dailyDataMap.set(dateKey, { totalWords: 0, goodEasyWords: 0 });
       }
       const dailyStats = dailyDataMap.get(dateKey)!;
-      for (const session of log.reviewSessions) {
+      for (const session of log.reviews) {
         if (session.performance) {
           dailyStats.totalWords++;
           if (

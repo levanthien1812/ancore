@@ -167,7 +167,7 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
           const now = new Date();
           const initialInterval = 1;
 
-          await prisma.reviewSession.create({
+          await prisma.wordReview.create({
             data: {
               userId: word.userId,
               wordId: word.id,
@@ -481,7 +481,7 @@ export const getWordsToReview = async (limit: number = 10) =>
   authenticationAction(async (userId) => {
     // 1. Find unique wordIds that have a review session due,
     //    ordered by the earliest scheduledAt of their due sessions.
-    const earliestDueReviews = await prisma.reviewSession.groupBy({
+    const earliestDueReviews = await prisma.wordReview.groupBy({
       by: ["wordId"],
       where: {
         userId,
@@ -527,7 +527,7 @@ export const getWordsToReview = async (limit: number = 10) =>
 
 export const getWordsToReviewCount = async () =>
   authenticationAction(async (userId) => {
-    const reviews = await prisma.reviewSession.groupBy({
+    const reviews = await prisma.wordReview.groupBy({
       by: ["wordId"],
       where: {
         userId,
@@ -549,7 +549,7 @@ export const deleteWords = async (prevState: unknown, formData: FormData) =>
         prisma.wordMeaning.deleteMany({
           where: { wordId: { in: wordIds } },
         }),
-        prisma.reviewSession.deleteMany({
+        prisma.wordReview.deleteMany({
           where: { wordId: { in: wordIds } },
         }),
         prisma.word.deleteMany({

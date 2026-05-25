@@ -10,8 +10,8 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useQuery } from "@tanstack/react-query";
 import {
-  getReviewLogs,
-  getReviewLogsByMonth,
+  getStudySessions,
+  getStudySessionsByMonth,
 } from "@/lib/actions/review.actions";
 import ReviewSummaryDetail from "./review-summary-detail";
 import { format } from "date-fns";
@@ -23,19 +23,21 @@ const ReviewHistory = () => {
   const [date, setDate] = React.useState<Date | undefined>(new Date());
   const [currentMonth, setCurrentMonth] = React.useState<Date>(new Date());
 
-  const { data: reviewLogs, isFetching: isFetchingReviewLogs } = useQuery({
-    queryFn: async () => {
-      if (!date) return;
-      const response = await getReviewLogs(date);
-      return response;
+  const { data: studySessions, isFetching: isFetchingStudySessions } = useQuery(
+    {
+      queryFn: async () => {
+        if (!date) return;
+        const response = await getStudySessions(date);
+        return response;
+      },
+      queryKey: [QUERY_KEY.GET_REVIEW_LOGS, date],
+      enabled: !!date,
     },
-    queryKey: [QUERY_KEY.GET_REVIEW_LOGS, date],
-    enabled: !!date,
-  });
+  );
 
-  const { data: datesWithLogs = [] } = useQuery({
+  const { data: datesWithSessions = [] } = useQuery({
     queryFn: async () => {
-      const response = await getReviewLogsByMonth(
+      const response = await getStudySessionsByMonth(
         currentMonth.getFullYear(),
         currentMonth.getMonth() + 1,
       );
@@ -50,11 +52,13 @@ const ReviewHistory = () => {
   });
 
   const modifiers = {
-    hasLog: datesWithLogs.map((dateStr) => new Date(dateStr + "T00:00:00Z")),
+    hasSession: datesWithSessions.map(
+      (dateStr) => new Date(dateStr + "T00:00:00Z"),
+    ),
   };
 
   const modifiersClassNames = {
-    hasLog: "bg-blue-100 dark:bg-blue-900 font-semibold rounded-full",
+    hasSession: "bg-blue-100 dark:bg-blue-900 font-semibold rounded-full",
   };
 
   return (
@@ -86,28 +90,32 @@ const ReviewHistory = () => {
           />
         </PopoverContent>
       </Popover>
-      {isFetchingReviewLogs && <div className="text-center">Loading...</div>}
-      {!isFetchingReviewLogs && reviewLogs && reviewLogs.length > 0 && (
-        <div className="flex flex-col space-y-6 mt-4">
-          {reviewLogs.map((log) => (
-            <div className="relative" key={log.id}>
-              {log.completedAt && (
-                <div className="absolute -top-4 z-0">
-                  <Badge className="rounded-md py-2 px-4">
-                    <CheckCircle width={16} height={16} />
-                    Completed at:{" "}
-                    <span>{format(log.completedAt, "dd/MM/yyyy hh:mm a")}</span>
-                  </Badge>
-                </div>
-              )}
-              <ReviewSummaryDetail reviewLog={log} />
-            </div>
-          ))}
-        </div>
-      )}
+      {isFetchingStudySessions && <div className="text-center">Loading...</div>}
+      {!isFetchingStudySessions &&
+        studySessions &&
+        studySessions.length > 0 && (
+          <div className="flex flex-col space-y-6 mt-4">
+            {studySessions.map((log) => (
+              <div className="relative" key={log.id}>
+                {log.completedAt && (
+                  <div className="absolute -top-4 z-0">
+                    <Badge className="rounded-md py-2 px-4">
+                      <CheckCircle width={16} height={16} />
+                      Completed at:{" "}
+                      <span>
+                        {format(log.completedAt, "dd/MM/yyyy hh:mm a")}
+                      </span>
+                    </Badge>
+                  </div>
+                )}
+                <ReviewSummaryDetail studySession={log} />
+              </div>
+            ))}
+          </div>
+        )}
       {date &&
-        !isFetchingReviewLogs &&
-        (!reviewLogs || reviewLogs.length === 0) && (
+        !isFetchingStudySessions &&
+        (!studySessions || studySessions.length === 0) && (
           <p className="text-center text-muted-foreground text-lg">
             No review logs found
           </p>

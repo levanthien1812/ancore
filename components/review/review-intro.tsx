@@ -62,7 +62,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
 
   if (count === 0) {
     return (
-      <div className="flex flex-col justify-center items-center gap-4 border rounded-lg p-4 text-center">
+      <div className="flex flex-col justify-center items-center gap-4 border rounded-lg p-4 text-center h-full">
         <p className="text-2xl font-semibold">No words to review!</p>
         <p className="text-muted-foreground">
           Add some new words to start your review session.
