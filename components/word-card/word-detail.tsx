@@ -73,7 +73,6 @@ const WordDetail = ({
       queryKey: ["review-info", word.id],
       queryFn: async () => {
         const response = await getReviewInfo(word.id);
-        console.log(response);
         return response;
       },
       enabled: showReviewStats,

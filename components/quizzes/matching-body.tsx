@@ -33,24 +33,20 @@ const MatchingBody = ({
       })),
     [question.leftItems],
   );
-  const initialRightItems = useMemo(
-    () =>
-      shuffleArray(question.rightItems).map((item) => ({
-        id: item,
-        text: item,
-      })),
-    [question.rightItems],
-  );
 
   const [leftItems, setLeftItems] = useState<MatchItem[]>(initialLeftItems);
-  const [rightItems, setRightItems] = useState<MatchItem[]>(initialRightItems);
-  const [selectedLeft, setSelectedLeft] = useState<MatchItem | null>(null);
+  const [rightItems, setRightItems] = useState<MatchItem[]>([]);
 
   useEffect(() => {
-    if (Object.keys(selectedMatchs).length === initialLeftItems.length) {
-      setSelectedAnswer(JSON.stringify(selectedMatchs));
-    }
-  }, [selectedMatchs, initialLeftItems, setSelectedAnswer]);
+    const shuffled = shuffleArray([...question.rightItems]).map((item) => ({
+      id: item,
+      text: item,
+    }));
+    setRightItems(shuffled);
+    setLeftItems(initialLeftItems);
+  }, [question.rightItems, initialLeftItems]);
+
+  const [selectedLeft, setSelectedLeft] = useState<MatchItem | null>(null);
 
   const handleLeftClick = (item: MatchItem) => {
     setSelectedLeft(item);
@@ -59,13 +55,18 @@ const MatchingBody = ({
   const handleRightClick = (rightItem: MatchItem) => {
     if (!selectedLeft) return toast.warning("Select a word on the left first.");
 
-    setSelectedMatchs((prev) => ({
-      ...prev,
+    const newMatches = {
+      ...selectedMatchs,
       [selectedLeft.id]: rightItem.id,
-    }));
+    };
+    setSelectedMatchs(newMatches);
 
     setLeftItems((prev) => prev.filter((li) => li.id !== selectedLeft.id));
     setRightItems((prev) => prev.filter((ri) => ri.id !== rightItem.id));
+
+    if (Object.keys(newMatches).length === initialLeftItems.length) {
+      setSelectedAnswer(JSON.stringify(newMatches));
+    }
   };
 
   const getItemClasses = (item: MatchItem, isLeft: boolean) => {
@@ -81,19 +82,25 @@ const MatchingBody = ({
 
   const handleReset = () => {
     setSelectedMatchs({});
+    setSelectedAnswer("");
+    const shuffled = shuffleArray([...question.rightItems]).map((item) => ({
+      id: item,
+      text: item,
+    }));
+    setRightItems(shuffled);
     setLeftItems(initialLeftItems);
-    setRightItems(initialRightItems);
     setSelectedLeft(null);
   };
 
   const handleClickSelectedMatch = (leftId: string) => {
     const rightId = selectedMatchs[leftId];
     if (!rightId) return;
-    setSelectedMatchs((prev) => {
-      const newMatchs = { ...prev };
-      delete newMatchs[leftId];
-      return newMatchs;
-    });
+
+    const newMatchs = { ...selectedMatchs };
+    delete newMatchs[leftId];
+    setSelectedMatchs(newMatchs);
+    setSelectedAnswer("");
+
     setLeftItems((prev) => [...prev, { id: leftId, text: leftId }]);
     setRightItems((prev) => [...prev, { id: rightId, text: rightId }]);
   };

@@ -1,7 +1,7 @@
 "use client";
 
 import { Input } from "../ui/input";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { QuizQuestion } from "@prisma/client";
 
@@ -20,22 +20,6 @@ const FillInTheBlankBody = ({
       : [],
   );
 
-  // Update parent component's state when user input changes
-  useEffect(() => {
-    if (!question.gapHint) return;
-    const isComplete = userInput.every(
-      (char, i) => question.gapHint![i] !== "_" || char !== "",
-    );
-
-    const finalAnswer = userInput
-      .map((char, i) =>
-        question.gapHint![i] !== "_" ? question.gapHint![i] : char,
-      )
-      .join("");
-
-    setSelectedAnswer(isComplete ? finalAnswer : "");
-  }, [userInput, question.gapHint, setSelectedAnswer]);
-
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     index: number,
@@ -45,6 +29,17 @@ const FillInTheBlankBody = ({
     const newUserInput = [...userInput];
     newUserInput[index] = value;
     setUserInput(newUserInput);
+
+    // Update parent
+    const isComplete = newUserInput.every(
+      (char, i) => question.gapHint![i] !== "_" || char !== "",
+    );
+    const finalAnswer = newUserInput
+      .map((char, i) =>
+        question.gapHint![i] !== "_" ? question.gapHint![i] : char,
+      )
+      .join("");
+    setSelectedAnswer(isComplete ? finalAnswer : "");
 
     // Move focus to the next empty input
     if (value && index < question.gapHint.length - 1) {

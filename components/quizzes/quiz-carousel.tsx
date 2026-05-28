@@ -8,23 +8,30 @@ import {
 } from "@/components/ui/carousel";
 import QuestionCard from "./question-card";
 import { cn } from "@/lib/utils";
-import { logQuizResult, updateQuizAnswer } from "@/lib/actions/quiz.actions";
+import { logQuizResult } from "@/lib/actions/quiz.actions";
 import QuizSummary from "./quiz-summary";
 import { toast } from "sonner";
 import { useBeforeUnload } from "@/lib/hooks/use-before-unload";
-import { QuizAnswerWithQuestion, QuizWithAnswers } from "@/lib/type";
+import { QuizWithAnswers } from "@/lib/type";
 
 const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-  const [startTime] = useState(new Date());
+
+  // Find the first unanswered question to set as the starting point for resumed sessions
+  const initialIndex = Math.max(
+    0,
+    quiz.quizAnswers.findIndex((a) => a.userAnswer === null && !a.isSkipped),
+  );
+
+  const [current, setCurrent] = useState(initialIndex);
+  const [startTime, setStartTime] = useState<Date | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // State to hold the questions with user answers
-  const [currentAnswers, setCurrentAnswers] = useState<
-    QuizAnswerWithQuestion[]
-  >(quiz.quizAnswers);
   const [finalQuiz, setFinalQuiz] = useState<QuizWithAnswers | null>(null);
+
+  useEffect(() => {
+    setStartTime(new Date());
+  }, []);
 
   // Hook to prevent accidental navigation away from the quiz
   useBeforeUnload(!finalQuiz);
@@ -48,57 +55,17 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
     };
   }, [api]);
 
-  // Find the first unanswered question to set as the starting point for resumed sessions
-  const [initialIndex] = useState(() => {
-    const start = currentAnswers.findIndex(
-      (a) => a.userAnswer === null && !a.isSkipped,
-    );
-    return start === -1 ? 0 : start;
-  });
-
-  const handleAnswered = (answerId: string, userAnswer: string | null) => {
-    // Call the server action to update the database in the background
-    startTransition(async () => {
-      const result = await updateQuizAnswer(answerId, userAnswer);
-      if (result) {
-        // Play audio feedback if the user didn't skip the question
-        if (userAnswer !== null) {
-          const audio = new Audio(
-            result.isCorrect
-              ? "/sounds/correct-answer-sound.mp3"
-              : "/sounds/wrong-answer-sound.mp3",
-          );
-          audio.play().catch((err) => console.error("Audio play failed:", err));
-        }
-
-        setCurrentAnswers((prev) =>
-          prev.map((a) =>
-            a.id === answerId
-              ? {
-                  ...a,
-                  userAnswer,
-                  isCorrect: result.isCorrect,
-                  quizQuestion: {
-                    ...a.quizQuestion,
-                    answer: result.correctAnswer,
-                  },
-                }
-              : a,
-          ),
-        );
-      }
-    });
-  };
-
   const handleNext = () => {
     if (api?.canScrollNext()) {
       api.scrollNext();
     } else {
       // This is the last question, finish the session.
-      const durationSeconds = Math.floor(
-        (new Date().getTime() - startTime.getTime()) / 1000,
-      );
-      const quizId = currentAnswers[0]?.quizId;
+      const now = new Date();
+      const durationSeconds = startTime
+        ? Math.floor((now.getTime() - startTime.getTime()) / 1000)
+        : 0;
+
+      const quizId = quiz.quizAnswers[0]?.quizId;
 
       if (quizId) {
         startTransition(async () => {
@@ -117,12 +84,12 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
     return <QuizSummary quiz={finalQuiz} />;
   }
 
-  if (currentAnswers.length === 0) return null;
+  if (quiz.quizAnswers.length === 0) return null;
   return (
     <div className="h-full space-y-1 flex flex-col">
       {/* The AlertDialog is not needed as useBeforeUnload handles browser-native prompts */}
       <div className="flex gap-1">
-        {currentAnswers.map((_, index) => (
+        {quiz.quizAnswers.map((_, index) => (
           <div
             key={index}
             className={cn("h-1 rounded-full flex-1", {
@@ -138,16 +105,16 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
         opts={{ watchDrag: false, startIndex: initialIndex }}
       >
         <CarouselContent className="h-full">
-          {currentAnswers.map((answer, index) => (
+          {quiz.quizAnswers.map((answer, index) => (
             <CarouselItem key={answer.id} className="h-full">
               <QuestionCard
+                answerId={answer.id}
                 question={answer.quizQuestion}
-                onAnswer={(userAnswer) => handleAnswered(answer.id, userAnswer)}
-                isCorrect={answer.isCorrect}
+                initialIsCorrect={answer.isCorrect}
                 onNext={handleNext}
                 currentIndex={index}
-                totalQuestions={currentAnswers.length}
-                isSubmitting={isPending}
+                totalQuestions={quiz.quizAnswers.length}
+                isFinalizing={isPending}
               />
             </CarouselItem>
           ))}

@@ -310,16 +310,22 @@ export const createQuizSession = async (
     });
 
     // --- Question Type 4: Matching (if enough words) ---
-    // Only consider words not already used in single-word questions
-    const availableWordsForMatching = wordsToQuiz.filter(
-      (w) =>
-        !wordsUsedInSingleQuestions.has(w.word) && w.meanings[0]?.definition,
+    // Consider all words with definitions for matching questions
+    const wordsWithDefinitionsForMatching = wordsToQuiz.filter(
+      (w) => w.meanings.length > 0 && w.meanings[0].definition.trim() !== "",
     );
 
-    if (availableWordsForMatching.length >= 3) {
-      const matchingWords = shuffleArray(availableWordsForMatching).slice(0, 4); // Randomly pick 3 or 4 words
+    if (wordsWithDefinitionsForMatching.length >= 3) {
+      const matchingWords = shuffleArray(wordsWithDefinitionsForMatching).slice(
+        0,
+        Math.min(wordsWithDefinitionsForMatching.length, 4),
+      ); // Randomly pick up to 4 words
       const leftItems = matchingWords.map((w) => w.word);
-      const rightItems = matchingWords.map((w) => w.meanings[0].definition);
+      const rightItems = matchingWords.map((w) => {
+        const randomMeaning =
+          w.meanings[Math.floor(Math.random() * w.meanings.length)];
+        return randomMeaning.definition;
+      });
 
       // Check if a matching question already exists for this set of words.
       // This is still a single DB query, which is fine outside the main loop.
@@ -530,7 +536,9 @@ export const updateQuizAnswer = async (
     try {
       const quizAnswer = await prisma.quizAnswer.findFirst({
         where: { id: answerId, quiz: { userId } },
-        include: { quizQuestion: true },
+        include: {
+          quizQuestion: { include: { words: { include: { meanings: true } } } },
+        },
       });
 
       if (!quizAnswer || !quizAnswer.quizQuestion) {
@@ -571,7 +579,7 @@ export const updateQuizAnswer = async (
           isUnreached: false,
         },
         include: {
-          quizQuestion: { include: { words: true } },
+          quizQuestion: { include: { words: { include: { meanings: true } } } },
         },
       });
 
@@ -676,7 +684,11 @@ export const logQuizResult = async (quizId: string, durationSeconds: number) =>
         },
         include: {
           quizAnswers: {
-            include: { quizQuestion: { include: { words: true } } },
+            include: {
+              quizQuestion: {
+                include: { words: { include: { meanings: true } } },
+              },
+            },
             orderBy: {
               createdAt: "asc",
             },
@@ -696,7 +708,11 @@ export const getQuiz = async (quizId: string) =>
       where: { id: quizId, userId },
       include: {
         quizAnswers: {
-          include: { quizQuestion: { include: { words: true } } },
+          include: {
+            quizQuestion: {
+              include: { words: { include: { meanings: true } } },
+            },
+          },
           orderBy: {
             createdAt: "asc", // Keep a consistent order from DB
           },
@@ -710,8 +726,8 @@ export const getQuiz = async (quizId: string) =>
       const shuffled = shuffleArray(quiz.quizAnswers);
       // Move completed questions (answered or skipped) to the start of the array
       const sortedAnswers = [
-        ...shuffled.filter((a) => a.userAnswer !== null || a.isSkipped),
-        ...shuffled.filter((a) => a.userAnswer === null && !a.isSkipped),
+        ...shuffled.filter((a) => !a.isUnreached),
+        ...shuffled.filter((a) => a.isUnreached),
       ];
 
       quiz.quizAnswers = sortedAnswers.map((ans) => {
