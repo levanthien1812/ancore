@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -9,29 +9,50 @@ import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
 import { Separator } from "../ui/separator";
 import { QuizQuestionWithWords } from "@/lib/type";
-import { CheckCircle, CircleX } from "lucide-react";
+import { CheckCircle, CircleX, Info } from "lucide-react";
 import {
   CORRECT_ENCOURAGEMENTS,
   INCORRECT_ENCOURAGEMENTS,
 } from "@/lib/constants/constant";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../ui/dialog";
+import { Badge } from "../ui/badge";
+import WordDetail from "../word-card/word-detail";
+import { updateQuizAnswer } from "@/lib/actions/quiz.actions";
+import { useMutation } from "@tanstack/react-query";
 
 const AnswerWrapper = ({
   isCorrect,
   description,
   correctAnswer,
+  words,
 }: {
   isCorrect: boolean;
   description?: string;
   correctAnswer?: React.ReactNode;
+  words: QuizQuestionWithWords["words"];
 }) => {
-  const [randomIndex] = useState(() =>
-    Math.floor(Math.random() * CORRECT_ENCOURAGEMENTS.length),
-  );
+  const [randomIndex, setRandomIndex] = useState(0);
+
+  useEffect(() => {
+    setRandomIndex(Math.floor(Math.random() * CORRECT_ENCOURAGEMENTS.length));
+  }, []);
 
   const randomEncouragement = isCorrect
     ? CORRECT_ENCOURAGEMENTS[randomIndex]
     : INCORRECT_ENCOURAGEMENTS[randomIndex];
+
+  const [selectedWordId, setSelectedWordId] = useState<string | null>(
+    words[0].id,
+  );
+
+  const selectedWord = words.find((w) => w.id === selectedWordId);
 
   return (
     <div
@@ -41,20 +62,59 @@ const AnswerWrapper = ({
         !isCorrect && "border-red-300 bg-red-100",
       )}
     >
-      <div className="flex justify-center items-center gap-2">
-        {isCorrect ? (
-          <CheckCircle className="text-green-600" width={32} height={32} />
-        ) : (
-          <CircleX className="text-red-600" width={32} height={32} />
-        )}
-        <div>
-          <p className={isCorrect ? "text-green-600" : "text-red-600"}>
-            {isCorrect ? "Correct" : "Incorrect"}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {description || randomEncouragement}
-          </p>
+      <div className="flex justify-between items-center gap-2">
+        <div className="flex items-center gap-2">
+          {isCorrect ? (
+            <CheckCircle className="text-green-600" width={32} height={32} />
+          ) : (
+            <CircleX className="text-red-600" width={32} height={32} />
+          )}
+          <div>
+            <p className={isCorrect ? "text-green-600" : "text-red-600"}>
+              {isCorrect ? "Correct" : "Incorrect"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {description || randomEncouragement}
+            </p>
+          </div>
         </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant={"ghost"} size={"sm"} type="button">
+              <Info className="text-muted-foreground" width={20} height={20} />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 bg-primary">
+            <DialogHeader className="text-white">
+              <DialogTitle>Word Details</DialogTitle>
+            </DialogHeader>
+
+            {words.length > 1 && (
+              <div className="flex gap-1">
+                {words.map((word) => (
+                  <Badge
+                    key={word.id}
+                    variant={
+                      selectedWordId === word.id ? "secondary" : "default"
+                    }
+                    className="cursor-pointer hover:underline"
+                    onClick={() => setSelectedWordId(word.id)}
+                  >
+                    {word.word}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {selectedWord ? (
+              <WordDetail word={selectedWord} showReviewStats={false} />
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                Select a word to view details.
+              </p>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
       {correctAnswer && (
         <div className="bg-white/50 p-3 sm:p-4 rounded-md mt-2">
@@ -67,30 +127,50 @@ const AnswerWrapper = ({
 };
 
 const QuestionCard = ({
+  answerId,
   question,
-  onAnswer,
-  isCorrect,
+  initialIsCorrect,
   onNext,
   currentIndex,
   totalQuestions,
-  isSubmitting,
+  isFinalizing,
 }: {
+  answerId: string;
   question: QuizQuestionWithWords;
-  onAnswer: (userAnswer: string | null) => void;
-  isCorrect: boolean | null;
+  initialIsCorrect: boolean | null;
   onNext: () => void;
   currentIndex: number;
   totalQuestions: number;
-  isSubmitting: boolean;
+  isFinalizing: boolean;
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
+  const [isAnswered, setIsAnswered] = useState(!!question.answer);
+  const [localIsCorrect, setLocalIsCorrect] = useState<boolean | null>(
+    initialIsCorrect,
+  );
   const isLastQuestion = currentIndex === totalQuestions - 1;
+
+  const { mutate: updateQuizAnswerMutation, isPending: isUpdatingQuizAnswer } =
+    useMutation({
+      mutationFn: (data: { userAnswer: string | null }) =>
+        updateQuizAnswer(answerId, data.userAnswer),
+      onSuccess: (data) => {
+        if (data) {
+          const audio = new Audio(
+            data.isCorrect
+              ? "/sounds/correct-answer-sound.mp3"
+              : "/sounds/wrong-answer-sound.mp3",
+          );
+          audio.play().catch((err) => console.error("Audio play failed:", err));
+          setLocalIsCorrect(data.isCorrect);
+          setIsAnswered(true);
+        }
+      },
+    });
 
   const handleCheckAnswer = () => {
     if (selectedAnswer) {
-      setIsAnswered(true);
-      onAnswer(selectedAnswer);
+      updateQuizAnswerMutation({ userAnswer: selectedAnswer });
     } else {
       toast.warning("Please select an answer or finish your answer first.");
     }
@@ -98,14 +178,15 @@ const QuestionCard = ({
 
   const handleSkip = () => {
     setSelectedAnswer(null);
+    setLocalIsCorrect(false);
     setIsAnswered(true);
-    onAnswer(null);
+    updateQuizAnswerMutation({ userAnswer: null });
     onNext();
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    if (isUpdatingQuizAnswer) return;
     if (!isAnswered) {
       handleCheckAnswer();
     } else {
@@ -113,7 +194,7 @@ const QuestionCard = ({
     }
   };
 
-  const renderQuestionBody = () => {
+  const questionBody = () => {
     switch (question.type) {
       case QuizQuestionType.MultipleChoice_DefinitionToWord:
       case QuizQuestionType.MultipleChoice_WordToSynonym:
@@ -143,9 +224,9 @@ const QuestionCard = ({
     }
   };
 
-  const correctAnswer = () => {
-    if (isCorrect) {
-      return <AnswerWrapper isCorrect={true} />;
+  const questionResult = () => {
+    if (localIsCorrect) {
+      return <AnswerWrapper isCorrect={true} words={question.words} />;
     }
 
     switch (question.type) {
@@ -155,6 +236,7 @@ const QuestionCard = ({
         return (
           <AnswerWrapper
             isCorrect={false}
+            words={question.words}
             correctAnswer={<div>{question.answer}</div>}
           />
         );
@@ -184,6 +266,7 @@ const QuestionCard = ({
           <AnswerWrapper
             isCorrect={false}
             description={"Some matches are not correct."}
+            words={question.words}
             correctAnswer={
               <div className="border border-green-600 rounded-md p-3 sm:p-4">
                 {correctMatches}
@@ -214,15 +297,16 @@ const QuestionCard = ({
         </CardHeader>
         <CardContent className="flex-1 flex flex-col justify-center custom-scrollbar-y">
           <div className="flex-1 flex flex-col justify-center">
-            {renderQuestionBody()}
+            {questionBody()}
           </div>
           <div className="mt-4 space-y-2">
             {isAnswered &&
-              !isSubmitting &&
-              isCorrect !== null &&
-              correctAnswer()}
+              !isUpdatingQuizAnswer &&
+              selectedAnswer &&
+              questionResult()}
             {!isAnswered && (
               <Button
+                disabled={isUpdatingQuizAnswer}
                 type="button"
                 variant={"outline"}
                 onClick={handleSkip}
@@ -234,19 +318,18 @@ const QuestionCard = ({
             {!isAnswered && (
               <Button
                 type="submit"
-                disabled={!selectedAnswer}
+                disabled={
+                  !selectedAnswer || isUpdatingQuizAnswer || isFinalizing
+                }
                 className="w-full"
+                isLoading={isUpdatingQuizAnswer || isFinalizing}
               >
-                Check Answer
+                {isUpdatingQuizAnswer ? "Checking..." : "Check Answer"}
               </Button>
             )}
             {isAnswered && (
-              <Button type="submit" className="w-full" isLoading={isSubmitting}>
-                {!isLastQuestion
-                  ? isSubmitting
-                    ? "Checking answer..."
-                    : "Next"
-                  : "Finish Quiz"}
+              <Button type="submit" className="w-full">
+                {!isLastQuestion ? "Next" : "Finish Quiz"}
               </Button>
             )}
           </div>

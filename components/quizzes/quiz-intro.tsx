@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useTransition } from "react";
+import React, { useTransition, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { createQuizSession } from "@/lib/actions/quiz.actions";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,25 @@ const QuizIntro = ({
 }) => {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+  const [progress, setProgress] = useState(0);
+
+  // Simulated progress logic
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isPending) {
+      setProgress(0);
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 92) return prev; // Hold at 92% until the server actually responds
+          const increment = prev < 40 ? 8 : prev < 70 ? 3 : 0.5;
+          return prev + increment;
+        });
+      }, 400);
+    } else {
+      setProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [isPending]);
 
   const handleStartQuiz = () => {
     startTransition(async () => {
@@ -61,9 +80,26 @@ const QuizIntro = ({
           (Approx. {estimatedTime} {estimatedTime > 1 ? "minutes" : "minute"})
         </p>
       </div>
-      <Button onClick={handleStartQuiz} size="lg" isLoading={isPending}>
-        {isPending ? "Preparing quiz..." : "Start Quiz"}
-      </Button>
+      <div className="w-full space-y-2">
+        <Button
+          onClick={handleStartQuiz}
+          size="lg"
+          isLoading={isPending}
+          className="w-full relative overflow-hidden"
+        >
+          {isPending
+            ? `Preparing quiz (${Math.floor(progress)}%)...`
+            : "Start Quiz"}
+        </Button>
+        {isPending && (
+          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+            <div
+              className="bg-primary h-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

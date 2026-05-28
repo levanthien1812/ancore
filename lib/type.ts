@@ -38,7 +38,7 @@ export type ActionState = {
 };
 
 export type QuizQuestionWithWords = Omit<QuizQuestion, "answer"> & {
-  words: Word[];
+  words: WordWithMeanings[];
   answer: string | null;
 };
 
