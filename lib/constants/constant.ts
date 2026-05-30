@@ -46,6 +46,9 @@ export const MAXIMUM_MESSAGES_IN_CHAT = 14;
 export const SHOW_NUDGE_IN = 40000;
 export const MAXIMUM_EXAMPLES = 10;
 export const DEFAULT_WORDS_PER_REVIEW = 10;
+export const DEFAULT_WORDS_PER_FETCH = 100;
+export const DEFAULT_WORDS_PER_PAGE_TABLE = 10;
+export const DEFAULT_WORDS_PER_PAGE_GRID = 20;
 
 export const ENGLISH_TOPICS = [
   {

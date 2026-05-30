@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState, memo } from "react";
+import { useCallback, useMemo, useState, memo, useRef, useEffect } from "react";
 import { debounce } from "@/lib/utils/debounce";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -19,6 +19,21 @@ const WordSuggest = memo(function WordSuggest({
 }: WordSuggestProps) {
   const [suggestedWordList, setSuggestedWordList] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleSuggest = useCallback(
     async (value: string) => {
@@ -59,7 +74,7 @@ const WordSuggest = memo(function WordSuggest({
   };
 
   return (
-    <div className="relative flex-1">
+    <div className="relative flex-1" ref={containerRef}>
       <Label htmlFor="word" className="text-right">
         Word
       </Label>

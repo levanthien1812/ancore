@@ -37,6 +37,7 @@ import { formatPronunciation } from "@/lib/utils/pronunciation";
 import IconDisplay from "../shared/icon-display";
 import { Volume2Icon } from "lucide-react";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { DEFAULT_WORDS_PER_PAGE_TABLE } from "@/lib/constants/constant";
 
 const WordTable = ({
   words,
@@ -196,7 +197,7 @@ const WordTable = ({
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: 10,
+    pageSize: DEFAULT_WORDS_PER_PAGE_TABLE,
   });
 
   const table = useReactTable({
@@ -299,6 +300,7 @@ const WordTable = ({
               onUpdateSuccess={() => {
                 table.resetRowSelection();
               }}
+              onCancel={() => table.resetRowSelection()}
             />
           )}
         </div>

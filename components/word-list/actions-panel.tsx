@@ -1,12 +1,9 @@
 "use client";
 import { useState } from "react";
 import { Button } from "../ui/button";
-import {
-  deleteWords,
-  bulkUpdateMasteryLevel,
-} from "@/lib/actions/word.actions";
+import { deleteWords, bulkUpdateWords } from "@/lib/actions/word.actions";
 import { MasteryLevel } from "@/lib/constants/enums";
-import { Trash2 } from "lucide-react";
+import { Star, StarOff, Trash2, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +16,7 @@ import {
 type Props = {
   selectedIds: Set<string>;
   onUpdateSuccess: () => void;
+  onCancel?: () => void;
   isPending?: boolean;
   startTransition?: (callback: () => void) => void;
 };
@@ -26,8 +24,9 @@ type Props = {
 const ActionsPanel = ({
   selectedIds,
   onUpdateSuccess,
+  onCancel,
   isPending = false,
-  startTransition = () => {},
+  startTransition = (cb) => cb(),
 }: Props) => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
@@ -48,7 +47,10 @@ const ActionsPanel = ({
     });
   };
 
-  const handleBulkMarkAs = async (level: MasteryLevel) => {
+  const handleBulkUpdate = async (updates: {
+    masteryLevel?: MasteryLevel;
+    highlighted?: boolean;
+  }) => {
     if (selectedIds.size === 0) return;
 
     startTransition(async () => {
@@ -56,9 +58,15 @@ const ActionsPanel = ({
       selectedIds.forEach((id) => {
         formData.append("ids", id);
       });
-      formData.append("masteryLevel", level);
 
-      const result = await bulkUpdateMasteryLevel({}, formData);
+      if (updates.masteryLevel) {
+        formData.append("masteryLevel", updates.masteryLevel);
+      }
+      if (updates.highlighted !== undefined) {
+        formData.append("highlighted", String(updates.highlighted));
+      }
+
+      const result = await bulkUpdateWords({}, formData);
       if (result && result.success) {
         onUpdateSuccess();
       }
@@ -72,10 +80,39 @@ const ActionsPanel = ({
           {selectedIds.size} word{selectedIds.size > 1 ? "s" : ""} selected
         </div>
         <div className="flex gap-2 flex-wrap">
+          {onCancel && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCancel}
+              disabled={isPending}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Exit
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleBulkMarkAs(MasteryLevel.New)}
+            onClick={() => handleBulkUpdate({ highlighted: true })}
+            disabled={isPending}
+          >
+            <Star className="w-4 h-4 mr-2 text-yellow-500 fill-yellow-500" />
+            Favorite
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleBulkUpdate({ highlighted: false })}
+            disabled={isPending}
+          >
+            <StarOff className="w-4 h-4 mr-2" />
+            Unfavorite
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleBulkUpdate({ masteryLevel: MasteryLevel.New })}
             disabled={isPending}
           >
             Mark as New
@@ -83,7 +120,9 @@ const ActionsPanel = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleBulkMarkAs(MasteryLevel.Learning)}
+            onClick={() =>
+              handleBulkUpdate({ masteryLevel: MasteryLevel.Learning })
+            }
             disabled={isPending}
           >
             Mark as Learning
@@ -91,7 +130,9 @@ const ActionsPanel = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleBulkMarkAs(MasteryLevel.Familiar)}
+            onClick={() =>
+              handleBulkUpdate({ masteryLevel: MasteryLevel.Familiar })
+            }
             disabled={isPending}
           >
             Mark as Familiar
@@ -99,7 +140,9 @@ const ActionsPanel = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleBulkMarkAs(MasteryLevel.Mastered)}
+            onClick={() =>
+              handleBulkUpdate({ masteryLevel: MasteryLevel.Mastered })
+            }
             disabled={isPending}
           >
             Mark as Mastered

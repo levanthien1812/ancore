@@ -30,13 +30,18 @@ const WordCard = ({
     }
   };
 
-  const uniquePos = [...new Set(word.meanings.map((m) => m.partOfSpeech))];
+  const uniquePos = [...new Set(word.meanings.map((m) => m.partOfSpeech))].map(
+    (pos) => {
+      if (pos && pos.length > 0) return pos;
+      return word.type as WordType;
+    },
+  );
 
   return (
     <div
       className={`p-3 sm:p-4 rounded-lg shadow-sm shadow-primary bg-primary group relative transition-colors duration-200 md:hover:shadow-md md:hover:bg-primary-2 md:hover:shadow-primary-2 ${
         isSelectMode ? "cursor-pointer" : ""
-      } ${isSelected ? "ring-2 ring-primary-2" : ""}`}
+      } ${isSelected ? "bg-primary-2 shadow-primary-2" : ""}`}
       onClick={isSelectMode ? handleCardClick : undefined}
     >
       <div className="flex gap-2 items-start">
@@ -70,12 +75,11 @@ const WordCard = ({
             <p className="text-sm text-white">
               {formatPronunciation(word.meanings[0]?.pronunciation)}
             </p>
-            {word.meanings[0]?.partOfSpeech &&
-              word.meanings[0].pronunciation && (
-                <Dot width={16} height={16} color="white" opacity={0.5} />
-              )}
+            {word.meanings[0].pronunciation && uniquePos.length > 0 && (
+              <Dot width={16} height={16} color="white" opacity={0.5} />
+            )}
             <p className="font-bold text-sm text-blue-300">
-              {word.type === WordType.Word ? uniquePos.join("/") : word.type}
+              {uniquePos.length > 0 ? uniquePos.join("/") : word.type}
             </p>
           </div>
         </div>
