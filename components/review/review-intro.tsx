@@ -20,7 +20,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
   const [reviewLimit, setReviewLimit] = useState(10);
   const [inputValue, setInputValue] = useState(10);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [forThisTimeOnly, setForThisTimeOnly] = useState(false);
+  const [forThisTimeOnly, setForThisTimeOnly] = useState(true);
 
   useEffect(() => {
     const storedLimit = localStorage.getItem("reviewLimit");

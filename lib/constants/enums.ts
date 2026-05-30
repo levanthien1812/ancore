@@ -38,6 +38,12 @@ export enum PartOfSpeech {
   Verb = "verb",
   Adjective = "adjective",
   Adverb = "adverb",
+  Preposition = "preposition",
+  Conjunction = "conjunction",
+  PhrasalVerb = "phrasal verb",
+  Idiom = "idiom",
+  Expression = "expression",
+  ComplexPreposition = "complex preposition",
 }
 
 export const PARTS_OF_SPEECH: PartOfSpeech[] = [
@@ -45,6 +51,14 @@ export const PARTS_OF_SPEECH: PartOfSpeech[] = [
   PartOfSpeech.Verb,
   PartOfSpeech.Adjective,
   PartOfSpeech.Adverb,
+  PartOfSpeech.Preposition,
+];
+
+export const PARTS_OF_SPEECH_PHRASES: PartOfSpeech[] = [
+  PartOfSpeech.PhrasalVerb,
+  PartOfSpeech.Idiom,
+  PartOfSpeech.Expression,
+  PartOfSpeech.ComplexPreposition,
 ];
 
 export const SAMPLE_TOPICS = [

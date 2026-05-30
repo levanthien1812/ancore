@@ -15,9 +15,14 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import { PAGE_SIZES } from "@/lib/constants/constant";
+import {
+  DEFAULT_WORDS_PER_PAGE_GRID,
+  PAGE_SIZES,
+} from "@/lib/constants/constant";
 import ActionsPanel from "./actions-panel";
 import Pagination from "./pagination";
+import { useQueryClient } from "@tanstack/react-query";
+import { QUERY_KEY } from "@/lib/constants/queryKey";
 
 const WordGrid = ({
   words,
@@ -29,6 +34,7 @@ const WordGrid = ({
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
+  const queryClient = useQueryClient();
 
   const columns = useMemo<ColumnDef<WordWithMeanings>[]>(
     () => [
@@ -96,7 +102,7 @@ const WordGrid = ({
   const [rowSelection, setRowSelection] = useState({});
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
-    pageSize: PAGE_SIZES[1],
+    pageSize: DEFAULT_WORDS_PER_PAGE_GRID,
   });
 
   const table = useReactTable({
@@ -172,7 +178,9 @@ const WordGrid = ({
           onUpdateSuccess={() => {
             setSelectedIds(new Set());
             setIsSelectMode(false);
+            queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
           }}
+          onCancel={() => handleToggleSelectMode(false)}
           isPending={isPending}
           startTransition={startTransition}
         />

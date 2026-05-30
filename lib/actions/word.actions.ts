@@ -13,6 +13,7 @@ import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
 import { authenticationAction } from "./_helpers";
 import { buildWordOfTheDayPrompt } from "../ai-prompts/word-of-the-day";
 import { generateWordOfTheDayWithAI } from "@/app/services/generate-word-of-the-day-with-ai";
+import { DEFAULT_WORDS_PER_REVIEW } from "../constants/constant";
 
 export const getWordListByFilter = async (wordFilter: WordFitler) =>
   authenticationAction(
@@ -477,7 +478,9 @@ export const getBestDay = async () =>
     };
   });
 
-export const getWordsToReview = async (limit: number = 10) =>
+export const getWordsToReview = async (
+  limit: number = DEFAULT_WORDS_PER_REVIEW,
+) =>
   authenticationAction(async (userId) => {
     // 1. Find unique wordIds that have a review session due,
     //    ordered by the earliest scheduledAt of their due sessions.
@@ -568,13 +571,21 @@ export const deleteWords = async (prevState: unknown, formData: FormData) =>
     }
   });
 
-export const bulkUpdateMasteryLevel = async (
-  prevState: unknown,
-  formData: FormData,
-) =>
+export const bulkUpdateWords = async (prevState: unknown, formData: FormData) =>
   authenticationAction(async (userId) => {
     const wordIds = formData.getAll("ids") as string[];
-    const masteryLevel = formData.get("masteryLevel") as MasteryLevel;
+    const masteryLevel = formData.get("masteryLevel") as MasteryLevel | null;
+    const highlightedStr = formData.get("highlighted") as string | null;
+
+    const data: Partial<Word> = {};
+    if (masteryLevel) data.masteryLevel = masteryLevel;
+    if (highlightedStr !== null) {
+      data.highlighted = toBoolean(highlightedStr);
+    }
+
+    if (Object.keys(data).length === 0) {
+      return { success: false, message: "No updates provided." };
+    }
 
     try {
       await prisma.word.updateMany({
@@ -582,9 +593,7 @@ export const bulkUpdateMasteryLevel = async (
           id: { in: wordIds },
           userId,
         },
-        data: {
-          masteryLevel,
-        },
+        data,
       });
 
       revalidatePath("/words");

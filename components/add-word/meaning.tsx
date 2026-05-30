@@ -12,7 +12,11 @@ import {
   useWatch,
 } from "react-hook-form";
 import FieldError from "../shared/field-error";
-import { CEFR_LEVELS, PARTS_OF_SPEECH } from "@/lib/constants/enums";
+import {
+  CEFR_LEVELS,
+  PARTS_OF_SPEECH,
+  PARTS_OF_SPEECH_PHRASES,
+} from "@/lib/constants/enums";
 import { WordWithMeanings } from "./add-word-form";
 import {
   Select,
@@ -52,6 +56,7 @@ const Meaning = memo(function Meaning({
   control,
   errors,
   count,
+  entryType,
 }: MeaningProps) {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -155,7 +160,10 @@ const Meaning = memo(function Meaning({
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {PARTS_OF_SPEECH.map((part) => (
+                  {(entryType === "word"
+                    ? PARTS_OF_SPEECH
+                    : PARTS_OF_SPEECH_PHRASES
+                  ).map((part) => (
                     <SelectItem key={part} value={part}>
                       {part}
                     </SelectItem>

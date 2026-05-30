@@ -7,8 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Button } from "@/components/ui/button";
 import { useLayout } from "@/components/layout/layout-context";
-
-const PAGE_SIZE = 50;
+import { DEFAULT_WORDS_PER_FETCH } from "@/lib/constants/constant";
 
 const WordsPage = () => {
   const {
@@ -24,7 +23,7 @@ const WordsPage = () => {
       try {
         const result = await getWordListByFilter({
           page: pageParam as number,
-          limit: PAGE_SIZE,
+          limit: DEFAULT_WORDS_PER_FETCH,
         });
         return result;
       } catch (err) {
@@ -33,7 +32,7 @@ const WordsPage = () => {
       }
     },
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage.words.length === PAGE_SIZE
+      return lastPage.words.length === DEFAULT_WORDS_PER_FETCH
         ? allPages.length + 1
         : undefined;
     },
