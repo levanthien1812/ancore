@@ -41,6 +41,18 @@ const SidebarItem = ({
   open: boolean;
   isActive: boolean;
 }) => {
+  const [popoverSide, setPopoverSide] = useState<"top" | "right">("right");
+
+  useEffect(() => {
+    const handleResize = () => {
+      // Update side based on the 'md' breakpoint (768px)
+      setPopoverSide(window.innerWidth < 768 ? "top" : "right");
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const linkContent = (
     <Link
       href={item.path}
@@ -67,7 +79,7 @@ const SidebarItem = ({
       <Popover open={item.showPopover}>
         <PopoverTrigger asChild>{linkContent}</PopoverTrigger>
         <PopoverContent
-          side="right"
+          side={popoverSide}
           align="center"
           sideOffset={12}
           className="w-64 p-3 bg-blue-50 border-blue-200 shadow-lg rounded-md z-50"

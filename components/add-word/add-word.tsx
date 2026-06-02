@@ -51,7 +51,11 @@ const AddOrEditWord = ({
           {triggerButton || defaultTriggerBtn}
         </DialogTrigger>
       )}
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent
+        className="sm:max-w-4xl"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{word ? "Edit word" : "Add new word"}</DialogTitle>
         </DialogHeader>
