@@ -2,7 +2,13 @@
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { MASTERY_LEVELS } from "@/lib/constants/enums";
 import { Button } from "../ui/button";
-import { ChevronDown } from "lucide-react";
+import {
+  ArrowDownAZ,
+  ChevronDown,
+  FunnelPlus,
+  FunnelX,
+  MousePointer2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -21,6 +27,7 @@ import {
 import { Checkbox } from "../ui/checkbox";
 import { Table } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
+import { useLayout } from "../layout/layout-context";
 
 type Props = {
   table: Table<WordWithMeanings>;
@@ -34,6 +41,7 @@ const WordFilter = ({
   onToggleSelectMode,
 }: Props) => {
   const [showFilters, setShowFilters] = useState(false);
+  const { mode } = useLayout();
 
   const handleResetFilter = () => {
     table.resetGlobalFilter();
@@ -72,33 +80,39 @@ const WordFilter = ({
   };
 
   return (
-    <div className="flex justify-between items-center gap-2">
-      <Input
-        placeholder="Search for words..."
-        value={(table.getState().globalFilter as string) ?? ""}
-        onChange={(event) => {
-          table.setGlobalFilter(event.target.value);
-        }}
-        className="w-full text-sm md:w-52"
-      />
-      <div className="flex flex-col items-end justify-center">
+    <>
+      <div className="flex justify-between items-center gap-2">
+        <Input
+          placeholder="🔎 Search for words..."
+          value={(table.getState().globalFilter as string) ?? ""}
+          onChange={(event) => {
+            table.setGlobalFilter(event.target.value);
+          }}
+          className="w-full text-sm md:w-52"
+        />
         <div className="flex justify-end gap-2">
           <Button
-            variant={"link"}
+            variant={"secondary"}
             onClick={() => onToggleSelectMode?.(!isSelectMode)}
-            className="p-0"
+            className=""
           >
-            {isSelectMode ? "Exit Select Mode" : "Select"}
+            <MousePointer2 width={16} />
+            <span className="hidden md:inline">
+              {isSelectMode ? "Exit Select Mode" : "Select"}
+            </span>
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
-                variant={"link"}
+                variant={"secondary"}
                 onClick={handleToggleFilters}
-                className="p-0"
+                className=""
               >
-                Sort by: {table.getState().sorting[0]?.id || "None"}{" "}
-                {table.getState().sorting[0]?.desc ? "⬇️" : "⬆️"}
+                <ArrowDownAZ width={16} />
+                <span className="hidden md:inline">
+                  Sort by: {table.getState().sorting[0]?.id || "None"}
+                </span>{" "}
+                <span>{table.getState().sorting[0]?.desc ? "⬇️" : "⬆️"}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -119,92 +133,85 @@ const WordFilter = ({
           </DropdownMenu>
 
           <Button
-            variant={"link"}
+            variant={"secondary"}
             onClick={handleToggleFilters}
-            className="p-0 gap-0.5"
+            className=" gap-0.5"
           >
-            {showFilters ? "Hide filters" : "Show filters"}
+            {showFilters ? <FunnelX width={16} /> : <FunnelPlus width={16} />}
+            <span className="hidden md:inline">
+              {showFilters ? "Hide filters" : "Show filters"}
+            </span>
+
             {areFiltersSet && (
               <div className="text-xs text-primary -translate-y-2">●</div>
             )}
           </Button>
         </div>
-        {showFilters && (
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 p-2 border rounded-md">
-            <Select
-              onValueChange={(value) =>
-                table.getColumn("masteryLevel")?.setFilterValue(value)
+      </div>
+      {showFilters && (
+        <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1">
+          <Select
+            onValueChange={(value) =>
+              table.getColumn("masteryLevel")?.setFilterValue(value)
+            }
+            value={table.getColumn("masteryLevel")?.getFilterValue() as string}
+          >
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Select Mastery level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {MASTERY_LEVELS.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <Select
+            onValueChange={(value) =>
+              table.getColumn("type")?.setFilterValue(value)
+            }
+            value={table.getColumn("type")?.getFilterValue() as string}
+          >
+            <SelectTrigger className="w-full md:w-32">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="Word">Word</SelectItem>
+                <SelectItem value="Phrase">Phrase</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="highlighted"
+              checked={
+                table.getColumn("highlighted")?.getFilterValue() === true
               }
-              value={
-                table.getColumn("masteryLevel")?.getFilterValue() as string
-              }
-            >
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Select Mastery level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {MASTERY_LEVELS.map((level) => (
-                    <SelectItem key={level} value={level}>
-                      {level}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <Select
-              onValueChange={(value) =>
-                table.getColumn("type")?.setFilterValue(value)
-              }
-              value={table.getColumn("type")?.getFilterValue() as string}
-            >
-              <SelectTrigger className="w-full md:w-32">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="Word">Word</SelectItem>
-                  <SelectItem value="Phrase">Phrase</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="highlighted"
-                checked={
-                  table.getColumn("highlighted")?.getFilterValue() === true
+              onCheckedChange={(checked) => {
+                const highlightedColumn = table.getColumn("highlighted");
+                if (highlightedColumn) {
+                  highlightedColumn.setFilterValue(checked ? true : undefined);
                 }
-                onCheckedChange={(checked) => {
-                  const highlightedColumn = table.getColumn("highlighted");
-                  if (highlightedColumn) {
-                    highlightedColumn.setFilterValue(
-                      checked ? true : undefined,
-                    );
-                  }
-                }}
-              />
-              <label
-                htmlFor="highlighted"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Highlighted
-              </label>
-            </div>
-            <div className="flex items-center gap-2 w-full">
-              {areFiltersSet && (
-                <Button
-                  variant={"default"}
-                  onClick={handleResetFilter}
-                  className="flex-1 md:w-auto"
-                >
-                  Reset filter
-                </Button>
-              )}
+              }}
+            />
+            <label
+              htmlFor="highlighted"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Highlighted
+            </label>
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            {mode === "list" && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="outline"
-                    className="ml-auto flex-1 md:flex-0 md:w-fit"
+                    className="flex-1 md:flex-0 md:w-fit"
                   >
                     Columns <ChevronDown />
                   </Button>
@@ -229,11 +236,20 @@ const WordFilter = ({
                     })}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
+            )}
+            {areFiltersSet && (
+              <Button
+                variant={"default"}
+                onClick={handleResetFilter}
+                className="flex-1 md:flex-0 md:w-fit"
+              >
+                Reset filter
+              </Button>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 };
 
