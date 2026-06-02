@@ -9,6 +9,7 @@ interface WordSuggestProps {
   setEnteredWord: (value: string) => void;
   existingWord?: string;
   entryType?: "word" | "phrase";
+  onPaste?: (e: React.ClipboardEvent) => void;
 }
 
 const WordSuggest = memo(function WordSuggest({
@@ -16,6 +17,7 @@ const WordSuggest = memo(function WordSuggest({
   setEnteredWord,
   existingWord,
   entryType = "word",
+  onPaste,
 }: WordSuggestProps) {
   const [suggestedWordList, setSuggestedWordList] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -83,6 +85,7 @@ const WordSuggest = memo(function WordSuggest({
         value={enteredWord}
         onChange={(e) => handleWordChange(e.target.value)}
         className="mt-1"
+        onPaste={onPaste}
       />
       {showSuggestions && entryType === "word" && (
         <div className="absolute w-full top-14 left-0 bg-white border p-2 rounded-md z-20">

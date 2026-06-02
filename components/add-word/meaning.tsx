@@ -14,6 +14,7 @@ import {
 import FieldError from "../shared/field-error";
 import {
   CEFR_LEVELS,
+  CEFRLevel,
   PARTS_OF_SPEECH,
   PARTS_OF_SPEECH_PHRASES,
 } from "@/lib/constants/enums";
@@ -28,6 +29,9 @@ import {
 } from "../ui/select";
 import { ChevronUp, Ellipsis, Plus, Trash, Volume2Icon } from "lucide-react";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { formatPronunciation } from "@/lib/utils/pronunciation";
+import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
+import { INITIAL_MEANING } from "@/lib/constants/initial-values";
 import IconDisplay from "../shared/icon-display";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
@@ -136,6 +140,37 @@ const Meaning = memo(function Meaning({
   const handlePasteDefinition = (
     e: React.ClipboardEvent<HTMLTextAreaElement>,
   ) => {
+    const currentDef = getValues(`meanings.${index}.definition`);
+    if (currentDef && currentDef.trim() !== "") {
+      return;
+    }
+    const htmlData = e.clipboardData.getData("text/html");
+    const parsed = parseWordFromCambridge(htmlData, true);
+
+    if (parsed) {
+      e.preventDefault();
+      const newMeaning = {
+        ...INITIAL_MEANING,
+        id: "temp-" + Math.random(),
+        definition: parsed.definition,
+        pronunciation: parsed.pronunciation || null,
+        partOfSpeech: parsed.pos || null,
+        cefrLevel:
+          parsed.cefr && CEFR_LEVELS.includes(parsed.cefr as CEFRLevel)
+            ? (parsed.cefr as CEFRLevel)
+            : null,
+        examples: parsed.examples.length > 0 ? parsed.examples : [""],
+      };
+
+      setValue(`meanings.${index}.definition`, newMeaning.definition);
+      setValue(`meanings.${index}.pronunciation`, newMeaning.pronunciation);
+      setValue(`meanings.${index}.partOfSpeech`, newMeaning.partOfSpeech);
+      setValue(`meanings.${index}.cefrLevel`, newMeaning.cefrLevel);
+      setValue(`meanings.${index}.examples`, newMeaning.examples);
+      toast.success("Populated current meaning block");
+      return;
+    }
+
     const text = e.clipboardData.getData("text/plain");
     if (text) {
       e.preventDefault();
@@ -153,7 +188,7 @@ const Meaning = memo(function Meaning({
     const text = e.clipboardData.getData("text/plain");
     if (text) {
       e.preventDefault();
-      const cleaned = text.trim();
+      const cleaned = formatPronunciation(text.trim());
       setValue(`meanings.${index}.pronunciation`, cleaned);
     }
   };

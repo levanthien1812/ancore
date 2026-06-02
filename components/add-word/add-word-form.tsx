@@ -45,6 +45,7 @@ import { BookOpen, Info, Layers2, Plus, Sparkles, X } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
+import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -297,6 +298,47 @@ const AddOrEditWordForm = ({
     setValue("tags", updatedTags.join(", "));
   };
 
+  const handlePasteWord = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    if (enteredWord.trim().length > 0) {
+      toast.info("Please clear the word input before pasting new content");
+      return;
+    }
+    const parsedContent = parseWordFromCambridge(
+      e.clipboardData.getData("text/html"),
+    );
+
+    if (!parsedContent) {
+      return;
+    }
+
+    const {
+      word: parsedWord,
+      definition,
+      pronunciation,
+      pos,
+      cefr,
+      examples,
+    } = parsedContent;
+
+    handleWordChange(parsedWord);
+    replace([
+      {
+        ...INITIAL_MEANING,
+        id: "temp-" + Math.random(),
+        definition,
+        pronunciation: pronunciation || null,
+        partOfSpeech: pos || null,
+        cefrLevel:
+          cefr && CEFR_LEVELS.includes(cefr as CEFRLevel)
+            ? (cefr as CEFRLevel)
+            : null,
+        examples: examples.length > 0 ? examples : [""],
+      },
+    ]);
+    toast.success("Imported details from Cambridge Dictionary");
+  };
+
   useEffect(() => {
     if (initialWord && !word && !wordOfTheDay) {
       checkWord(initialWord);
@@ -373,6 +415,7 @@ const AddOrEditWordForm = ({
                   setEnteredWord={handleWordChange}
                   existingWord={word?.word || wordOfTheDay?.word}
                   entryType={entryType}
+                  onPaste={handlePasteWord}
                 />
                 <Button
                   variant={"outline"}
