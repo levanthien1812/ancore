@@ -133,6 +133,31 @@ const Meaning = memo(function Meaning({
     updateExamples(newList);
   };
 
+  const handlePasteDefinition = (
+    e: React.ClipboardEvent<HTMLTextAreaElement>,
+  ) => {
+    const text = e.clipboardData.getData("text/plain");
+    if (text) {
+      e.preventDefault();
+      let cleaned = text.trim();
+      if (cleaned.endsWith(":")) {
+        cleaned = cleaned.slice(0, -1).trim();
+      }
+      setValue(`meanings.${index}.definition`, cleaned);
+    }
+  };
+
+  const handlePastePronunciation = (
+    e: React.ClipboardEvent<HTMLInputElement>,
+  ) => {
+    const text = e.clipboardData.getData("text/plain");
+    if (text) {
+      e.preventDefault();
+      const cleaned = text.trim();
+      setValue(`meanings.${index}.pronunciation`, cleaned);
+    }
+  };
+
   const handleSetAsPrimary = () => {
     // move primary meaning to the begining
     const meanings = getValues("meanings");
@@ -229,6 +254,7 @@ const Meaning = memo(function Meaning({
                 id="definition"
                 required
                 {...register(`meanings.${index}.definition`)}
+                onPaste={handlePasteDefinition}
               />
             </div>
             <div className="grid gap-1">
@@ -239,6 +265,7 @@ const Meaning = memo(function Meaning({
                 <Input
                   id="pronunciation"
                   {...register(`meanings.${index}.pronunciation`)}
+                  onPaste={handlePastePronunciation}
                 />
                 <Button
                   type="button"

@@ -118,23 +118,22 @@ const AddOrEditWordForm = ({
       .filter(Boolean);
   }, [watchedTags]);
 
-  const { mutate: checkWordExistsMutate, isPending: isCheckingWordExists } =
-    useMutation({
-      mutationKey: ["checkWordExists"],
-      mutationFn: async (wordToCheck: string) => {
-        const exists = await checkWordExists(wordToCheck);
-        return exists;
-      },
-      onSuccess: (exists) => {
-        if (exists) {
-          setWordExistsError(
-            `The word "${enteredWord}" already exists in your vocabulary.`,
-          );
-        } else {
-          setWordExistsError(null);
-        }
-      },
-    });
+  const { mutate: checkWordExistsMutate } = useMutation({
+    mutationKey: ["checkWordExists"],
+    mutationFn: async (wordToCheck: string) => {
+      const exists = await checkWordExists(wordToCheck);
+      return exists;
+    },
+    onSuccess: (exists) => {
+      if (exists) {
+        setWordExistsError(
+          `The word "${enteredWord}" already exists in your vocabulary.`,
+        );
+      } else {
+        setWordExistsError(null);
+      }
+    },
+  });
 
   const checkWord = useCallback(
     async (wordToCheck: string) => {
