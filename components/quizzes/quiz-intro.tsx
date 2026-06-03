@@ -1,13 +1,28 @@
 "use client";
-
-import React, { useTransition, useState, useEffect } from "react";
+import { useTransition, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { createQuizSession } from "@/lib/actions/quiz.actions";
+import {
+  createQuizSession,
+  getLatestIncompleteQuiz,
+} from "@/lib/actions/quiz.actions";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import quizIllustration from "@/public/images/quiz-illustration.jpg";
+import { useQuery } from "@tanstack/react-query";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import { deleteQuiz } from "@/lib/actions/quiz.actions";
+import { format } from "date-fns";
 
 const QuizIntro = ({
   wordsToQuizCount,
@@ -21,6 +36,7 @@ const QuizIntro = ({
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
   const [progress, setProgress] = useState(0);
+  const [showIncompleteDialog, setShowIncompleteDialog] = useState(false);
 
   // Simulated progress logic
   useEffect(() => {
@@ -45,11 +61,43 @@ const QuizIntro = ({
       const result = await createQuizSession(wordsToQuizCount, specificWords);
       if (result.success && result.quizId) {
         router.push(`/quizzes/${result.quizId}`);
+        localStorage.removeItem("incompleteQuizId");
       } else {
         // TODO: Implement user-friendly error handling, e.g., a toast notification
         console.error(result.message || "Failed to start quiz session.");
       }
     });
+  };
+
+  const { data: incompleteQuiz } = useQuery({
+    queryKey: ["latestIncompleteQuiz"],
+    queryFn: async () => {
+      const quiz = await getLatestIncompleteQuiz();
+      const storedQuizId = localStorage.getItem("incompleteQuizId");
+      if (quiz && quiz.id !== storedQuizId) {
+        setShowIncompleteDialog(true);
+      }
+      return quiz;
+    },
+    enabled: true,
+  });
+
+  const handleContinue = () => {
+    if (incompleteQuiz) {
+      router.push(`/quizzes/${incompleteQuiz.id}`);
+      localStorage.removeItem("incompleteQuizId");
+    }
+  };
+
+  const handleStartNew = async () => {
+    if (incompleteQuiz && incompleteQuiz.answeredCount === 0) {
+      await deleteQuiz(incompleteQuiz.id);
+    }
+    localStorage.setItem(
+      "incompleteQuizId",
+      incompleteQuiz ? incompleteQuiz.id : "",
+    );
+    setShowIncompleteDialog(false);
   };
 
   if (wordsToQuizCount === 0) {
@@ -100,6 +148,31 @@ const QuizIntro = ({
           </div>
         )}
       </div>
+
+      <AlertDialog
+        open={showIncompleteDialog}
+        onOpenChange={setShowIncompleteDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Incomplete Quiz Found</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have an unfinished quiz from{" "}
+              {incompleteQuiz &&
+                format(new Date(incompleteQuiz.createdAt), "PPP")}
+              . Would you like to continue it or start a new one?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleStartNew}>
+              Start New Quiz
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleContinue}>
+              Continue Quiz
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

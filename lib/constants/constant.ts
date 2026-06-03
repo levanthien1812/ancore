@@ -272,3 +272,19 @@ export const ENGLISH_TOPICS = [
     ],
   },
 ];
+
+export enum QuizEvaluationLevel {
+  NeedsPractice = "Needs Practice",
+  Fair = "Fair",
+  Good = "Good",
+  Awesome = "Awesome",
+  Outstanding = "Outstanding",
+}
+
+export enum QuizEvaluationEncouragement {
+  NeedsPractice = "Don't worry, keep practicing and you'll get there!",
+  Fair = "Not bad! A little more effort and you'll improve.",
+  Good = "Good job! You're on the right track.",
+  Awesome = "Awesome work! Keep it up!",
+  Outstanding = "Outstanding performance! You're doing amazing!",
+}

@@ -1,7 +1,4 @@
-import {
-  getWordsToQuiz,
-  getLatestIncompleteQuiz,
-} from "@/lib/actions/quiz.actions";
+import { getWordsToQuiz } from "@/lib/actions/quiz.actions";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import QuizzesTabsWrapper from "@/components/quizzes/quizzes-tabs-wrapper";
 import { Suspense } from "react";
@@ -17,8 +14,6 @@ const QuizzesPage = async ({ searchParams }: QuizzesPageProps) => {
   let words: WordWithMeanings[] = [];
   let estimatedTimeInMinutes = 0;
 
-  const incompleteQuiz = await getLatestIncompleteQuiz();
-
   if (wordsParam) {
     // Parse the words from URL parameter (comma-separated)
     const wordList = wordsParam.split(",").map((w) => w.trim());
@@ -33,14 +28,13 @@ const QuizzesPage = async ({ searchParams }: QuizzesPageProps) => {
   }
 
   return (
-    <div className="w-full max-w-[520px] mx-auto h-full py-2 px-2 sm:px-4 md:px-0">
+    <div className="sm:min-w-[520px] sm:max-w-[25%] mx-auto h-full py-2 px-2 sm:px-4 md:px-0">
       <Suspense fallback={<div className="text-center py-8">Loading...</div>}>
         <QuizzesTabsWrapper
           words={words}
           estimatedTimeInMinutes={estimatedTimeInMinutes}
           wordsParam={wordsParam}
           initialTab={params.tab || "start"}
-          incompleteQuiz={incompleteQuiz}
         />
       </Suspense>
     </div>
