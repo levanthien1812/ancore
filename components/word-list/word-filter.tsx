@@ -8,6 +8,7 @@ import {
   FunnelPlus,
   FunnelX,
   MousePointer2,
+  MousePointer2Off,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -96,7 +97,11 @@ const WordFilter = ({
             onClick={() => onToggleSelectMode?.(!isSelectMode)}
             className=""
           >
-            <MousePointer2 width={16} />
+            {isSelectMode ? (
+              <MousePointer2Off width={16} />
+            ) : (
+              <MousePointer2 width={16} />
+            )}
             <span className="hidden md:inline">
               {isSelectMode ? "Exit Select Mode" : "Select"}
             </span>

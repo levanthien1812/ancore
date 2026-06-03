@@ -46,6 +46,7 @@ import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
 import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
+import PasteWordTips from "./paste-word-tips";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -319,6 +320,8 @@ const AddOrEditWordForm = ({
       pos,
       cefr,
       examples,
+      synonyms,
+      antonyms,
     } = parsedContent;
 
     handleWordChange(parsedWord);
@@ -334,6 +337,8 @@ const AddOrEditWordForm = ({
             ? (cefr as CEFRLevel)
             : null,
         examples: examples.length > 0 ? examples : [""],
+        synonyms: synonyms || null,
+        antonyms: antonyms || null,
       },
     ]);
     toast.success("Imported details from Cambridge Dictionary");
@@ -465,21 +470,24 @@ const AddOrEditWordForm = ({
             <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
           </div>
           {wordExistsError && <FieldError error={wordExistsError} />}
-          <div className="flex gap-2 mt-4">
-            <Checkbox
-              id="highlighted"
-              {...register("highlighted")}
-              checked={highlighted}
-              onCheckedChange={(value) => setValue("highlighted", !!value)}
-            />
-            <div>
-              <Label htmlFor="highlighted" className="text-right">
-                Highlighed
-              </Label>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Mark this word as highlighted in your content
-              </p>
+          <div className="flex justify-between gap-2 items-end">
+            <div className="flex gap-2 mt-4">
+              <Checkbox
+                id="highlighted"
+                {...register("highlighted")}
+                checked={highlighted}
+                onCheckedChange={(value) => setValue("highlighted", !!value)}
+              />
+              <div>
+                <Label htmlFor="highlighted" className="text-right">
+                  Highlighed
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Mark this word as highlighted in your content
+                </p>
+              </div>
             </div>
+            <PasteWordTips />
           </div>
         </div>
       </div>

@@ -23,9 +23,10 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
 
   const wordText = wordElement.textContent?.trim() || "";
   const pos = doc.querySelector(".pos.dpos")?.textContent?.trim();
-  const pronunciationRaw = doc
-    .querySelector(".us.dpron-i .ipa.dipa")
-    ?.textContent?.trim();
+  const pronunciationRaw = (
+    doc.querySelector(".us.dpron-i .ipa.dipa") ||
+    doc.querySelector(".uk.dpron-i .ipa.dipa")
+  )?.textContent?.trim();
   const pronunciation = formatPronunciation(pronunciationRaw);
 
   const cefr = doc.querySelector(".epp-xref.dxref")?.textContent?.trim();
@@ -39,6 +40,16 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     .filter((t): t is string => !!t)
     .slice(0, 10);
 
+  const synonyms = Array.from(doc.querySelectorAll(".xref.synonym .x-h.dx-h"))
+    .map((el) => el.textContent?.trim())
+    .filter((t): t is string => !!t)
+    .join(", ");
+
+  const antonyms = Array.from(doc.querySelectorAll(".xref.opposites .x-h.dx-h"))
+    .map((el) => el.textContent?.trim())
+    .filter((t): t is string => !!t)
+    .join(", ");
+
   return {
     word: wordText,
     pos,
@@ -46,5 +57,7 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     cefr,
     definition,
     examples,
+    synonyms,
+    antonyms,
   };
 };
