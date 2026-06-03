@@ -7,6 +7,7 @@ export interface WordDefinitionOutput {
     definition: string;
     partOfSpeech?: string;
     examples?: string[];
+    guideWord?: string;
     synonyms?: string;
     antonyms?: string;
   }>;

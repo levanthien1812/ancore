@@ -1,5 +1,5 @@
 import type { WordMeaning } from "@prisma/client";
-import { NotebookPen, Quote, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Dot, NotebookPen, Quote, ThumbsDown, ThumbsUp } from "lucide-react";
 import { Badge } from "../ui/badge";
 import IconDisplay from "../shared/icon-display";
 
@@ -34,9 +34,27 @@ const WordMeaning = ({
       key={meaning.id}
       className="text-white border border-white/40 rounded-lg p-4 max-h-[420px] no-scrollbar overflow-y-auto h-full"
     >
-      {meaning.partOfSpeech && (
-        <p className="font-bold text-blue-400">{meaning.partOfSpeech}</p>
-      )}
+      <div className="">
+        {meaning.partOfSpeech && (
+          <span className="font-bold text-blue-400">
+            {meaning.partOfSpeech}
+          </span>
+        )}
+        {meaning.partOfSpeech && meaning.guideWord && (
+          <Dot
+            width={16}
+            height={16}
+            color="white"
+            opacity={0.5}
+            className="inline"
+          />
+        )}
+        {meaning.guideWord && (
+          <span className="text-sm font-bold text-purple-300">
+            [{meaning.guideWord.toUpperCase()}]
+          </span>
+        )}
+      </div>
       <p className=" text-xl font-bold">{meaning.definition}</p>
       {examples.length > 0 && (
         <>

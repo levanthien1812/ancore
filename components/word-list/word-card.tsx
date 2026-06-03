@@ -68,7 +68,7 @@ const WordCard = ({
               icon={Volume2Icon}
               asButton
               size="sm"
-              onClick={(e) => handlePlayAudio(word.word)}
+              onClick={() => handlePlayAudio(word.word)}
             />
           </div>
           <div className="flex items-center">

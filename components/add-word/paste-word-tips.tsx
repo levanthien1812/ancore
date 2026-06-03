@@ -57,7 +57,7 @@ const PasteWordTips = () => {
             vocabulary list without having to type them out manually.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar p-2">
           <div>
             <h4 className="font-medium">1. Copy a Word</h4>
             <p className="text-sm text-muted-foreground">

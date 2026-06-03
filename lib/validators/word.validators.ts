@@ -3,6 +3,7 @@ import { CEFRLevel, MasteryLevel } from "../constants/enums";
 
 export const saveWordMeaningSchema = z.object({
   definition: z.string().trim().min(1, "Definition is required."),
+  guideWord: z.string().trim().optional().nullable(),
   pronunciation: z.string().trim().optional().nullable(),
   cefrLevel: z.nativeEnum(CEFRLevel).optional().nullable(),
   partOfSpeech: z.string().trim().optional().nullable(),
