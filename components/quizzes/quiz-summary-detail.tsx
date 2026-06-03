@@ -12,6 +12,7 @@ import { QuizWithAnswers } from "@/lib/type";
 import Image from "next/image";
 import Medal from "@/public/images/medal.png";
 import AnswerCard from "./answer-card";
+import { QuizEvaluationEncouragement } from "@/lib/constants/constant";
 
 const QuizSummaryDetail = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const [showDetails, setShowDetails] = useState(false);
@@ -23,6 +24,18 @@ const QuizSummaryDetail = ({ quiz }: { quiz: QuizWithAnswers }) => {
   // );
 
   const correctCount = quiz.quizAnswers.filter((a) => a.isCorrect).length;
+
+  const getEncouragement = () => {
+    const total = quiz.quizAnswers.length;
+    if (total === 0) return "";
+    const percentage = (correctCount / total) * 100;
+
+    if (percentage === 100) return QuizEvaluationEncouragement.Outstanding;
+    if (percentage >= 85) return QuizEvaluationEncouragement.Awesome;
+    if (percentage >= 70) return QuizEvaluationEncouragement.Good;
+    if (percentage >= 50) return QuizEvaluationEncouragement.Fair;
+    return QuizEvaluationEncouragement.NeedsPractice;
+  };
 
   return (
     <div className="space-y-2 flex-1">
@@ -36,9 +49,7 @@ const QuizSummaryDetail = ({ quiz }: { quiz: QuizWithAnswers }) => {
             <span className="text-green-500 text-2xl">{correctCount}</span> out
             of {quiz.quizAnswers.length} correct!
           </p>
-          <p className="text-sm text-muted-foreground">
-            Good effort! Keep it up!
-          </p>
+          <p className="text-sm text-muted-foreground">{getEncouragement()}</p>
         </div>
       </div>
 

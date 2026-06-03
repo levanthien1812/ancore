@@ -14,6 +14,7 @@ import {
 import { generateDistractorsWithAi } from "@/app/services/generate-distractors-with-ai";
 import { QuizAnswerWithQuestion, QuizWithAnswers } from "../type";
 import { authenticationAction } from "./_helpers";
+import { revalidatePath } from "next/cache";
 
 export const createQuizSession = async (
   wordCount: number = 5,
@@ -809,7 +810,6 @@ export const getLatestIncompleteQuiz = async () =>
     const quiz = await prisma.quiz.findFirst({
       where: {
         userId,
-        completedAt: null,
       },
       orderBy: {
         createdAt: "desc",
@@ -823,7 +823,7 @@ export const getLatestIncompleteQuiz = async () =>
       },
     });
 
-    if (!quiz) return null;
+    if (!quiz || quiz.completedAt !== null) return null;
 
     const answeredCount = quiz.quizAnswers.filter(
       (a) => a.userAnswer !== null,
@@ -839,9 +839,13 @@ export const getLatestIncompleteQuiz = async () =>
 
 export const deleteQuiz = async (quizId: string) =>
   authenticationAction(async (userId) => {
+    console.log(quizId);
     await prisma.$transaction([
       prisma.quizAnswer.deleteMany({ where: { quizId } }),
       prisma.quiz.delete({ where: { id: quizId, userId } }),
     ]);
+
+    revalidatePath("/quizzes");
+
     return { success: true };
   });
