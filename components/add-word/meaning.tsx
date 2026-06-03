@@ -160,6 +160,8 @@ const Meaning = memo(function Meaning({
             ? (parsed.cefr as CEFRLevel)
             : null,
         examples: parsed.examples.length > 0 ? parsed.examples : [""],
+        synonyms: parsed.synonyms || null,
+        antonyms: parsed.antonyms || null,
       };
 
       setValue(`meanings.${index}.definition`, newMeaning.definition);
@@ -167,6 +169,9 @@ const Meaning = memo(function Meaning({
       setValue(`meanings.${index}.partOfSpeech`, newMeaning.partOfSpeech);
       setValue(`meanings.${index}.cefrLevel`, newMeaning.cefrLevel);
       setValue(`meanings.${index}.examples`, newMeaning.examples);
+      setValue(`meanings.${index}.synonyms`, newMeaning.synonyms);
+      setValue(`meanings.${index}.antonyms`, newMeaning.antonyms);
+
       toast.success("Populated current meaning block");
       return;
     }
