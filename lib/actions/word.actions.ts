@@ -185,10 +185,10 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       revalidatePath("/words");
 
       return { success: true, message: "Word saved successfully." };
-    } catch (error) {
+    } catch (error: any) {
       return {
         success: false,
-        message: "Database error: Failed to save word.",
+        message: error.message || "Database error: Failed to save word.",
       };
     }
   });
@@ -642,6 +642,7 @@ export const fillWithAI = async (
           meanings: existingWord.meanings.map((m) => ({
             definition: m.definition,
             pronunciation: m.pronunciation || undefined,
+            guideWord: m.guideWord || undefined,
             cefrLevel: m.cefrLevel || undefined,
             partOfSpeech: m.partOfSpeech || undefined,
             examples: m.examples,

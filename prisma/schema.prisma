@@ -125,6 +125,7 @@ model WordMeaning {
   wordId        String
   word          Word             @relation(fields: [wordId], references: [id])
   definition    String
+  guideWord     String?
   pronunciation String?
   cefrLevel     DifficultyLevel?
   partOfSpeech  String?

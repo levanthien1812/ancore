@@ -207,6 +207,7 @@ const AddOrEditWordForm = ({
         id: `${index}`,
         wordId: word?.id ?? "",
         definition: meaning.definition,
+        guideWord: meaning.guideWord?.toLowerCase() || null,
         pronunciation: meaning.pronunciation ?? null,
         cefrLevel:
           meaning.cefrLevel &&
@@ -322,6 +323,7 @@ const AddOrEditWordForm = ({
       examples,
       synonyms,
       antonyms,
+      guideWord,
     } = parsedContent;
 
     handleWordChange(parsedWord);
@@ -330,6 +332,7 @@ const AddOrEditWordForm = ({
         ...INITIAL_MEANING,
         id: "temp-" + Math.random(),
         definition,
+        guideWord: guideWord ?? null,
         pronunciation: pronunciation || null,
         partOfSpeech: pos || null,
         cefrLevel:
@@ -469,7 +472,9 @@ const AddOrEditWordForm = ({
             </div>
             <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
           </div>
-          {wordExistsError && <FieldError error={wordExistsError} />}
+          {(wordExistsError || !state?.success) && (
+            <FieldError error={wordExistsError || state?.message} />
+          )}
           <div className="flex justify-between gap-2 items-end">
             <div className="flex gap-2 mt-4">
               <Checkbox

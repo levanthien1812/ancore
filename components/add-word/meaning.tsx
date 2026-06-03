@@ -153,6 +153,7 @@ const Meaning = memo(function Meaning({
         ...INITIAL_MEANING,
         id: "temp-" + Math.random(),
         definition: parsed.definition,
+        guideWord: parsed.guideWord?.toLowerCase() || null,
         pronunciation: parsed.pronunciation || null,
         partOfSpeech: parsed.pos || null,
         cefrLevel:
@@ -165,6 +166,7 @@ const Meaning = memo(function Meaning({
       };
 
       setValue(`meanings.${index}.definition`, newMeaning.definition);
+      setValue(`meanings.${index}.guideWord`, newMeaning.guideWord);
       setValue(`meanings.${index}.pronunciation`, newMeaning.pronunciation);
       setValue(`meanings.${index}.partOfSpeech`, newMeaning.partOfSpeech);
       setValue(`meanings.${index}.cefrLevel`, newMeaning.cefrLevel);
@@ -392,6 +394,18 @@ const Meaning = memo(function Meaning({
                   </Select>
                 )}
               />
+            </div>
+            <div className="grid gap-1">
+              <Label htmlFor="guideWord" className="text-right">
+                Guide Word
+              </Label>
+              <Input
+                id="guideWord"
+                {...register(`meanings.${index}.guideWord`)}
+              />
+              <p className="text-xs text-muted-foreground">
+                A word that helps clarify the meaning
+              </p>
             </div>
             <div className="grid gap-1">
               <Label htmlFor="synonyms" className="text-right">

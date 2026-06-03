@@ -6,6 +6,7 @@ export const INITIAL_MEANING: WordMeaning = {
   id: "",
   wordId: "",
   definition: "",
+  guideWord: "",
   pronunciation: "",
   cefrLevel: null,
   partOfSpeech: "",
