@@ -8,7 +8,7 @@ const ReviewPage = async () => {
   const wordsToReviewCount = await getWordsToReviewCount();
 
   return (
-    <div className="w-full max-w-[520px] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
+    <div className="sm:min-w-[520px] sm:max-w-[25%] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
       <Tabs defaultValue="start" className="h-full flex flex-col">
         <TabsList className="mx-auto sticky">
           <TabsTrigger value="start" className="text-sm">

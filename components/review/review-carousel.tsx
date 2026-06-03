@@ -88,6 +88,10 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
         });
         setStudySession(studySession);
       }
+
+      const audio = new Audio("/sounds/applause-sound.mp3");
+      audio.play().catch((err) => console.error("Audio play failed:", err));
+
       setSessionFinished(true);
     });
   };
