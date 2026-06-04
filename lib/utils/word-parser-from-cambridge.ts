@@ -9,7 +9,9 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
 
   // Check for Cambridge Dictionary specific classes
   const wordElement =
-    doc.querySelector(".hw.dhw") || doc.querySelector(".hw.dsense_hw");
+    doc.querySelector(".hw.dhw") ||
+    doc.querySelector(".hw.dsense_hw") ||
+    doc.querySelector(".headword.dhw");
   if (!wordElement && !silent) {
     if (!silent) {
       toast.error(
