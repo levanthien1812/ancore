@@ -24,11 +24,11 @@ const NoteDetailModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="md:max-w-[40%] md:min-w-[520px]">
         <DialogHeader>
           <DialogTitle>{note.title || "Untitled"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-60 custom-scrollbar-y">
           <div className="bg-muted p-4 rounded-lg border border-border">
             <div
               className="prose prose-sm max-w-none"

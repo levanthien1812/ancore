@@ -13,6 +13,13 @@ import AddNote from "@/components/add-note/add-note";
 import ConfirmActionDialog from "@/components/shared/confirm-action-dialog";
 import NoteDetailModal from "./note-detail-modal";
 import type { Note } from "@prisma/client";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Ellipsis } from "lucide-react";
+import IconDisplay from "@/components/shared/icon-display";
 
 interface NoteCardProps {
   note: Note;
@@ -21,7 +28,6 @@ interface NoteCardProps {
 const NoteCard = ({ note }: NoteCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const queryClient = useQueryClient();
 
   const getTextContent = (html: string) => {
@@ -68,77 +74,87 @@ const NoteCard = ({ note }: NoteCardProps) => {
   return (
     <>
       <Card
-        className={`hover:shadow-md transition-shadow ${
+        className={`hover:shadow-md transition-shadow cursor-pointer ${
           note.highlighted ? "border-yellow-400 bg-yellow-50" : ""
         }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => setShowDetailModal(true)}
       >
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">
               {note.title || "Untitled"}
             </CardTitle>
-            <div
-              className={`flex gap-1 transition-opacity ${isHovered ? "opacity-100" : "opacity-0"}`}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDetailModal(true);
-                }}
-                title="View detail"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  highlightMutation.mutate(note.id);
-                }}
-                className={note.highlighted ? "text-yellow-500" : ""}
-                title="Toggle highlight"
-              >
-                <Star className="h-4 w-4" />
-              </Button>
-              <AddNote
-                note={note}
-                triggerButton={
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                }
-              />
-              <ConfirmActionDialog
-                showDialog={showDeleteDialog}
-                setShowDialog={setShowDeleteDialog}
-                handleDelete={handleDelete}
-                message={`Are you sure you want to delete "${note.title || "this note"}"? This action cannot be undone.`}
-                title="Delete Note"
-                triggerButton={
+            <Popover>
+              <PopoverTrigger asChild>
+                <IconDisplay
+                  icon={Ellipsis}
+                  iconColor="text-primary"
+                  asButton
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-fit p-1">
+                <div className={`flex gap-1`}>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowDeleteDialog(true);
+                      setShowDetailModal(true);
                     }}
+                    title="View detail"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
                   </Button>
-                }
-                actionText="Delete"
-                isLoading={deleteMutation.isPending}
-              />
-            </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      highlightMutation.mutate(note.id);
+                    }}
+                    className={note.highlighted ? "text-yellow-500" : ""}
+                    title="Toggle highlight"
+                  >
+                    <Star className="h-4 w-4" />
+                  </Button>
+                  <AddNote
+                    note={note}
+                    triggerButton={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    }
+                  />
+                  <ConfirmActionDialog
+                    showDialog={showDeleteDialog}
+                    setShowDialog={setShowDeleteDialog}
+                    handleDelete={handleDelete}
+                    message={`Are you sure you want to delete "${note.title || "this note"}"? This action cannot be undone.`}
+                    title="Delete Note"
+                    triggerButton={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowDeleteDialog(true);
+                        }}
+                        className="text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    }
+                    actionText="Delete"
+                    isLoading={deleteMutation.isPending}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardHeader>
         <CardContent>
