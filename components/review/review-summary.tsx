@@ -9,8 +9,10 @@ import { StudySessionWithWordReviews } from "@/lib/type";
 
 const ReviewSummary = ({
   studySession,
+  onReviewMore,
 }: {
   studySession: StudySessionWithWordReviews;
+  onReviewMore: () => void;
 }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full">
@@ -24,8 +26,8 @@ const ReviewSummary = ({
           </div>
           <ReviewSummaryDetail studySession={studySession} />
           <div className="flex gap-4 justify-center pt-4">
-            <Button asChild>
-              <Link href="/review">Review More</Link>
+            <Button asChild onClick={onReviewMore}>
+              Review more
             </Button>
             <Button variant="outline" asChild>
               <Link href="/dashboard">Go to Dashboard</Link>

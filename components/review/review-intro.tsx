@@ -60,6 +60,11 @@ const ReviewIntro = ({ count }: { count: number }) => {
     setIsPopoverOpen(false);
   };
 
+  const handleReviewMore = () => {
+    setStarted(false);
+    refetch();
+  };
+
   if (count === 0) {
     return (
       <div className="flex flex-col justify-center items-center gap-4 border rounded-lg p-4 text-center h-full">
@@ -77,7 +82,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
   if (started && words && words.length > 0) {
     return (
       <div className="h-full">
-        <ReviewCarousel words={words} />
+        <ReviewCarousel words={words} onReviewMore={handleReviewMore} />
       </div>
     );
   }

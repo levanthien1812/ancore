@@ -169,8 +169,8 @@ export const logWordReview = async (
     const log = await prisma.studySession.update({
       where: { id: logId, userId },
       data: {
-        completedAt: new Date(),
         ...summary,
+        completedAt: new Date(),
       },
       include: {
         reviews: {

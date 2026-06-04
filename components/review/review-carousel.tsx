@@ -15,7 +15,13 @@ import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
 import { StudySessionWithWordReviews } from "@/lib/type";
 
-const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
+const ReviewCarousel = ({
+  words,
+  onReviewMore,
+}: {
+  words: WordWithMeanings[];
+  onReviewMore: () => void;
+}) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [startTime] = useState(new Date());
@@ -97,7 +103,9 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
   };
 
   if (sessionFinished && studySession) {
-    return <ReviewSummary studySession={studySession} />;
+    return (
+      <ReviewSummary studySession={studySession} onReviewMore={onReviewMore} />
+    );
   }
   if (words.length === 0) return null;
 
