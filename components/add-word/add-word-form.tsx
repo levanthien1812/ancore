@@ -249,7 +249,11 @@ const AddOrEditWordForm = ({
       if (trimmedValue.length > 0) {
         debouncedCheckWord(trimmedValue);
       } else {
-        reset({ ...INITIAL_WORD, meanings: [INITIAL_MEANING] });
+        if (word) {
+          reset({ ...INITIAL_WORD, id: word.id, meanings: [INITIAL_MEANING] });
+        } else {
+          reset({ ...INITIAL_WORD, meanings: [INITIAL_MEANING] });
+        }
         setGenerated(false);
         setWordExistsError(null);
       }

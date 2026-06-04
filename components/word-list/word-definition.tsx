@@ -1,6 +1,6 @@
 import { shorten } from "@/lib/utils/shorten";
 import { useLayout } from "../layout/layout-context";
-import { Dot } from "lucide-react";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 const WordDefinition = ({ meanings }: { meanings: string[] }) => {
   const { mode } = useLayout();
@@ -9,7 +9,7 @@ const WordDefinition = ({ meanings }: { meanings: string[] }) => {
     return (
       <div className="">
         <p className="text-sm text-white" title={meanings[0]}>
-          {shorten(meanings[0], 70)}
+          {shorten(normalizeText(meanings[0]), 70)}
         </p>
         {meanings.length > 1 && (
           <p className="text-xs text-gray-200  mt-1 italic">
@@ -24,7 +24,7 @@ const WordDefinition = ({ meanings }: { meanings: string[] }) => {
     <ul className="list-disc ms-4">
       {meanings.map((meaning, index) => (
         <li key={index} className="text-primary-2" title={meaning}>
-          {shorten(meaning)}
+          {shorten(normalizeText(meaning))}
         </li>
       ))}
     </ul>
