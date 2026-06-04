@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { ReviewPerformance, User, Word, WordMeaning } from "@prisma/client";
 import { updateWordReview } from "@/lib/actions/review.actions";
 import { useCarousel } from "../ui/carousel";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 type Hint = Partial<
   Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
@@ -56,12 +57,12 @@ const FrontFace = ({
 
   const availableHints = useMemo(() => {
     const availableHints: Hint = {};
-    if (word.tags) availableHints.tags = word.tags;
-    if (word.meanings[0]?.examples)
+    if (word.tags && word.tags.length > 0) availableHints.tags = word.tags;
+    if (word.meanings[0]?.examples && word.meanings[0].examples.length > 0)
       availableHints.examples = word.meanings[0]?.examples;
-    if (word.meanings[0]?.synonyms)
+    if (word.meanings[0]?.synonyms && word.meanings[0].synonyms.length > 0)
       availableHints.synonyms = word.meanings[0]?.synonyms;
-    if (word.meanings[0]?.antonyms)
+    if (word.meanings[0]?.antonyms && word.meanings[0].antonyms.length > 0)
       availableHints.antonyms = word.meanings[0]?.antonyms;
     return availableHints;
   }, [word]);
@@ -244,7 +245,7 @@ const FrontFace = ({
                 {currentHint.field === "examples" && (
                   <ul className="text-primary-2 text-sm list-disc list-inside">
                     {(currentHint.value as string[]).map((example, index) => (
-                      <li key={index}>{example}</li>
+                      <li key={index}>{normalizeText(example)}</li>
                     ))}
                   </ul>
                 )}
