@@ -30,8 +30,7 @@ const ReviewHistory = () => {
         const response = await getStudySessions(date);
         return response;
       },
-      queryKey: [QUERY_KEY.GET_REVIEW_LOGS, date],
-      enabled: !!date,
+      queryKey: [QUERY_KEY.GET_STUDY_SESSIONS, date],
     },
   );
 
@@ -44,7 +43,7 @@ const ReviewHistory = () => {
       return response;
     },
     queryKey: [
-      QUERY_KEY.GET_REVIEW_LOGS,
+      QUERY_KEY.GET_STUDY_SESSIONS,
       "month",
       currentMonth.getFullYear(),
       currentMonth.getMonth(),

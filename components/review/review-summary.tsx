@@ -26,9 +26,7 @@ const ReviewSummary = ({
           </div>
           <ReviewSummaryDetail studySession={studySession} />
           <div className="flex gap-4 justify-center pt-4">
-            <Button asChild onClick={onReviewMore}>
-              Review more
-            </Button>
+            <Button onClick={onReviewMore}>Review more</Button>
             <Button variant="outline" asChild>
               <Link href="/dashboard">Go to Dashboard</Link>
             </Button>

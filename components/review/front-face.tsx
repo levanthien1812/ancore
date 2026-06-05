@@ -11,6 +11,7 @@ import { ReviewPerformance, User, Word, WordMeaning } from "@prisma/client";
 import { updateWordReview } from "@/lib/actions/review.actions";
 import { useCarousel } from "../ui/carousel";
 import { normalizeText } from "@/lib/utils/normalize-text";
+import { removeDuplicates } from "@/lib/utils/remove-duplicates";
 
 type Hint = Partial<
   Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
@@ -192,15 +193,41 @@ const FrontFace = ({
     return hintList.find((hint) => hint.field === hintLevel);
   }, [hintLevel, hintList]);
 
+  const distinctPartsOfSpeech = useMemo(() => {
+    const partsOfSpeech = word.meanings
+      .map((meaning) => {
+        if (meaning.partOfSpeech) return meaning.partOfSpeech;
+        return null;
+      })
+      .filter((pos) => pos !== null);
+
+    return removeDuplicates(partsOfSpeech) as string[];
+  }, [word.meanings]);
+
+  const distinctCefrLevels = useMemo(() => {
+    const cefrLevels = word.meanings
+      .map((meaning) => meaning.cefrLevel)
+      .filter((level) => !!level);
+    return removeDuplicates(cefrLevels) as string[];
+  }, [word.meanings]);
+
   return (
     <div className="flex flex-col px-4 sm:px-8 py-4 bg-primary rounded-2xl h-full">
       <div className="grow flex flex-col justify-center items-center">
-        <Badge className="bg-primary-2 text-white">
-          {word.meanings[0]?.cefrLevel}
-        </Badge>
+        {distinctCefrLevels.length > 0 &&
+          distinctCefrLevels.map((level) => (
+            <Badge key={level} className="bg-primary-2 text-white">
+              {level}
+            </Badge>
+          ))}
         <div className="text-[40px] font-bold mt-2 text-white text-center">
           {word.word}
         </div>
+        {distinctPartsOfSpeech.length > 0 && (
+          <div className="text-sm text-white/80 mt-1 text-center">
+            {distinctPartsOfSpeech.join(", ")}
+          </div>
+        )}
       </div>
       {!isReviewed && (
         <>

@@ -13,14 +13,15 @@ import {
 import Image from "next/image";
 import RoadSign from "@/public/images/road-sign.png";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../ui/hover-card";
 import WordDetail from "../word-card/word-detail";
 import { StudySessionWithWordReviews } from "@/lib/type";
 import { ReviewPerformance } from "@prisma/client";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import needsPractice from "@/public/images/needs-practice.png";
+import fair from "@/public/images/fair.png";
+import good from "@/public/images/good.png";
+import awesome from "@/public/images/awesome.png";
+import outstanding from "@/public/images/outstanding.png";
 
 const WordList = ({
   title,
@@ -32,11 +33,11 @@ const WordList = ({
   if (words.length === 0) return null;
 
   const colorMap: Record<string, string> = {
-    Forgot: "border-level-forgot bg-level-forgot/10",
-    Hard: "border-level-hard bg-level-hard/10",
-    Medium: "border-level-medium bg-level-medium/10",
-    Good: "border-level-good bg-level-good/10",
-    Easy: "border-level-easy bg-level-easy/10",
+    Forgot: "border-level-forgot bg-level-forgot/10 hover:bg-level-forgot/20",
+    Hard: "border-level-hard bg-level-hard/10 hover:bg-level-hard/20",
+    Medium: "border-level-medium bg-level-medium/10 hover:bg-level-medium/20",
+    Good: "border-level-good bg-level-good/10 hover:bg-level-good/20",
+    Easy: "border-level-easy bg-level-easy/10 hover:bg-level-easy/20",
   };
 
   const bgColorMap: Record<string, string> = {
@@ -68,21 +69,21 @@ const WordList = ({
         </h3>
         <div className="flex flex-wrap gap-1 mt-1">
           {words.map((wordObj, index) => (
-            <HoverCard key={`${wordObj.id}-${index}`}>
-              <HoverCardTrigger asChild>
+            <Popover key={`${wordObj.id}-${index}`}>
+              <PopoverTrigger asChild>
                 <div
-                  className={`border text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-help`}
+                  className={`border text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-pointer transition`}
                 >
                   {wordObj.word}
                 </div>
-              </HoverCardTrigger>
-              <HoverCardContent
+              </PopoverTrigger>
+              <PopoverContent
                 className="w-120 overflow-hidden bg-primary p-4"
                 side="top"
               >
                 <WordDetail word={wordObj} showReviewStats={false} />
-              </HoverCardContent>
-            </HoverCard>
+              </PopoverContent>
+            </Popover>
           ))}
         </div>
       </div>
@@ -123,14 +124,33 @@ const ReviewSummaryDetail = ({
   const allWords = Object.values(summary).flat();
   const wordsParam = allWords.map((w) => w.word).join(",");
 
+  const evaluationImage = React.useMemo(() => {
+    if (total === 0) return RoadSign;
+
+    // Define success as words that were Good or Easy
+    const successCount = summary.Good.length + summary.Easy.length;
+    const percentage = (successCount / total) * 100;
+
+    if (percentage === 100) return outstanding;
+    if (percentage >= 85) return awesome;
+    if (percentage >= 70) return good;
+    if (percentage >= 50) return fair;
+    return needsPractice;
+  }, [summary, total]);
+
   return (
     <div className="shadow-lg rounded-2xl border-primary p-4 space-y-2 bg-linear-to-b from-[#2563eb]/20 to-white">
       <div className="flex justify-center items-center gap-2">
-        <p className="text-center text-xl font-bold">
+        <p className="text-center text-xl font-bold mx-auto">
           You reviewed <span className="text-3xl text-[#2563eb]">{total}</span>{" "}
           words.
         </p>
-        <Image src={RoadSign} width={100} height={100} alt="Road Sign" />
+        <Image
+          src={evaluationImage}
+          width={100}
+          height={100}
+          alt="Performance illustration"
+        />
       </div>
       <div className="space-y-1">
         <WordList title="Forgot" words={summary.Forgot} />
