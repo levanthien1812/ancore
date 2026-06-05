@@ -15,8 +15,8 @@ const AnswerCard = ({
 }) => {
   const displayAnswer = (questionType: QuizQuestionType, answer: string) => {
     switch (questionType) {
-      case QuizQuestionType.MultipleChoice_DefinitionToWord:
-      case QuizQuestionType.MultipleChoice_WordToSynonym:
+      case QuizQuestionType.DefinitionToWord_Typing:
+      case QuizQuestionType.WordToSynonym:
       case QuizQuestionType.FillInTheBlank:
         return <span>{answer}</span>;
       case QuizQuestionType.Matching:

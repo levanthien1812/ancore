@@ -149,6 +149,9 @@ const QuestionCard = ({
     initialIsCorrect,
   );
   const isLastQuestion = currentIndex === totalQuestions - 1;
+  const [correctAnswer, setCorrectAnswer] = useState<typeof question.answer>(
+    question.answer,
+  );
 
   const { mutate: updateQuizAnswerMutation, isPending: isUpdatingQuizAnswer } =
     useMutation({
@@ -163,6 +166,7 @@ const QuestionCard = ({
           );
           audio.play().catch((err) => console.error("Audio play failed:", err));
           setLocalIsCorrect(data.isCorrect);
+          setCorrectAnswer(data.correctAnswer);
           setIsAnswered(true);
         }
       },
@@ -196,19 +200,19 @@ const QuestionCard = ({
 
   const questionBody = () => {
     switch (question.type) {
-      case QuizQuestionType.MultipleChoice_DefinitionToWord:
-      case QuizQuestionType.MultipleChoice_WordToSynonym:
+      case QuizQuestionType.DefinitionToWord_Typing:
+        return (
+          <FillInTheBlankBody
+            question={question}
+            setSelectedAnswer={setSelectedAnswer}
+          />
+        );
+      case QuizQuestionType.WordToSynonym:
+      case QuizQuestionType.FillInTheBlank:
         return (
           <MultipleChoiceBody
             question={question}
             selectedAnswer={selectedAnswer}
-            setSelectedAnswer={setSelectedAnswer}
-          />
-        );
-      case QuizQuestionType.FillInTheBlank:
-        return (
-          <FillInTheBlankBody
-            question={question}
             setSelectedAnswer={setSelectedAnswer}
           />
         );
@@ -230,14 +234,14 @@ const QuestionCard = ({
     }
 
     switch (question.type) {
-      case QuizQuestionType.MultipleChoice_DefinitionToWord:
-      case QuizQuestionType.MultipleChoice_WordToSynonym:
+      case QuizQuestionType.DefinitionToWord_Typing:
+      case QuizQuestionType.WordToSynonym:
       case QuizQuestionType.FillInTheBlank:
         return (
           <AnswerWrapper
             isCorrect={false}
             words={question.words}
-            correctAnswer={<div>{question.answer}</div>}
+            correctAnswer={<div>{correctAnswer}</div>}
           />
         );
       case QuizQuestionType.Matching:
