@@ -87,15 +87,15 @@ export const SAMPLE_TOPICS = [
 ];
 
 export enum QuizQuestionType {
-  MultipleChoice_DefinitionToWord = "MultipleChoice_DefinitionToWord",
-  MultipleChoice_WordToSynonym = "MultipleChoice_WordToSynonym",
+  DefinitionToWord_Typing = "DefinitionToWord_Typing",
+  WordToSynonym = "WordToSynonym",
   Matching = "Matching",
   FillInTheBlank = "FillInTheBlank",
 }
 
 export enum QuizQuestionTypeLabel {
-  MultipleChoice_DefinitionToWord = "Definition",
-  MultipleChoice_WordToSynonym = "Synonym/Antonym",
+  DefinitionToWord_Typing = "Definition",
+  WordToSynonym = "Synonym/Antonym",
   Matching = "Matching",
   FillInTheBlank = "Fill in the blank",
 }

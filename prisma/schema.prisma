@@ -208,8 +208,8 @@ enum QuizStatus {
 }
 
 enum QuestionType {
-  MultipleChoice_DefinitionToWord
-  MultipleChoice_WordToSynonym
+  DefinitionToWord_Typing
+  WordToSynonym
   Matching
   FillInTheBlank
 }
