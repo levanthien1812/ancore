@@ -11,9 +11,9 @@ import {
   Mic,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useTransition } from "react";
 import { signOutUser } from "@/lib/actions/user.actions";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import IconDisplay from "../icon-display";
 import {
@@ -32,16 +32,98 @@ type SidebarItem = {
   popoverContent?: React.ReactNode;
 };
 
-const SidebarItem = ({
-  item,
-  open,
-  isActive,
-}: {
-  item: SidebarItem;
-  open: boolean;
-  isActive: boolean;
-}) => {
+const SidebarItem = React.memo(
+  ({
+    item,
+    open,
+    isActive,
+    popoverSide,
+  }: {
+    item: SidebarItem;
+    open: boolean;
+    isActive: boolean;
+    popoverSide: "top" | "right";
+  }) => {
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+
+    const handleNavigate = (e: React.MouseEvent) => {
+      // Allow standard browser behavior for modified clicks (e.g., cmd+click to open in new tab)
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
+
+      // Don't trigger transition if already on the active route
+      if (isActive) return;
+
+      e.preventDefault();
+      startTransition(() => {
+        router.push(item.path);
+      });
+    };
+
+    const linkContent = (
+      <Link
+        href={item.path}
+        onClick={handleNavigate}
+        className={cn(
+          "flex flex-col md:flex-row justify-between items-center md:justify-center gap-0 md:gap-2 py-0.5 md:py-2 px-2 md:px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-sm md:rounded-l-none md:rounded-r-md",
+          isActive && "bg-primary-2 text-white",
+          isPending && "animate-pulse opacity-70 bg-primary-2/30",
+        )}
+      >
+        <span className="">{item.icon}</span>
+        {open && (
+          <span className="md:w-[100px] text-center text-[10px] md:text-sm md:text-start">
+            {item.title}
+          </span>
+        )}
+      </Link>
+    );
+
+    if (!item.showPopover) {
+      return <li className="flex-1 md:flex-none">{linkContent}</li>;
+    }
+
+    return (
+      <li className="flex-1 md:flex-none">
+        <Popover open={item.showPopover}>
+          <PopoverTrigger asChild>{linkContent}</PopoverTrigger>
+          <PopoverContent
+            side={popoverSide}
+            align="center"
+            sideOffset={12}
+            className="w-64 p-3 bg-blue-50 border-blue-200 shadow-lg rounded-md z-50"
+          >
+            <p className="text-sm font-semibold text-blue-800">
+              {item.popoverContent}
+            </p>
+            <div className="mt-2 border-t border-blue-100 pt-2 flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                onClick={item.onDismiss}
+              >
+                Dismiss
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </li>
+    );
+  },
+);
+SidebarItem.displayName = "SidebarItem";
+
+const Sidebar = () => {
+  const [open, setOpen] = React.useState(true);
   const [popoverSide, setPopoverSide] = useState<"top" | "right">("right");
+  const pathname = usePathname();
+
+  // Simulate having a review session (in a real app, this would come from data)
+  const [hasWordReview, setHasWordReview] = useState(true);
+  // State to track if the notification has been dismissed by the user
+  const [isReviewNotificationDismissed, setIsReviewNotificationDismissed] =
+    useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -52,66 +134,6 @@ const SidebarItem = ({
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const linkContent = (
-    <Link
-      href={item.path}
-      className={cn(
-        "flex flex-col md:flex-row justify-between items-center md:justify-center gap-0 md:gap-2 py-0.5 md:py-2 px-2 md:px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-sm md:rounded-l-none md:rounded-r-md",
-        isActive && "bg-primary-2 text-white",
-      )}
-    >
-      <span className="">{item.icon}</span>
-      {open && (
-        <span className="md:w-[100px] text-center text-[10px] md:text-sm md:text-start">
-          {item.title}
-        </span>
-      )}
-    </Link>
-  );
-
-  if (!item.showPopover) {
-    return <li className="flex-1 md:flex-none">{linkContent}</li>;
-  }
-
-  return (
-    <li className="flex-1 md:flex-none">
-      <Popover open={item.showPopover}>
-        <PopoverTrigger asChild>{linkContent}</PopoverTrigger>
-        <PopoverContent
-          side={popoverSide}
-          align="center"
-          sideOffset={12}
-          className="w-64 p-3 bg-blue-50 border-blue-200 shadow-lg rounded-md z-50"
-        >
-          <p className="text-sm font-semibold text-blue-800">
-            {item.popoverContent}
-          </p>
-          <div className="mt-2 border-t border-blue-100 pt-2 flex justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-100"
-              onClick={item.onDismiss}
-            >
-              Dismiss
-            </Button>
-          </div>
-        </PopoverContent>
-      </Popover>
-    </li>
-  );
-};
-
-const Sidebar = () => {
-  const [open, setOpen] = React.useState(true);
-  const pathname = usePathname();
-
-  // Simulate having a review session (in a real app, this would come from data)
-  const [hasWordReview, setHasWordReview] = useState(true);
-  // State to track if the notification has been dismissed by the user
-  const [isReviewNotificationDismissed, setIsReviewNotificationDismissed] =
-    useState(false);
 
   useEffect(() => {
     const dismissed = sessionStorage.getItem("reviewNotificationDismissed");
@@ -178,6 +200,7 @@ const Sidebar = () => {
             key={item.title}
             item={item}
             open={open}
+            popoverSide={popoverSide}
             isActive={
               item.path === "/"
                 ? pathname === "/"

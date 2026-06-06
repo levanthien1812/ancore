@@ -22,6 +22,7 @@ import fair from "@/public/images/fair.png";
 import good from "@/public/images/good.png";
 import awesome from "@/public/images/awesome.png";
 import outstanding from "@/public/images/outstanding.png";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const WordList = ({
   title,
@@ -71,11 +72,14 @@ const WordList = ({
           {words.map((wordObj, index) => (
             <Popover key={`${wordObj.id}-${index}`}>
               <PopoverTrigger asChild>
-                <div
+                <button
                   className={`border text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-pointer transition`}
+                  onClick={(e) => {
+                    handlePlayAudio(wordObj.word);
+                  }}
                 >
                   {wordObj.word}
-                </div>
+                </button>
               </PopoverTrigger>
               <PopoverContent
                 className="w-120 overflow-hidden bg-primary p-4"

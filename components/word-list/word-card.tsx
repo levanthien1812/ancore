@@ -8,6 +8,7 @@ import { formatPronunciation } from "@/lib/utils/pronunciation";
 import IconDisplay from "../shared/icon-display";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { WordType } from "@prisma/client";
+import PartsOfSpeech from "./parts-of-speech";
 
 const WordCard = ({
   word,
@@ -78,9 +79,12 @@ const WordCard = ({
             {word.meanings[0].pronunciation && uniquePos.length > 0 && (
               <Dot width={16} height={16} color="white" opacity={0.5} />
             )}
-            <p className="font-bold text-sm text-blue-300">
-              {uniquePos.length > 0 ? uniquePos.join("/") : word.type}
-            </p>
+            {uniquePos.length > 0 && (
+              <PartsOfSpeech
+                uniquePos={uniquePos}
+                wordType={word.type as string}
+              />
+            )}
           </div>
         </div>
         <div></div>

@@ -3,7 +3,13 @@ import React, { useMemo, useState } from "react";
 import { Badge } from "../ui/badge";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { Button } from "../ui/button";
-import { CircleCheckBig, Lightbulb, Sun } from "lucide-react";
+import {
+  CircleCheckBig,
+  CircleDashed,
+  Clock3,
+  Lightbulb,
+  Sun,
+} from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
 import { useSession } from "next-auth/react";
@@ -12,6 +18,12 @@ import { updateWordReview } from "@/lib/actions/review.actions";
 import { useCarousel } from "../ui/carousel";
 import { normalizeText } from "@/lib/utils/normalize-text";
 import { removeDuplicates } from "@/lib/utils/remove-duplicates";
+import PartsOfSpeech from "../word-list/parts-of-speech";
+import {
+  getDistinctCefrLevels,
+  getDistinctPartsOfSpeech,
+  getDistinctPronunciations,
+} from "@/lib/utils/get-distinct-values";
 
 type Hint = Partial<
   Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
@@ -188,61 +200,77 @@ const FrontFace = ({
     else scrollNext();
   };
 
+  const handleClickNeedMorePractice = () => {
+    wordReviewMutate(ReviewPerformance.Forgot);
+    onPerformanceUpdate("Medium");
+    setIsReviewed(true);
+    setIsFlipped(true);
+  };
+
   const currentHint = useMemo(() => {
     if (!hintLevel) return null;
     return hintList.find((hint) => hint.field === hintLevel);
   }, [hintLevel, hintList]);
 
-  const distinctPartsOfSpeech = useMemo(() => {
-    const partsOfSpeech = word.meanings
-      .map((meaning) => {
-        if (meaning.partOfSpeech) return meaning.partOfSpeech;
-        return null;
-      })
-      .filter((pos) => pos !== null);
-
-    return removeDuplicates(partsOfSpeech) as string[];
-  }, [word.meanings]);
-
-  const distinctCefrLevels = useMemo(() => {
-    const cefrLevels = word.meanings
-      .map((meaning) => meaning.cefrLevel)
-      .filter((level) => !!level);
-    return removeDuplicates(cefrLevels) as string[];
-  }, [word.meanings]);
+  const distinctPartsOfSpeech = useMemo(
+    () => getDistinctPartsOfSpeech(word),
+    [word],
+  );
+  const distinctCefrLevels = useMemo(() => getDistinctCefrLevels(word), [word]);
+  const distinctPronunciations = useMemo(
+    () => getDistinctPronunciations(word),
+    [word],
+  );
 
   return (
     <div className="flex flex-col px-4 sm:px-8 py-4 bg-primary rounded-2xl h-full">
       <div className="grow flex flex-col justify-center items-center">
-        {distinctCefrLevels.length > 0 &&
-          distinctCefrLevels.map((level) => (
-            <Badge key={level} className="bg-primary-2 text-white">
-              {level}
-            </Badge>
-          ))}
+        <div className="flex gap-2">
+          {distinctCefrLevels.length > 0 &&
+            distinctCefrLevels.map((level) => (
+              <Badge key={level} className="bg-primary-2 text-white">
+                {level}
+              </Badge>
+            ))}
+        </div>
         <div className="text-[40px] font-bold mt-2 text-white text-center">
           {word.word}
         </div>
         {distinctPartsOfSpeech.length > 0 && (
+          <PartsOfSpeech
+            uniquePos={distinctPartsOfSpeech}
+            wordType={word.type as string}
+          />
+        )}
+        {distinctPronunciations.length > 0 && (
           <div className="text-sm text-white/80 mt-1 text-center">
-            {distinctPartsOfSpeech.join(", ")}
+            {distinctPronunciations.join(", ")}
           </div>
         )}
       </div>
       {!isReviewed && (
         <>
-          <div className="flex justify-between gap-2 ">
-            {Object.keys(availableHints).length > 0 && !showHint && (
-              <Button
-                className="border border-white bg-transparent flex-1"
-                onClick={handleClickShowHint}
-              >
-                <Lightbulb width={14} height={14} className="text-primary-2" />
-                Need a hint?
-              </Button>
-            )}
+          {Object.keys(availableHints).length > 0 && !showHint && (
             <Button
-              className="border border-white bg-transparent flex-1"
+              className="text-white"
+              onClick={handleClickShowHint}
+              variant={"link"}
+            >
+              <Lightbulb width={14} height={14} className="text-primary-2" />
+              Need a hint?
+            </Button>
+          )}
+          <div className="flex justify-between gap-2 ">
+            <Button
+              className="border border-white bg-transparent hover:bg-white/10 flex-1"
+              onClick={handleClickNeedMorePractice}
+              disabled={isUpdatingWordReview}
+            >
+              <Clock3 width={14} height={14} className="text-yellow-500" />
+              Needs more practice
+            </Button>
+            <Button
+              className="border border-white bg-transparent hover:bg-white/10 flex-1"
               onClick={handleClickMarkAsFamiliar}
               disabled={isUpdatingWordReview}
             >
