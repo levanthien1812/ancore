@@ -171,9 +171,9 @@ export const REVIEW_PERIOD_LABEL: Record<ReviewPeriod, string> = {
 };
 
 export const REVIEW_PERFORMANCE_COLOR: Record<ReviewPerformance, string> = {
-  [ReviewPerformance.Forgot]: "#FF5555",
-  [ReviewPerformance.Hard]: "#3B82F6",
-  [ReviewPerformance.Medium]: "#F59E0B",
-  [ReviewPerformance.Good]: "#8B5CF6",
-  [ReviewPerformance.Easy]: "#22C55E",
+  [ReviewPerformance.Forgot]: "#BDE8F5",
+  [ReviewPerformance.Hard]: "#4988C4",
+  [ReviewPerformance.Medium]: "#1C4D8D",
+  [ReviewPerformance.Good]: "#2C5EAD",
+  [ReviewPerformance.Easy]: "#0F2854",
 };
