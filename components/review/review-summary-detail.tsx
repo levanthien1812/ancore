@@ -23,6 +23,8 @@ import good from "@/public/images/good.png";
 import awesome from "@/public/images/awesome.png";
 import outstanding from "@/public/images/outstanding.png";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { motion } from "framer-motion";
+import BorderGlowAnimation from "../shared/border-glow-animation";
 
 const WordList = ({
   title,
@@ -156,9 +158,14 @@ const ReviewSummaryDetail = ({
           alt="Performance illustration"
         />
       </div>
+
       <div className="space-y-1">
-        <WordList title="Forgot" words={summary.Forgot} />
-        <WordList title="Hard" words={summary.Hard} />
+        <BorderGlowAnimation>
+          <WordList title="Forgot" words={summary.Forgot} />
+        </BorderGlowAnimation>
+        <BorderGlowAnimation>
+          <WordList title="Hard" words={summary.Hard} />
+        </BorderGlowAnimation>
         <WordList title="Medium" words={summary.Medium} />
         <WordList title="Good" words={summary.Good} />
         <WordList title="Easy" words={summary.Easy} />
