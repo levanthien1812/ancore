@@ -26,7 +26,6 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
     queryKey: ["user-settings"],
     queryFn: async () => {
       const settings = await getUserSettings();
-      console.log("userSettings", settings);
       return settings;
     },
   });

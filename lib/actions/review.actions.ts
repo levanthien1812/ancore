@@ -676,8 +676,6 @@ export const sendEmailRemindReviewSessions = async () => {
 
   const emailResults = [];
 
-  console.log({ usersToRemind });
-
   for (const user of usersToRemind) {
     const settings = user.settings;
     if (!settings || !settings.reviewReminderTime) continue;
@@ -685,11 +683,7 @@ export const sendEmailRemindReviewSessions = async () => {
     const userMinutes = parseTimeToMinutes(settings.reviewReminderTime);
     const diff = nowMinutes - userMinutes;
 
-    console.log({ diff });
-
-    // Check if the scheduled time falls within the 5-minute window of this cron run.
-    // This ensures that if the cron runs at 9:03, a 9:00 reminder is correctly triggered.
-    if (diff < 0 || diff >= 5) continue;
+    if (diff < 0 || diff >= 10) continue;
 
     let isScheduledDay = false;
 

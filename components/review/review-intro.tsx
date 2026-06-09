@@ -35,7 +35,6 @@ const ReviewIntro = ({ count }: { count: number }) => {
     queryKey: ["wordsToReview"],
     queryFn: async () => {
       const responseData = await getWordsToReview(reviewLimit);
-      console.log("wordsToReview", responseData);
       return responseData;
     },
     enabled: true,

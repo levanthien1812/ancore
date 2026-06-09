@@ -76,7 +76,6 @@ const Meaning = memo(function Meaning({
 
   const handlePaste = (e: React.ClipboardEvent) => {
     const htmlData = e.clipboardData.getData("text/html");
-    console.log(htmlData);
     let newItems: string[] = [];
 
     if (htmlData) {
