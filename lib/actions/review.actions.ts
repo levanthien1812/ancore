@@ -683,6 +683,11 @@ export const sendEmailRemindReviewSessions = async () => {
     const userMinutes = parseTimeToMinutes(settings.reviewReminderTime);
     const diff = nowMinutes - userMinutes;
 
+    // Helpful for production debugging
+    console.log(
+      `Checking reminder for ${user.email}: ServerMinutes=${nowMinutes}, UserMinutes=${userMinutes}, Diff=${diff}`,
+    );
+
     if (diff < 0 || diff >= 10) continue;
 
     let isScheduledDay = false;
@@ -708,6 +713,13 @@ export const sendEmailRemindReviewSessions = async () => {
           },
         },
       });
+
+      if (!process.env.RESEND_FROM_EMAIL) {
+        console.error(
+          "CRITICAL: RESEND_FROM_EMAIL is not defined in production environment variables.",
+        );
+        continue;
+      }
 
       if (dueCount > 0) {
         try {
