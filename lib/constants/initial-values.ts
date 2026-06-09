@@ -98,4 +98,6 @@ export const INITIAL_USER_SETTINGS: Omit<UserSettings, "id" | "userId"> = {
   missedReviewReminderEnabled: true,
   streakReminderEnabled: true,
   wordOfTheDayEnabled: true,
+
+  timezone: "UTC",
 };

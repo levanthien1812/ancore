@@ -343,6 +343,7 @@ export const saveUserSettings = async (
         formData.get("missedReviewReminderEnabled") === "true",
       streakReminderEnabled: formData.get("streakReminderEnabled") === "true",
       wordOfTheDayEnabled: formData.get("wordOfTheDayEnabled") === "true",
+      timezone: formData.get("timezone"),
     });
 
     if (!validatedFields.success) {

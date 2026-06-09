@@ -94,4 +94,5 @@ export const userSettingsSchema = z.object({
   missedReviewReminderEnabled: z.boolean(),
   streakReminderEnabled: z.boolean(),
   wordOfTheDayEnabled: z.boolean(),
+  timezone: z.string().default("UTC"),
 });
