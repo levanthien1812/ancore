@@ -11,6 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Notifications = () => {
   const { control, register } = useFormContext();
@@ -127,6 +134,33 @@ const Notifications = () => {
               />
             )}
           />
+        </div>
+
+        {/* Timezone */}
+        <div className="grid gap-1.5">
+          <Label htmlFor="timezone">Timezone</Label>
+          <Controller
+            control={control}
+            name="timezone"
+            render={({ field }) => (
+              <Select onValueChange={field.onChange} value={field.value}>
+                <SelectTrigger id="timezone">
+                  <SelectValue placeholder="Select timezone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Intl.supportedValuesOf("timeZone").map((tz) => (
+                    <SelectItem key={tz} value={tz}>
+                      {tz.replace(/_/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          />
+          <p className="text-xs text-muted-foreground">
+            Set your local timezone to ensure reminders are sent at the right
+            time.
+          </p>
         </div>
       </CardContent>
     </Card>

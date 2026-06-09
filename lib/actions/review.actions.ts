@@ -15,6 +15,7 @@ import {
   format,
   differenceInCalendarDays,
 } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
 import { authenticationAction } from "./_helpers";
 import { ReviewPerformance } from "@prisma/client";
@@ -668,11 +669,6 @@ export const sendEmailRemindReviewSessions = async () => {
   });
 
   const now = new Date();
-  const todayName = format(now, "EEEE") as DayOfWeek;
-  const daysSinceEpoch = Math.floor(now.getTime() / (1000 * 60 * 60 * 24));
-
-  // Convert current time to total minutes from start of day for range comparison
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const emailResults = [];
 
@@ -680,15 +676,32 @@ export const sendEmailRemindReviewSessions = async () => {
     const settings = user.settings;
     if (!settings || !settings.reviewReminderTime) continue;
 
+    // Convert current time to user's timezone
+    const userTimezone = settings.timezone || "UTC";
+    const nowInUserTz = formatInTimeZone(now, userTimezone, "HH:mm");
+    const [hours, minutes] = nowInUserTz.split(":").map(Number);
+    const nowMinutes = hours * 60 + minutes;
+
     const userMinutes = parseTimeToMinutes(settings.reviewReminderTime);
     const diff = nowMinutes - userMinutes;
 
-    // Helpful for production debugging
+    // Helpful for production debugging - show timezone context
     console.log(
-      `Checking reminder for ${user.email}: ServerMinutes=${nowMinutes}, UserMinutes=${userMinutes}, Diff=${diff}`,
+      `Checking reminder for ${user.email} (${userTimezone}): LocalMinutes=${nowMinutes}, ReminderTime=${userMinutes}, Diff=${diff}`,
     );
 
     if (diff < 0 || diff >= 10) continue;
+
+    // Now check the day in the user's timezone
+    const todayNameInUserTz = formatInTimeZone(
+      now,
+      userTimezone,
+      "EEEE",
+    ) as DayOfWeek;
+    const daysSinceEpochInUserTz = Math.floor(
+      new Date(formatInTimeZone(now, userTimezone, "yyyy-MM-dd")).getTime() /
+        (1000 * 60 * 60 * 24),
+    );
 
     let isScheduledDay = false;
 
@@ -696,9 +709,9 @@ export const sendEmailRemindReviewSessions = async () => {
     if (settings.reviewFrequency === ReviewFrequency.Daily) {
       isScheduledDay = true;
     } else if (settings.reviewFrequency === ReviewFrequency.Custom) {
-      isScheduledDay = settings.reviewDays.includes(todayName);
+      isScheduledDay = settings.reviewDays.includes(todayNameInUserTz);
     } else if (settings.reviewFrequency === ReviewFrequency.Every2Days) {
-      isScheduledDay = daysSinceEpoch % 2 === 0;
+      isScheduledDay = daysSinceEpochInUserTz % 2 === 0;
     }
 
     if (isScheduledDay) {

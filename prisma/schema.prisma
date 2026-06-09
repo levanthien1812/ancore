@@ -327,6 +327,8 @@ model UserSettings {
   missedReviewReminderEnabled Boolean @default(true)
   streakReminderEnabled       Boolean @default(true)
   wordOfTheDayEnabled         Boolean @default(true)
+
+  timezone String @default("UTC") // Store user's preferred timezone
 }
 
 enum ReviewFrequency {
