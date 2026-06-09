@@ -638,7 +638,6 @@ export const updateQuizAnswer = async (
           }
         }
       }
-      console.log(quizAnswer);
       return { isCorrect, correctAnswer: quizAnswer.quizQuestion.answer };
     } catch (error) {
       console.error("Failed to update quiz question:", error);
@@ -861,7 +860,6 @@ export const getLatestIncompleteQuiz = async () =>
 
 export const deleteQuiz = async (quizId: string) =>
   authenticationAction(async (userId) => {
-    console.log(quizId);
     await prisma.$transaction([
       prisma.quizAnswer.deleteMany({ where: { quizId } }),
       prisma.quiz.delete({ where: { id: quizId, userId } }),

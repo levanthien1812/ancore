@@ -1,3 +1,12 @@
+import {
+  DayOfWeek,
+  MasteryLevel,
+  QuestionType,
+  QuizResultMode,
+  ReviewFrequency,
+  SpacedRepetitionAlgorithm,
+  UserLevel,
+} from "@prisma/client";
 import z from "zod";
 
 export const signInFormSchema = z.object({
@@ -55,4 +64,34 @@ export const onboardingFormSchema = z.object({
       message: "You can only enter up to 3 topics.",
     }),
   dailyGoal: z.number().min(5, "Goal must be at least 5 minutes."),
+});
+
+export const userSettingsSchema = z.object({
+  wordsPerReview: z.number().int().min(1).max(50),
+  reviewFrequency: z.nativeEnum(ReviewFrequency),
+  // time-format: 22:00
+  reviewReminderTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  reviewDays: z.array(z.nativeEnum(DayOfWeek)),
+  includeWordLevels: z.array(z.nativeEnum(MasteryLevel)),
+  prioritizeWeakWords: z.boolean(),
+  autoRepeatForgottenWords: z.boolean(),
+  questionsPerQuiz: z.number().int().min(1).max(50),
+  quizTypes: z.array(z.nativeEnum(QuestionType)),
+  timeLimitPerQuestion: z.number().int().min(0).max(300), // 0 for no limit, max 5 minutes
+  showResultsMode: z.nativeEnum(QuizResultMode),
+  allowRetry: z.boolean(),
+  includeAudioQuestions: z.boolean(),
+  showIpaPronunciation: z.boolean(),
+  autoPlayPronunciation: z.boolean(),
+  dailyNewWordsGoal: z.number().int().min(1).max(100),
+  reviewAlgorithm: z.nativeEnum(SpacedRepetitionAlgorithm),
+  familiarInterval: z.number().int().min(1).max(365),
+  easyInterval: z.number().int().min(1).max(365),
+  forgottenInterval: z.number().int().min(1).max(365),
+  masteredInterval: z.number().int().min(1).max(365),
+  dailyReminderEnabled: z.boolean(),
+  notificationTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  missedReviewReminderEnabled: z.boolean(),
+  streakReminderEnabled: z.boolean(),
+  wordOfTheDayEnabled: z.boolean(),
 });

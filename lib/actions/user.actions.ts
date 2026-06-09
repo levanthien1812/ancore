@@ -7,6 +7,7 @@ import {
   signInFormSchema,
   signUpFormSchema,
   forgotPasswordFormSchema,
+  userSettingsSchema,
   resetPasswordFormSchema,
 } from "../validators/user.validators";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
@@ -14,7 +15,7 @@ import { prisma } from "@/db/prisma";
 import { hashSync } from "bcrypt-ts-edge";
 import z from "zod";
 import { revalidatePath } from "next/cache";
-import { UserLevel } from "@prisma/client";
+import { UserLevel, UserSettings } from "@prisma/client";
 import { authenticationAction } from "./_helpers";
 
 export const signInWithCredentials = async (
@@ -305,3 +306,107 @@ export const getWordOfTheDayPreference = async () =>
     },
     { stopped: false },
   );
+
+export const saveUserSettings = async (
+  prevState: unknown,
+  formData: FormData,
+) =>
+  authenticationAction(async (userId) => {
+    const validatedFields = userSettingsSchema.safeParse({
+      wordsPerReview: parseInt(formData.get("wordsPerReview") as string),
+      reviewFrequency: formData.get("reviewFrequency"),
+      reviewReminderTime: formData.get("reviewReminderTime"),
+      reviewDays: formData.getAll("reviewDays"),
+      includeWordLevels: formData.getAll("includeWordLevels"),
+      prioritizeWeakWords: formData.get("prioritizeWeakWords") === "true",
+      autoRepeatForgottenWords:
+        formData.get("autoRepeatForgottenWords") === "true",
+      questionsPerQuiz: parseInt(formData.get("questionsPerQuiz") as string),
+      quizTypes: formData.getAll("quizTypes"),
+      timeLimitPerQuestion: parseInt(
+        formData.get("timeLimitPerQuestion") as string,
+      ),
+      showResultsMode: formData.get("showResultsMode"),
+      allowRetry: formData.get("allowRetry") === "true",
+      includeAudioQuestions: formData.get("includeAudioQuestions") === "true",
+      showIpaPronunciation: formData.get("showIpaPronunciation") === "true",
+      autoPlayPronunciation: formData.get("autoPlayPronunciation") === "true",
+      dailyNewWordsGoal: parseInt(formData.get("dailyNewWordsGoal") as string),
+      reviewAlgorithm: formData.get("reviewAlgorithm"),
+      familiarInterval: parseInt(formData.get("familiarInterval") as string),
+      easyInterval: parseInt(formData.get("easyInterval") as string),
+      forgottenInterval: parseInt(formData.get("forgottenInterval") as string),
+      masteredInterval: parseInt(formData.get("masteredInterval") as string),
+      dailyReminderEnabled: formData.get("dailyReminderEnabled") === "true",
+      notificationTime: formData.get("notificationTime"),
+      missedReviewReminderEnabled:
+        formData.get("missedReviewReminderEnabled") === "true",
+      streakReminderEnabled: formData.get("streakReminderEnabled") === "true",
+      wordOfTheDayEnabled: formData.get("wordOfTheDayEnabled") === "true",
+    });
+
+    if (!validatedFields.success) {
+      console.log("Validation failed!");
+      console.log(formData.get("reviewReminderTime"));
+      console.log(validatedFields.error.flatten().fieldErrors);
+
+      return {
+        success: false,
+        message: "Validation failed.",
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+
+    console.log("Validation passed!", validatedFields.data);
+
+    try {
+      await prisma.userSettings.upsert({
+        where: { userId: userId },
+        update: validatedFields.data,
+        create: {
+          userId: userId,
+          ...validatedFields.data,
+        },
+      });
+      revalidatePath("/settings"); // Revalidate the settings page to show updated values
+      return { success: true, message: "Settings saved successfully." };
+    } catch (error) {
+      console.error("Failed to save user settings:", error);
+      return {
+        success: false,
+        message: "Database error: Failed to save settings.",
+      };
+    }
+  });
+
+export const getUserSettings = async () =>
+  authenticationAction(async (userId) => {
+    const settings = await prisma.userSettings.findUnique({
+      where: { userId: userId },
+    });
+
+    if (!settings) {
+      return null;
+    }
+
+    return settings;
+  }, null);
+
+export const updateUserSettingsByField = async (
+  userId: string,
+  field: keyof UserSettings,
+  value: UserSettings[keyof UserSettings],
+) =>
+  authenticationAction(async (userId) => {
+    try {
+      await prisma.userSettings.update({
+        where: { userId: userId },
+        data: {
+          [field]: value,
+        },
+      });
+      revalidatePath("/settings");
+    } catch (error) {
+      console.error("Failed to update user settings:", error);
+    }
+  }, null);

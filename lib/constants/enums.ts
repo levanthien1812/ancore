@@ -177,3 +177,29 @@ export const REVIEW_PERFORMANCE_COLOR: Record<ReviewPerformance, string> = {
   [ReviewPerformance.Good]: "#2C5EAD",
   [ReviewPerformance.Easy]: "#0F2854",
 };
+
+export enum ReviewFrequency {
+  Daily = "Daily",
+  Every2Days = "Every2Days",
+  Custom = "Custom",
+}
+
+export enum DayOfWeek {
+  Monday = "Monday",
+  Tuesday = "Tuesday",
+  Wednesday = "Wednesday",
+  Thursday = "Thursday",
+  Friday = "Friday",
+  Saturday = "Saturday",
+  Sunday = "Sunday",
+}
+
+export enum QuizResultMode {
+  AfterEachQuestion = "AfterEachQuestion",
+  AtTheEnd = "AtTheEnd",
+}
+
+export enum SpacedRepetitionAlgorithm {
+  Default = "Default",
+  Custom = "Custom",
+}

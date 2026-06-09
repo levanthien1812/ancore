@@ -6,12 +6,10 @@ import { forgotPassword } from "@/lib/actions/user.actions";
 import Link from "next/link";
 import React, { startTransition, useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 
 const ForgotPasswordForm = () => {
-  const [data, action] = useActionState(forgotPassword, {
-    success: false,
-    message: "",
-  });
+  const [data, action] = useActionState(forgotPassword, INITIAL_ACTION_STATE);
 
   const ForgotPasswordButton = () => {
     const { pending } = useFormStatus();

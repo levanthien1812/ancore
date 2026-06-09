@@ -35,7 +35,7 @@ import { Skeleton } from "../ui/skeleton";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import ConfirmActionDialog from "../shared/confirm-action-dialog";
 import { toast } from "sonner";
-import { initialActionState } from "@/lib/constants/initial-values";
+import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 import { convertHoursToDaysHours } from "@/lib/utils/time-convert";
 
 const WordDetail = ({
@@ -53,7 +53,7 @@ const WordDetail = ({
   const queryClient = useQueryClient();
   const [state, formAction, isDeleting] = useActionState(
     deleteWords,
-    initialActionState,
+    INITIAL_ACTION_STATE,
   );
 
   const { mutate: updateWordMutation, isPending: isUpdating } = useMutation({

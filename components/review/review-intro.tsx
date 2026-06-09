@@ -14,37 +14,36 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
+import { useLayout } from "../layout/layout-context";
+import { INITIAL_USER_SETTINGS } from "@/lib/constants/initial-values";
 
 const ReviewIntro = ({ count }: { count: number }) => {
   const [started, setStarted] = useState(false);
-  const [reviewLimit, setReviewLimit] = useState(10);
+  const { settings } = useLayout();
+  const [reviewLimit, setReviewLimit] = useState(
+    settings?.wordsPerReview ?? INITIAL_USER_SETTINGS.wordsPerReview,
+  );
   const [inputValue, setInputValue] = useState(10);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [forThisTimeOnly, setForThisTimeOnly] = useState(true);
-
-  useEffect(() => {
-    const storedLimit = localStorage.getItem("reviewLimit");
-    if (storedLimit) {
-      const val = Number(storedLimit);
-      if (!isNaN(val) && val > 0) {
-        setReviewLimit(val);
-        setInputValue(val);
-      }
-    }
-  }, []);
 
   const {
     data: words,
     isLoading,
     refetch,
   } = useQuery<WordWithMeanings[]>({
-    queryKey: ["wordsToReview", reviewLimit],
+    queryKey: ["wordsToReview"],
     queryFn: async () => {
       const responseData = await getWordsToReview(reviewLimit);
       return responseData;
     },
-    enabled: false,
+    enabled: true,
   });
+
+  useEffect(() => {
+    if (!settings || !settings.wordsPerReview) return;
+    setReviewLimit(settings?.wordsPerReview);
+  }, [settings]);
 
   const handleStartReview = () => {
     refetch();
@@ -54,9 +53,6 @@ const ReviewIntro = ({ count }: { count: number }) => {
   const handleSaveLimit = () => {
     if (inputValue < 1) return;
     setReviewLimit(inputValue);
-    if (!forThisTimeOnly) {
-      localStorage.setItem("reviewLimit", inputValue.toString());
-    }
     setIsPopoverOpen(false);
   };
 

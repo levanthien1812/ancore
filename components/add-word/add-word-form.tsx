@@ -24,7 +24,7 @@ import {
 import {
   INITIAL_MEANING,
   INITIAL_WORD,
-  initialActionState,
+  INITIAL_ACTION_STATE,
 } from "@/lib/constants/initial-values";
 import Meaning from "./meaning";
 import WordSuggest from "./word-suggest";
@@ -77,7 +77,7 @@ const AddOrEditWordForm = ({
   const [generated, setGenerated] = useState(word?.isOriginal || false);
   const [state, formAction, isLoading] = useActionState(
     saveWord,
-    initialActionState,
+    INITIAL_ACTION_STATE,
   );
 
   const defaultValues = (): WordWithMeanings => {

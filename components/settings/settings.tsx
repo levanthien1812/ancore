@@ -1,0 +1,146 @@
+"use client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import LearningPreferences from "./learning-preferences";
+import ReviewSettings from "./review-settings";
+import QuizSettings from "./quiz-settings";
+import SpacedRepetitionSettings from "./spaced-repetition";
+import Notifications from "./notifications";
+import { FormProvider, useForm } from "react-hook-form";
+import {
+  INITIAL_ACTION_STATE,
+  INITIAL_USER_SETTINGS,
+} from "@/lib/constants/initial-values";
+import { Button } from "@/components/ui/button";
+import { saveUserSettings } from "@/lib/actions/user.actions";
+import { toast } from "sonner";
+import { useLayout } from "../layout/layout-context";
+import { useQueryClient } from "@tanstack/react-query";
+import { startTransition, useActionState, useEffect } from "react";
+
+const Settings = () => {
+  const { settings } = useLayout();
+  const queryClient = useQueryClient();
+  const [state, action, isPending] = useActionState(
+    saveUserSettings,
+    INITIAL_ACTION_STATE,
+  );
+
+  const methods = useForm({
+    defaultValues: settings || INITIAL_USER_SETTINGS,
+  });
+
+  const onSubmit = async (data: typeof INITIAL_USER_SETTINGS) => {
+    const formData = new FormData();
+    for (const key in data) {
+      const value = data[key as keyof typeof data];
+      if (Array.isArray(value)) {
+        value.forEach((item) => formData.append(key, item.toString()));
+      } else if (typeof value === "boolean") {
+        formData.append(key, value.toString());
+      } else if (value !== null && value !== undefined) {
+        formData.append(key, value.toString());
+      }
+    }
+    startTransition(() => {
+      action(formData);
+    });
+  };
+
+  useEffect(() => {
+    if (state.success) {
+      toast.success("Settings saved successfully!");
+      queryClient.invalidateQueries({ queryKey: ["user-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["wordsToReview"] });
+    } else if (state.message) {
+      toast.error("Failed to save settings:" + state.message);
+    }
+  }, [state, queryClient]);
+
+  return (
+    <div>
+      <FormProvider {...methods}>
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+          <Tabs
+            defaultValue="learning-preferences"
+            orientation="vertical"
+            className="flex flex-col md:flex-row gap-6"
+          >
+            <TabsList className="flex flex-col h-fit bg-transparent  rounded-none p-0 items-stretch min-w-[180px]">
+              <TabsTrigger
+                value="learning-preferences"
+                className="justify-start px-4 py-2 data-[state=active]:bg-muted"
+              >
+                Learning Preferences
+              </TabsTrigger>
+              <TabsTrigger
+                value="review-settings"
+                className="justify-start px-4 py-2 data-[state=active]:bg-muted"
+              >
+                Review Settings
+              </TabsTrigger>
+              <TabsTrigger
+                value="quiz-settings"
+                className="justify-start px-4 py-2 data-[state=active]:bg-muted"
+              >
+                Quiz Settings
+              </TabsTrigger>
+              <TabsTrigger
+                value="space-repetition"
+                className="justify-start px-4 py-2 data-[state=active]:bg-muted"
+              >
+                Space Repetition
+              </TabsTrigger>
+              <TabsTrigger
+                value="notifications"
+                className="justify-start px-4 py-2 data-[state=active]:bg-muted"
+              >
+                Notifications
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex-1 flex flex-col gap-2 custom-scrollbar-y h-[70vh] custom-scrollbar-y">
+              <TabsContent
+                value="learning-preferences"
+                className="m-0 border-none p-0 shadow-none"
+              >
+                <LearningPreferences />
+              </TabsContent>
+              <TabsContent
+                value="review-settings"
+                className="m-0 border-none p-0 shadow-none"
+              >
+                <ReviewSettings />
+              </TabsContent>
+              <TabsContent
+                value="quiz-settings"
+                className="m-0 border-none p-0 shadow-none"
+              >
+                <QuizSettings />
+              </TabsContent>
+              <TabsContent
+                value="space-repetition"
+                className="m-0 border-none p-0 shadow-none"
+              >
+                <SpacedRepetitionSettings />
+              </TabsContent>
+              <TabsContent
+                value="notifications"
+                className="m-0 border-none p-0 shadow-none"
+              >
+                <Notifications />
+              </TabsContent>
+
+              <div className="flex justify-end gap-2 mt-2 p-2 w-full rounded-md border bg-white/80 sticky bottom-0">
+                <Button type="submit" isLoading={isPending}>
+                  {isPending ? "Saving..." : "Save changes"}
+                </Button>
+              </div>
+            </div>
+          </Tabs>
+        </form>
+      </FormProvider>
+    </div>
+  );
+};
+
+export default Settings;
