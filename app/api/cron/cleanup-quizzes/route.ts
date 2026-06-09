@@ -1,15 +1,9 @@
+import { authenticateCronJobs } from "@/lib/actions/_helpers";
 import { cleanupAbandonedQuizzes } from "@/lib/actions/quiz.actions";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
-  // Secure the endpoint
-  const authHeader = request.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response("Unauthorized", {
-      status: 401,
-    });
-  }
-
+  authenticateCronJobs(request);
   try {
     const result = await cleanupAbandonedQuizzes();
     return NextResponse.json(result);
@@ -17,7 +11,7 @@ export async function GET(request: Request) {
     console.error("Cron job failed:", error);
     return NextResponse.json(
       { success: false, message: "Cron job failed." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

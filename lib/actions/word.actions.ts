@@ -10,10 +10,12 @@ import { User, Word, WordMeaning } from "@prisma/client";
 import { toBoolean } from "../utils/to-boolean";
 import { buildWordAutofillPrompt } from "../ai-prompts/word-autofill";
 import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
-import { authenticationAction } from "./_helpers";
+import { authenticationAction, settingsAction } from "./_helpers";
 import { buildWordOfTheDayPrompt } from "../ai-prompts/word-of-the-day";
 import { generateWordOfTheDayWithAI } from "@/app/services/generate-word-of-the-day-with-ai";
 import { DEFAULT_WORDS_PER_REVIEW } from "../constants/constant";
+import { remindReviewSessionsTemplate } from "../email-templates/remind-review-sessions";
+import { resend } from "../resend";
 
 export const getWordListByFilter = async (wordFilter: WordFitler) =>
   authenticationAction(
@@ -185,11 +187,13 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       revalidatePath("/words");
 
       return { success: true, message: "Word saved successfully." };
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || "Database error: Failed to save word.",
-      };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return {
+          success: false,
+          message: error.message || "Database error: Failed to save word.",
+        };
+      }
     }
   });
 
@@ -481,7 +485,7 @@ export const getBestDay = async () =>
 export const getWordsToReview = async (
   limit: number = DEFAULT_WORDS_PER_REVIEW,
 ) =>
-  authenticationAction(async (userId) => {
+  settingsAction(async (userId, settings) => {
     // 1. Find unique wordIds that have a review session due,
     //    ordered by the earliest scheduledAt of their due sessions.
     const earliestDueReviews = await prisma.wordReview.groupBy({
@@ -492,6 +496,11 @@ export const getWordsToReview = async (
           lte: new Date(), // Get all words due today or in the past
         },
         completedAt: null, // Exclude completed sessions
+        word: {
+          masteryLevel: {
+            in: settings.includeWordLevels,
+          },
+        },
       },
       _min: {
         scheduledAt: true,
@@ -529,13 +538,19 @@ export const getWordsToReview = async (
   });
 
 export const getWordsToReviewCount = async () =>
-  authenticationAction(async (userId) => {
+  settingsAction(async (userId, settings) => {
     const reviews = await prisma.wordReview.groupBy({
       by: ["wordId"],
       where: {
         userId,
         scheduledAt: {
           lte: new Date(), // Count all words due today or in the past
+        },
+        completedAt: null, // Exclude completed sessions
+        word: {
+          masteryLevel: {
+            in: settings.includeWordLevels,
+          },
         },
       },
     });

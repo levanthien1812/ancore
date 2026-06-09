@@ -31,13 +31,13 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className={`${font.className} antialiased tracking-tight`}>
-        <Providers>
-          <QueryProvider>
+        <QueryProvider>
+          <Providers>
             {/* SelectionAddWord must be inside Providers to access Session and Query contexts */}
             <SelectionAddWord />
             {children}
-          </QueryProvider>
-        </Providers>
+          </Providers>
+        </QueryProvider>
       </body>
     </html>
   );

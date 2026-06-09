@@ -1,6 +1,11 @@
 "use server";
 import { prisma } from "@/db/prisma";
-import { MasteryLevel, WordReviewInfo } from "../constants/enums";
+import {
+  MasteryLevel,
+  WordReviewInfo,
+  ReviewFrequency,
+  DayOfWeek,
+} from "../constants/enums";
 import { dateFilter } from "../utils/date-filter"; // Keep this for getStudySessions
 import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers";
 import {
@@ -13,6 +18,9 @@ import {
 import { revalidatePath } from "next/cache";
 import { authenticationAction } from "./_helpers";
 import { ReviewPerformance } from "@prisma/client";
+import { remindReviewSessionsTemplate } from "../email-templates/remind-review-sessions";
+import { parseTimeToMinutes } from "../utils/time-convert";
+import { resend } from "../resend";
 
 export const updateWordReview = async (
   wordId: string,
@@ -642,3 +650,102 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       performanceCounts: currentMetrics.performanceCounts,
     };
   });
+
+/**
+ * System-level action to send daily review reminders based on user settings.
+ * This checks frequency, active review days, and pending word counts.
+ */
+export const sendEmailRemindReviewSessions = async () => {
+  const usersToRemind = await prisma.user.findMany({
+    where: {
+      settings: {
+        dailyReminderEnabled: true,
+      },
+    },
+    include: {
+      settings: true,
+    },
+  });
+
+  const now = new Date();
+  const todayName = format(now, "EEEE") as DayOfWeek;
+  const daysSinceEpoch = Math.floor(now.getTime() / (1000 * 60 * 60 * 24));
+
+  // Convert current time to total minutes from start of day for range comparison
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const emailResults = [];
+
+  console.log({ usersToRemind });
+
+  for (const user of usersToRemind) {
+    const settings = user.settings;
+    if (!settings || !settings.reviewReminderTime) continue;
+
+    const userMinutes = parseTimeToMinutes(settings.reviewReminderTime);
+    const diff = nowMinutes - userMinutes;
+
+    console.log({ diff });
+
+    // Check if the scheduled time falls within the 5-minute window of this cron run.
+    // This ensures that if the cron runs at 9:03, a 9:00 reminder is correctly triggered.
+    if (diff < 0 || diff >= 5) continue;
+
+    let isScheduledDay = false;
+
+    // 1. Identify if today matches the user's frequency preference
+    if (settings.reviewFrequency === ReviewFrequency.Daily) {
+      isScheduledDay = true;
+    } else if (settings.reviewFrequency === ReviewFrequency.Custom) {
+      isScheduledDay = settings.reviewDays.includes(todayName);
+    } else if (settings.reviewFrequency === ReviewFrequency.Every2Days) {
+      isScheduledDay = daysSinceEpoch % 2 === 0;
+    }
+
+    if (isScheduledDay) {
+      // 2. Only remind if they actually have words due for review
+      const dueCount = await prisma.wordReview.count({
+        where: {
+          userId: user.id,
+          scheduledAt: { lte: now },
+          completedAt: null,
+          word: {
+            masteryLevel: { in: settings.includeWordLevels },
+          },
+        },
+      });
+
+      if (dueCount > 0) {
+        try {
+          const { data, error } = await resend.emails.send({
+            from: `Ancore <${process.env.RESEND_FROM_EMAIL}>`, // Replace with your verified domain in production
+            to: user.email,
+            subject: `Time to review: ${dueCount} words are due!`,
+            html: remindReviewSessionsTemplate({
+              dueCount,
+              userName: user.name || "Learner",
+            }),
+          });
+
+          if (error) {
+            // This will show you exactly why Resend is rejecting the request in your logs
+            console.error(`Resend API error for ${user.email}:`, error);
+          } else if (data) {
+            emailResults.push({
+              userId: user.id,
+              status: "sent",
+              messageId: data.id,
+            });
+          }
+        } catch (err) {
+          console.error(
+            `Network error sending reminder to ${user.email}:`,
+            err,
+          );
+        }
+      }
+    }
+  }
+
+  return { success: true, remindersSent: emailResults.length };
+};

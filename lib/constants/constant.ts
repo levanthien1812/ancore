@@ -1,3 +1,5 @@
+import { MasteryLevel, QuestionType } from "@prisma/client";
+
 export const PAGE_SIZES = [10, 20, 50, 100];
 
 export const CORRECT_ENCOURAGEMENTS = [
@@ -288,3 +290,11 @@ export enum QuizEvaluationEncouragement {
   Awesome = "Awesome work! Keep it up!",
   Outstanding = "Outstanding performance! You're doing amazing!",
 }
+
+export const REQUIRED_QUESTION_TYPES: QuestionType[] = [
+  QuestionType.DefinitionToWord_Typing,
+];
+export const REQUIRED_REVIEW_MASTERY_LEVELS: MasteryLevel[] = [
+  MasteryLevel.New,
+  MasteryLevel.Learning,
+];

@@ -42,6 +42,7 @@ model User {
   quiz          Quiz[]
   notes         Note[]
   talks         TalkSession[]
+  settings      UserSettings?
 }
 
 model Account {
@@ -284,4 +285,72 @@ enum ReviewPerformance {
   Medium
   Good
   Easy
+}
+
+model UserSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 1. Review settings
+  wordsPerReview           Int             @default(10)
+  reviewFrequency          ReviewFrequency @default(Daily)
+  reviewReminderTime       String?         @default("08:00 PM")
+  reviewDays               DayOfWeek[]     @default([Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday])
+  includeWordLevels        MasteryLevel[]  @default([New, Learning, Familiar, Mastered])
+  prioritizeWeakWords      Boolean         @default(true)
+  autoRepeatForgottenWords Boolean         @default(true)
+
+  // 2. Quiz settings
+  questionsPerQuiz      Int            @default(10)
+  quizTypes             QuestionType[] @default([DefinitionToWord_Typing, WordToSynonym, Matching, FillInTheBlank])
+  timeLimitPerQuestion  Int            @default(0) // 0 means no limit, otherwise seconds per question
+  showResultsMode       QuizResultMode @default(AtTheEnd)
+  allowRetry            Boolean        @default(true)
+  includeAudioQuestions Boolean        @default(true)
+
+  // 3. Learning preference settings
+  showIpaPronunciation  Boolean @default(true)
+  autoPlayPronunciation Boolean @default(false)
+  dailyNewWordsGoal     Int     @default(5)
+
+  // 4. Spaced repetition settings
+  reviewAlgorithm   SpacedRepetitionAlgorithm @default(Default)
+  familiarInterval  Int                       @default(2) // days
+  easyInterval      Int                       @default(4) // days
+  forgottenInterval Int                       @default(1) // days
+  masteredInterval  Int                       @default(8) // days
+
+  // 5. Notification settings
+  dailyReminderEnabled        Boolean @default(true)
+  notificationTime            String  @default("07:30 PM")
+  missedReviewReminderEnabled Boolean @default(true)
+  streakReminderEnabled       Boolean @default(true)
+  wordOfTheDayEnabled         Boolean @default(true)
+}
+
+enum ReviewFrequency {
+  Daily
+  Every2Days
+  Custom
+}
+
+enum DayOfWeek {
+  Monday
+  Tuesday
+  Wednesday
+  Thursday
+  Friday
+  Saturday
+  Sunday
+}
+
+enum QuizResultMode {
+  AfterEachQuestion
+  AtTheEnd
+}
+
+enum SpacedRepetitionAlgorithm {
+  Default
+  Custom
 }
