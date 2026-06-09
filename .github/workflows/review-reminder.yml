@@ -14,6 +14,6 @@ jobs:
     steps:
       - name: Call reminder endpoint
         run: |
-          curl \
+          curl -i \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            https://ancore-sage.vercel.app//api/cron/remind-review-session
+            https://ancore-sage.vercel.app/api/cron/remind-review-session
