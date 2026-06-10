@@ -22,8 +22,19 @@ import {
 import { DayOfWeek, MasteryLevel, ReviewFrequency } from "@prisma/client";
 import { REQUIRED_REVIEW_MASTERY_LEVELS } from "@/lib/constants/constant";
 
+const REMINDER_INTERVAL =
+  Number(process.env.NEXT_PUBLIC_REVIEW_REMINDER_INTERVAL_MINUTES) || 10;
+
 const ReviewSettings = () => {
-  const { register, control } = useFormContext();
+  const {
+    register,
+    control,
+    watch,
+    formState: { errors },
+  } = useFormContext();
+
+  const reviewFrequency = watch("reviewFrequency");
+  const stepSeconds = REMINDER_INTERVAL * 60;
 
   return (
     <Card>
@@ -82,11 +93,28 @@ const ReviewSettings = () => {
           <Input
             id="reviewReminderTime"
             type="time"
-            {...register("reviewReminderTime")}
+            step={stepSeconds}
+            {...register("reviewReminderTime", {
+              validate: (value) => {
+                if (!value) return true;
+                const [, minutes] = value.split(":").map(Number);
+                return (
+                  minutes % REMINDER_INTERVAL === 0 ||
+                  `Minutes must be a multiple of ${REMINDER_INTERVAL}`
+                );
+              },
+            })}
           />
-          <p className="text-xs text-muted-foreground">
-            Preferred time to receive a reminder for your review session.
-          </p>
+          {errors.reviewReminderTime ? (
+            <p className="text-xs font-medium text-destructive">
+              {errors.reviewReminderTime.message as string}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Preferred time to receive a reminder for your review session. Must
+              be a multiple of {REMINDER_INTERVAL} minutes.
+            </p>
+          )}
         </div>
 
         {/* Review Days */}
@@ -108,6 +136,7 @@ const ReviewSettings = () => {
                           : field.value?.filter((v: string) => v !== day);
                         setTimeout(() => field.onChange(newValue), 0);
                       }}
+                      disabled={reviewFrequency !== ReviewFrequency.Custom}
                     />
                   )}
                 />

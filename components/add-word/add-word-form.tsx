@@ -32,13 +32,14 @@ import AiMeaningSuggest from "./ai-meaning-suggest";
 import {
   checkWordExists,
   fillWithAI,
+  getWordsAddedToday,
   saveWord,
 } from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
 import { CEFR_LEVELS, CEFRLevel, MASTERY_LEVELS } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { WordOfTheDay } from "../home/word-of-the-day";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { BookOpen, Info, Layers2, Plus, Sparkles, X } from "lucide-react";
@@ -47,6 +48,7 @@ import { toast } from "sonner";
 import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
 import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 import PasteWordTips from "./paste-word-tips";
+import { useLayout } from "../layout/layout-context";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -65,6 +67,11 @@ const AddOrEditWordForm = ({
   wordOfTheDay,
   initialWord,
 }: AddOrEditWordFormProps) => {
+  const { settings } = useLayout();
+  const { refetch: refetchTodayCount } = useQuery({
+    queryKey: ["wordsAddedToday"],
+    queryFn: () => getWordsAddedToday(),
+  });
   const [enteredWord, setEnteredWord] = useState(
     word?.word || wordOfTheDay?.word || initialWord || "",
   );
@@ -367,6 +374,20 @@ const AddOrEditWordForm = ({
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_MASTERY_LEVEL],
       });
+      queryClient.invalidateQueries({ queryKey: ["wordsAddedToday"] });
+
+      if (!word) {
+        const goal = settings?.dailyNewWordsGoal ?? 5;
+        refetchTodayCount().then((result) => {
+          if (result.data === goal) {
+            toast.success(
+              `Congratulations! You've reached your daily goal of ${goal} words! 🎊`,
+              { duration: 5000 },
+            );
+          }
+        });
+      }
+
       if (word?.id) {
         queryClient.invalidateQueries({
           queryKey: ["review-info", word.id],
@@ -375,7 +396,7 @@ const AddOrEditWordForm = ({
 
       onClose();
     }
-  }, [state, onClose, queryClient]);
+  }, [state, onClose, queryClient, word, settings, refetchTodayCount]);
 
   return (
     <form

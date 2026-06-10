@@ -41,29 +41,19 @@ const WordGrid = ({
       {
         accessorKey: "word",
         header: "Word",
-        cell: ({ row }) => (
-          <WordCard
-            word={row.original}
-            onClickTitle={() => {
-              const originalIndex = words.findIndex(
-                (w) => w.id === row.original.id,
-              );
-              onClickTitle(originalIndex === -1 ? 0 : originalIndex);
-            }}
-            isSelectMode={isSelectMode}
-            isSelected={selectedIds.has(row.original.id)}
-            onSelect={(wordId) => {
-              const newSelectedIds = new Set(selectedIds);
-              if (newSelectedIds.has(wordId)) {
-                newSelectedIds.delete(wordId);
-              } else {
-                newSelectedIds.add(wordId);
-              }
-              setSelectedIds(newSelectedIds);
-            }}
-          />
-        ),
         enableSorting: true,
+        enableGlobalFilter: true,
+      },
+      {
+        accessorFn: (row) =>
+          row.meanings.map((meaning) => meaning.definition).join(" "),
+        id: "meanings",
+        header: "Meanings",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const meanings = row.original.meanings;
+          return meanings.map((meaning) => meaning.definition).join(", ");
+        },
         enableGlobalFilter: true,
       },
       {
@@ -90,7 +80,7 @@ const WordGrid = ({
         enableSorting: true,
       },
     ],
-    [onClickTitle, words, isSelectMode, selectedIds],
+    [],
   );
 
   const [sorting, setSorting] = useState<SortingState>([

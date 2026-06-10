@@ -690,7 +690,38 @@ export const sendEmailRemindReviewSessions = async () => {
       `Checking reminder for ${user.email} (${userTimezone}): LocalMinutes=${nowMinutes}, ReminderTime=${userMinutes}, Diff=${diff}`,
     );
 
-    if (diff < 0 || diff >= 10) continue;
+    if (
+      diff < 0 ||
+      diff >=
+        (process.env.REVIEW_REMINDER_INTERVAL_MINUTES
+          ? parseInt(process.env.REVIEW_REMINDER_INTERVAL_MINUTES)
+          : 10)
+    )
+      continue;
+
+    // Check if they already have a completed study session today in their timezone
+    const startOfTodayIso = formatInTimeZone(
+      now,
+      userTimezone,
+      "yyyy-MM-dd'T'00:00:00XXX",
+    );
+    const startOfToday = new Date(startOfTodayIso);
+
+    const hasStudiedToday = await prisma.studySession.findFirst({
+      where: {
+        userId: user.id,
+        completedAt: {
+          gte: startOfToday,
+        },
+      },
+    });
+
+    if (hasStudiedToday) {
+      console.log(
+        `User ${user.email} already studied today. Skipping reminder.`,
+      );
+      continue;
+    }
 
     // Now check the day in the user's timezone
     const todayNameInUserTz = formatInTimeZone(
