@@ -76,7 +76,7 @@ const LearningPreferences = () => {
             {...register("dailyNewWordsGoal", { valueAsNumber: true })}
           />
           <p className="text-xs text-muted-foreground">
-            Set a target for how many new words you want to learn each day.
+            Set a target for how many new words you want to add each day.
           </p>
         </div>
       </CardContent>

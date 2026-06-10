@@ -14,6 +14,8 @@ import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
 import { StudySessionWithWordReviews } from "@/lib/type";
+import { ReviewPerformance } from "@prisma/client";
+import { useLayout } from "../layout/layout-context";
 
 const ReviewCarousel = ({
   words,
@@ -31,6 +33,8 @@ const ReviewCarousel = ({
   const [studySessionId, setStudySessionId] = useState<string | null>(null);
   const [studySession, setStudySession] =
     useState<StudySessionWithWordReviews | null>(null);
+  const { settings } = useLayout();
+  const [reviewQueue, setReviewQueue] = useState(words);
 
   useEffect(() => {
     const initLog = async () => {
@@ -69,17 +73,34 @@ const ReviewCarousel = ({
 
   // Play pronunciation audio whenever the current word changes
   useEffect(() => {
-    if (words[current] && !sessionFinished) {
-      handlePlayAudio(words[current].word);
+    if (reviewQueue[current] && !sessionFinished) {
+      handlePlayAudio(
+        reviewQueue[current].word,
+        settings?.autoPlayPronunciation,
+      );
     }
-  }, [current, words, sessionFinished]);
+  }, [current, reviewQueue, sessionFinished, settings?.autoPlayPronunciation]);
 
-  const handlePerformanceUpdate = () => {
-    const currentWord = words[current];
+  const handlePerformanceUpdate = (performance: ReviewPerformance) => {
+    const currentWord = reviewQueue[current];
     if (!currentWord) return;
 
-    if (current + 1 === words.length) {
+    const isForgotten = performance === ReviewPerformance.Forgot;
+    // Only allow words from the original batch to be re-queued.
+    // This ensures that "extra" words are only shown once, even if forgotten again.
+    const isOriginalWord = current < words.length;
+    const shouldRepeat =
+      isForgotten && settings?.autoRepeatForgottenWords && isOriginalWord;
+
+    if (shouldRepeat) {
+      setReviewQueue((prev) => [...prev, currentWord]);
+    }
+
+    const isLastCard = current + 1 === reviewQueue.length;
+    if (isLastCard && !shouldRepeat) {
       setIsAllWordsReviewed(true);
+    } else {
+      setIsAllWordsReviewed(false);
     }
   };
 
@@ -112,9 +133,9 @@ const ReviewCarousel = ({
   return (
     <div className="relative h-full">
       <div className="flex gap-1">
-        {words.map((word, index) => (
+        {reviewQueue.map((word, index) => (
           <div
-            key={word.id}
+            key={`${word.id}-${index}`}
             className={cn("h-1 rounded-full flex-1", {
               "bg-primary/90": index === current,
               "bg-muted": index !== current,
@@ -128,8 +149,8 @@ const ReviewCarousel = ({
         opts={{ watchDrag: false }}
       >
         <CarouselContent className="h-full">
-          {words.map((word) => (
-            <CarouselItem key={word.id} className="h-full">
+          {reviewQueue.map((word, index) => (
+            <CarouselItem key={`${word.id}-${index}`} className="h-full">
               <ReviewWordCard
                 word={word}
                 onPerformanceUpdate={handlePerformanceUpdate}
@@ -143,7 +164,7 @@ const ReviewCarousel = ({
       </Carousel>
       <div className="mt-4 px-8 flex justify-center absolute top-0 right-0 gap-2 items-center w-full">
         <p className="text-white text-sm">
-          {current + 1} of {words.length}
+          {current + 1} of {reviewQueue.length}
         </p>
         {isAllWordsReviewed && (
           <Button

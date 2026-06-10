@@ -2,6 +2,7 @@
 import { prisma } from "@/db/prisma";
 import { saveWordSchema } from "../validators";
 import { revalidatePath } from "next/cache";
+import { formatInTimeZone } from "date-fns-tz";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
@@ -705,4 +706,27 @@ export const getWordOfTheDay = async () =>
     const data = await generateWordOfTheDayWithAI(prompt);
 
     return data;
+  });
+
+export const getWordsAddedToday = async () =>
+  settingsAction(async (userId, settings) => {
+    const userTimezone = settings.timezone || "UTC";
+    const now = new Date();
+    const startOfTodayIso = formatInTimeZone(
+      now,
+      userTimezone,
+      "yyyy-MM-dd'T'00:00:00XXX",
+    );
+    const startOfToday = new Date(startOfTodayIso);
+
+    const count = await prisma.word.count({
+      where: {
+        userId,
+        createdAt: {
+          gte: startOfToday,
+        },
+      },
+    });
+
+    return count;
   });

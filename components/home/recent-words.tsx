@@ -21,9 +21,11 @@ import { RefreshCcw } from "lucide-react";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { shorten } from "@/lib/utils/shorten";
+import { useLayout } from "../layout/layout-context";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  const { settings } = useLayout();
 
   const {
     data: words,
@@ -42,9 +44,12 @@ const RecentWords = () => {
 
   useEffect(() => {
     if (selectedIndex !== null && words[selectedIndex]) {
-      handlePlayAudio(words[selectedIndex].word);
+      handlePlayAudio(
+        words[selectedIndex].word,
+        settings?.autoPlayPronunciation,
+      );
     }
-  }, [selectedIndex, words]);
+  }, [selectedIndex, words, settings?.autoPlayPronunciation]);
 
   return (
     <div className=" flex flex-col bg-white p-4 rounded-2xl gap-2 h-full">

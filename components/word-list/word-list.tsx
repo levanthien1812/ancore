@@ -17,16 +17,19 @@ const WordList = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const word = selectedIndex !== null ? words[selectedIndex] : undefined;
-  const { mode, setMode } = useLayout();
+  const { mode, setMode, settings } = useLayout();
   const handleTitleClick = React.useCallback((index: number) => {
     setSelectedIndex(index);
   }, []);
 
   useEffect(() => {
     if (selectedIndex !== null && words[selectedIndex]) {
-      handlePlayAudio(words[selectedIndex].word);
+      handlePlayAudio(
+        words[selectedIndex].word,
+        settings?.autoPlayPronunciation,
+      );
     }
-  }, [selectedIndex, words]);
+  }, [selectedIndex, words, settings?.autoPlayPronunciation]);
 
   return (
     <div>

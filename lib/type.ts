@@ -22,6 +22,7 @@ export interface WordFitler {
   tags?: string[];
   page: number;
   limit: number;
+  search?: string;
 }
 
 export type Period = "day" | "week" | "month";
