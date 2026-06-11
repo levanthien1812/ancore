@@ -13,14 +13,14 @@ import {
 } from "@prisma/client";
 import { generateDistractorsWithAi } from "@/app/services/generate-distractors-with-ai";
 import { QuizAnswerWithQuestion, QuizWithAnswers } from "../type";
-import { authenticationAction } from "./_helpers";
+import { authenticationAction, settingsAction } from "./_helpers";
 import { revalidatePath } from "next/cache";
 
 export const createQuizSession = async (
-  wordCount: number = 5,
+  wordCount?: number,
   specificWords?: string[],
 ) =>
-  authenticationAction(async (userId) => {
+  settingsAction(async (userId, settings) => {
     // 1. Get words for the quiz (New or Learning), ensuring they have meanings
     const quizData = specificWords
       ? await getWordsToQuiz({ wordList: specificWords })
@@ -113,27 +113,44 @@ export const createQuizSession = async (
       const allExamples = word.meanings.flatMap((m) => m.examples || []);
 
       // Determine valid question types for this word based on available data
-      const validTypes: QuestionType[] = [];
+      let validTypes: QuestionType[] = [];
 
       // Type 1: Definition
       if (mainMeaning.definition) {
         validTypes.push(QuestionType.DefinitionToWord_Typing);
       }
 
-      // Type 2: Synonym/Antonym
-      const synonyms =
-        mainMeaning.synonyms
-          ?.split(",")
-          .map((s) => s.trim())
-          .filter((s) => s.length > 0) || [];
-      const antonyms =
-        mainMeaning.antonyms
-          ?.split(",")
-          .map((a) => a.trim())
-          .filter((a) => a.length > 0) || [];
+      // Filter validTypes based on user settings.quizTypes
+      const allowedQuizTypes = settings.quizTypes || [];
+      validTypes = validTypes.filter((type) => allowedQuizTypes.includes(type));
 
-      if (synonyms.length > 0 || antonyms.length > 0) {
-        validTypes.push(QuestionType.WordToSynonym);
+      // Ensure DefinitionToWord_Typing is always available if the word has a definition
+      if (
+        mainMeaning.definition &&
+        !validTypes.includes(QuestionType.DefinitionToWord_Typing)
+      ) {
+        validTypes.push(QuestionType.DefinitionToWord_Typing);
+      }
+
+      // Only add Synonym/Antonym if allowed by settings and data exists
+      if (allowedQuizTypes.includes(QuestionType.WordToSynonym)) {
+        const synonyms =
+          mainMeaning.synonyms
+            ?.split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0) || [];
+        const antonyms =
+          mainMeaning.antonyms
+            ?.split(",")
+            .map((a) => a.trim())
+            .filter((a) => a.length > 0) || [];
+
+        if (
+          (synonyms.length > 0 || antonyms.length > 0) &&
+          !validTypes.includes(QuestionType.WordToSynonym)
+        ) {
+          validTypes.push(QuestionType.WordToSynonym);
+        }
       }
 
       // Type 3: Fill in the Blank
@@ -142,7 +159,12 @@ export const createQuizSession = async (
           new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
         )
       ) {
-        validTypes.push(QuestionType.FillInTheBlank);
+        if (
+          allowedQuizTypes.includes(QuestionType.FillInTheBlank) &&
+          !validTypes.includes(QuestionType.FillInTheBlank)
+        ) {
+          validTypes.push(QuestionType.FillInTheBlank);
+        }
       }
 
       if (validTypes.length === 0) continue;
@@ -163,6 +185,15 @@ export const createQuizSession = async (
         }
 
         // If no existing question, try to generate data for the selected type
+        // Re-check settings.quizTypes here to ensure we don't generate a question type
+        // that was filtered out, in case multiple types were valid for a word.
+        if (
+          !settings.quizTypes.includes(selectedType) &&
+          selectedType !== QuestionType.DefinitionToWord_Typing
+        ) {
+          continue; // Skip if not allowed by settings (and not the required type)
+        }
+
         if (selectedType === QuestionType.DefinitionToWord_Typing) {
           // NOW TYPING - Add hint logic for definition
           const wordLength = word.word.length;
@@ -202,6 +233,17 @@ export const createQuizSession = async (
         }
 
         if (selectedType === QuestionType.WordToSynonym) {
+          const synonyms =
+            mainMeaning.synonyms
+              ?.split(",")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0) || [];
+          const antonyms =
+            mainMeaning.antonyms
+              ?.split(",")
+              .map((a) => a.trim())
+              .filter((a) => a.length > 0) || [];
+
           // Randomly decide to create a synonym or antonym question if both are available
           const canCreateSynonym = synonyms.length > 0;
           const canCreateAntonym = antonyms.length > 0;
@@ -330,7 +372,10 @@ export const createQuizSession = async (
       (w) => w.meanings.length > 0 && w.meanings[0].definition.trim() !== "",
     );
 
-    if (wordsWithDefinitionsForMatching.length >= 3) {
+    if (
+      wordsWithDefinitionsForMatching.length >= 3 &&
+      settings.quizTypes.includes(QuestionType.Matching)
+    ) {
       const matchingWords = shuffleArray(wordsWithDefinitionsForMatching).slice(
         0,
         Math.min(wordsWithDefinitionsForMatching.length, 4),
@@ -418,8 +463,9 @@ export const getWordsToQuiz = async ({
   wordCount?: number;
   wordList?: string[];
 }) =>
-  authenticationAction(async (userId) => {
+  settingsAction(async (userId, settings) => {
     let words: WordWithMeanings[];
+    const finalWordCount = wordCount ?? settings.questionsPerQuiz ?? 10;
 
     if (wordList && wordList.length > 0) {
       // Get specific words by name
@@ -449,7 +495,7 @@ export const getWordsToQuiz = async ({
             some: { definition: { not: "" } },
           },
         },
-        take: wordCount || 10,
+        take: finalWordCount,
         include: {
           meanings: true,
         },

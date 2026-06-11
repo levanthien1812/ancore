@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,6 +26,8 @@ import { Badge } from "../ui/badge";
 import WordDetail from "../word-card/word-detail";
 import { updateQuizAnswer } from "@/lib/actions/quiz.actions";
 import { useMutation } from "@tanstack/react-query";
+import { QuizResultMode } from "@prisma/client";
+import { useLayout } from "../layout/layout-context";
 
 const AnswerWrapper = ({
   isCorrect,
@@ -38,10 +40,8 @@ const AnswerWrapper = ({
   correctAnswer?: React.ReactNode;
   words: QuizQuestionWithWords["words"];
 }) => {
-  const [randomIndex, setRandomIndex] = useState(0);
-
-  useEffect(() => {
-    setRandomIndex(Math.floor(Math.random() * CORRECT_ENCOURAGEMENTS.length));
+  const randomIndex = useMemo(() => {
+    return Math.floor(Math.random() * CORRECT_ENCOURAGEMENTS.length);
   }, []);
 
   const randomEncouragement = isCorrect
@@ -132,6 +132,7 @@ const QuestionCard = ({
   initialIsCorrect,
   onNext,
   currentIndex,
+  isActive,
   totalQuestions,
   isFinalizing,
 }: {
@@ -140,9 +141,14 @@ const QuestionCard = ({
   initialIsCorrect: boolean | null;
   onNext: () => void;
   currentIndex: number;
+  isActive: boolean;
   totalQuestions: number;
   isFinalizing: boolean;
 }) => {
+  const { settings } = useLayout();
+  const timeLimit = settings?.timeLimitPerQuestion || 0;
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
+
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(!!question.answer);
   const [localIsCorrect, setLocalIsCorrect] = useState<boolean | null>(
@@ -152,13 +158,18 @@ const QuestionCard = ({
   const [correctAnswer, setCorrectAnswer] = useState<typeof question.answer>(
     question.answer,
   );
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { mutate: updateQuizAnswerMutation, isPending: isUpdatingQuizAnswer } =
     useMutation({
       mutationFn: (data: { userAnswer: string | null }) =>
         updateQuizAnswer(answerId, data.userAnswer),
+      mutationKey: ["updateQuizAnswer", answerId],
       onSuccess: (data) => {
-        if (data) {
+        if (
+          data &&
+          settings?.showResultsMode === QuizResultMode.AfterEachQuestion
+        ) {
           const audio = new Audio(
             data.isCorrect
               ? "/sounds/correct-answer-sound.mp3"
@@ -172,27 +183,56 @@ const QuestionCard = ({
       },
     });
 
-  const handleCheckAnswer = () => {
+  const handleCheckAnswer = useCallback(() => {
     if (selectedAnswer) {
       updateQuizAnswerMutation({ userAnswer: selectedAnswer });
     } else {
       toast.warning("Please select an answer or finish your answer first.");
     }
-  };
+  }, [selectedAnswer, updateQuizAnswerMutation]);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     setSelectedAnswer(null);
     setLocalIsCorrect(false);
     setIsAnswered(true);
     updateQuizAnswerMutation({ userAnswer: null });
-    onNext();
-  };
+    if (settings?.showResultsMode !== QuizResultMode.AfterEachQuestion) {
+      onNext();
+    }
+  }, [onNext, updateQuizAnswerMutation, settings?.showResultsMode]);
+
+  useEffect(() => {
+    // If the card is not active, ensure timer is stopped and reset
+    if (!isActive) {
+      return;
+    }
+
+    if (timeLimit > 0 && !isAnswered && !isUpdatingQuizAnswer) {
+      setTimeLeft(timeLimit);
+      timerIntervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => Math.max(0, prev - 0.1));
+      }, 100);
+
+      return () => clearInterval(timerIntervalRef.current ?? undefined);
+    }
+  }, [isActive, isAnswered, isUpdatingQuizAnswer, timeLimit]);
+
+  useEffect(() => {
+    if (isActive && !isAnswered && timeLimit > 0 && timeLeft <= 0) {
+      handleSkip();
+    }
+  }, [isActive, isAnswered, timeLimit, timeLeft, handleSkip]);
+
+  const progressWidth = timeLimit > 0 ? (timeLeft / timeLimit) * 100 : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isUpdatingQuizAnswer) return;
     if (!isAnswered) {
       handleCheckAnswer();
+      if (settings?.showResultsMode === QuizResultMode.AtTheEnd) {
+        onNext();
+      }
     } else {
       onNext();
     }
@@ -205,6 +245,7 @@ const QuestionCard = ({
           <FillInTheBlankBody
             question={question}
             setSelectedAnswer={setSelectedAnswer}
+            correctAnswer={correctAnswer}
           />
         );
       case QuizQuestionType.WordToSynonym:
@@ -214,6 +255,7 @@ const QuestionCard = ({
             question={question}
             selectedAnswer={selectedAnswer}
             setSelectedAnswer={setSelectedAnswer}
+            correctAnswer={correctAnswer}
           />
         );
       case QuizQuestionType.Matching:
@@ -221,6 +263,7 @@ const QuestionCard = ({
           <MatchingBody
             question={question}
             setSelectedAnswer={setSelectedAnswer}
+            correctAnswer={correctAnswer}
           />
         );
       default:
@@ -284,7 +327,15 @@ const QuestionCard = ({
   };
 
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col overflow-hidden relative">
+      {timeLimit > 0 && !isAnswered && (
+        <div className="absolute top-0 left-0 h-1 w-full bg-muted z-20">
+          <div
+            className="h-full bg-primary-2 transition-all duration-100 ease-linear"
+            style={{ width: `${progressWidth}%` }}
+          />
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="h-full flex flex-col">
         <CardHeader>
           {/* Display the direction */}
@@ -306,7 +357,7 @@ const QuestionCard = ({
           <div className="mt-4 space-y-2">
             {isAnswered &&
               !isUpdatingQuizAnswer &&
-              selectedAnswer &&
+              settings?.showResultsMode === QuizResultMode.AfterEachQuestion &&
               questionResult()}
             {!isAnswered && (
               <Button
@@ -319,20 +370,28 @@ const QuestionCard = ({
                 Skip
               </Button>
             )}
-            {!isAnswered && (
+            {!isAnswered &&
+              settings?.showResultsMode ===
+                QuizResultMode.AfterEachQuestion && (
+                <Button
+                  type="submit"
+                  disabled={
+                    !selectedAnswer || isUpdatingQuizAnswer || isFinalizing
+                  }
+                  className="w-full"
+                  isLoading={isUpdatingQuizAnswer || isFinalizing}
+                >
+                  {isUpdatingQuizAnswer ? "Checking..." : "Check Answer"}
+                </Button>
+              )}
+            {(isAnswered ||
+              settings?.showResultsMode === QuizResultMode.AtTheEnd) && (
               <Button
                 type="submit"
-                disabled={
-                  !selectedAnswer || isUpdatingQuizAnswer || isFinalizing
-                }
                 className="w-full"
+                disabled={selectedAnswer?.length === 0}
                 isLoading={isUpdatingQuizAnswer || isFinalizing}
               >
-                {isUpdatingQuizAnswer ? "Checking..." : "Check Answer"}
-              </Button>
-            )}
-            {isAnswered && (
-              <Button type="submit" className="w-full">
                 {!isLastQuestion ? "Next" : "Finish Quiz"}
               </Button>
             )}

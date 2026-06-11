@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useCallback } from "react";
 import {
   Carousel,
   CarouselApi,
@@ -24,14 +24,10 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
   );
 
   const [current, setCurrent] = useState(initialIndex);
-  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [startTime] = useState<Date | null>(() => new Date());
   const [isPending, startTransition] = useTransition();
 
   const [finalQuiz, setFinalQuiz] = useState<QuizWithAnswers | null>(null);
-
-  useEffect(() => {
-    setStartTime(new Date());
-  }, []);
 
   // Hook to prevent accidental navigation away from the quiz
   useBeforeUnload(!finalQuiz);
@@ -55,7 +51,7 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
     };
   }, [api]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (api?.canScrollNext()) {
       api.scrollNext();
     } else {
@@ -78,7 +74,7 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
         toast.error("Could not save quiz results. Quiz Log ID is missing.");
       }
     }
-  };
+  }, [api, quiz.quizAnswers, startTime]);
 
   if (finalQuiz) {
     return <QuizSummary quiz={finalQuiz} />;
@@ -113,6 +109,7 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
                 initialIsCorrect={answer.isCorrect}
                 onNext={handleNext}
                 currentIndex={index}
+                isActive={current === index}
                 totalQuestions={quiz.quizAnswers.length}
                 isFinalizing={isPending}
               />
