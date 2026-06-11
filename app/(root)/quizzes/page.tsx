@@ -22,7 +22,7 @@ const QuizzesPage = async ({ searchParams }: QuizzesPageProps) => {
     estimatedTimeInMinutes = result.estimatedTimeInMinutes;
   } else {
     // Default behavior: get words automatically
-    const result = await getWordsToQuiz({ wordCount: 10 });
+    const result = await getWordsToQuiz({});
     words = result.words;
     estimatedTimeInMinutes = result.estimatedTimeInMinutes;
   }

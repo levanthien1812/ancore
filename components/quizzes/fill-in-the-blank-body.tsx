@@ -8,9 +8,11 @@ import { QuizQuestion } from "@prisma/client";
 const FillInTheBlankBody = ({
   setSelectedAnswer,
   question,
+  correctAnswer,
 }: {
   question: QuizQuestion;
   setSelectedAnswer: (answer: string) => void;
+  correctAnswer: string | null;
 }) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -80,16 +82,16 @@ const FillInTheBlankBody = ({
             value={isHint ? char : userInput[index]}
             onChange={(e) => handleInputChange(e, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            disabled={isHint || !!question.answer}
+            disabled={isHint || !!correctAnswer}
             className={cn(
               "w-12 h-14 text-base md:text-2xl text-center font-bold px-1",
               {
                 "bg-muted border-dashed text-muted-foreground":
-                  isHint && !question.answer,
+                  isHint && !correctAnswer,
                 "bg-green-100 border-green-600":
-                  question.answer && question.answer === userInput.join(""),
+                  correctAnswer && correctAnswer === userInput.join(""),
                 "bg-red-100 border-red-600":
-                  question.answer && question.answer !== userInput.join(""),
+                  correctAnswer && correctAnswer !== userInput.join(""),
               },
             )}
             aria-label={`Letter ${index + 1} of the word`}

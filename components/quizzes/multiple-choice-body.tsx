@@ -1,32 +1,30 @@
 import { shuffleArray } from "@/lib/utils/shuffle-array";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { QuizQuestion } from "@prisma/client";
 
 const MultipleChoiceBody = ({
   question,
   selectedAnswer,
   setSelectedAnswer,
+  correctAnswer,
 }: {
   question: QuizQuestion;
   selectedAnswer: string | null;
+  correctAnswer: string | null;
   setSelectedAnswer: (answer: string) => void;
 }) => {
-  const [shuffledOptions, setShuffledOptions] = useState<string[]>(
-    question.options,
-  );
-
-  useEffect(() => {
-    setShuffledOptions(shuffleArray([...question.options]));
-  }, [question.options]);
+  const [shuffledOptions] = useState<string[]>(() => {
+    return shuffleArray([...question.options]);
+  });
 
   const isCorrectOption = useCallback(
     (option: string) => {
-      if (!question.answer) return false;
-      return option === question.answer;
+      if (!correctAnswer) return false;
+      return option === correctAnswer;
     },
-    [question.answer],
+    [correctAnswer],
   );
   const isSelected = useCallback(
     (option: string) => {
@@ -45,13 +43,13 @@ const MultipleChoiceBody = ({
           onClick={() => setSelectedAnswer(option)}
           className={cn("h-auto py-3 whitespace-normal justify-start", {
             "bg-green-500 hover:bg-green-600 text-white":
-              question.answer && isCorrectOption(option),
+              correctAnswer && isCorrectOption(option),
             "bg-red-500 hover:bg-red-600 text-white":
-              question.answer &&
+              correctAnswer &&
               option === selectedAnswer &&
               !isCorrectOption(option),
           })}
-          disabled={!!question.answer}
+          disabled={!!correctAnswer}
         >
           {option}
         </Button>
