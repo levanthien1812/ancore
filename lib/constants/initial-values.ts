@@ -87,10 +87,11 @@ export const INITIAL_USER_SETTINGS: Omit<UserSettings, "id" | "userId"> = {
 
   // 4. Spaced repetition settings
   reviewAlgorithm: SpacedRepetitionAlgorithm.Default,
-  familiarInterval: 2,
-  easyInterval: 4,
   forgottenInterval: 1,
-  masteredInterval: 8,
+  hardInterval: 2,
+  mediumInterval: 3,
+  goodInterval: 5,
+  easyInterval: 8,
 
   // 5. Notification settings
   dailyReminderEnabled: true,

@@ -316,10 +316,11 @@ model UserSettings {
 
   // 4. Spaced repetition settings
   reviewAlgorithm   SpacedRepetitionAlgorithm @default(Default)
-  familiarInterval  Int                       @default(2) // days
-  easyInterval      Int                       @default(4) // days
   forgottenInterval Int                       @default(1) // days
-  masteredInterval  Int                       @default(8) // days
+  hardInterval      Int                       @default(2) // days
+  mediumInterval    Int                       @default(3) // days 
+  goodInterval      Int                       @default(5) // days
+  easyInterval      Int                       @default(8) // days
 
   // 5. Notification settings
   dailyReminderEnabled        Boolean @default(true)
