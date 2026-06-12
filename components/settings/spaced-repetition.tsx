@@ -20,7 +20,8 @@ import {
 import { SpacedRepetitionAlgorithm } from "@prisma/client";
 
 const SpacedRepetition = () => {
-  const { register, control } = useFormContext();
+  const { register, control, watch } = useFormContext();
+  const reviewAlgorithm = watch("reviewAlgorithm");
 
   return (
     <Card>
@@ -62,15 +63,17 @@ const SpacedRepetition = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { id: "forgottenInterval", label: "Forgotten Interval (days)" },
-            { id: "familiarInterval", label: "Familiar Interval (days)" },
+            { id: "hardInterval", label: "Hard Interval (days)" },
+            { id: "mediumInterval", label: "Medium Interval (days)" },
+            { id: "goodInterval", label: "Good Interval (days)" },
             { id: "easyInterval", label: "Easy Interval (days)" },
-            { id: "masteredInterval", label: "Mastered Interval (days)" },
           ].map((item) => (
             <div key={item.id} className="grid gap-1.5">
               <Label htmlFor={item.id}>{item.label}</Label>
               <Input
                 id={item.id}
                 type="number"
+                disabled={reviewAlgorithm !== SpacedRepetitionAlgorithm.Custom}
                 {...register(item.id as string, { valueAsNumber: true })}
               />
             </div>

@@ -5,6 +5,7 @@ import {
   WordReviewInfo,
   ReviewFrequency,
   DayOfWeek,
+  SpacedRepetitionAlgorithm,
 } from "../constants/enums";
 import { dateFilter } from "../utils/date-filter"; // Keep this for getStudySessions
 import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers";
@@ -17,7 +18,7 @@ import {
 } from "date-fns";
 import { formatInTimeZone } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
-import { authenticationAction } from "./_helpers";
+import { authenticationAction, settingsAction } from "./_helpers";
 import { ReviewPerformance } from "@prisma/client";
 import { remindReviewSessionsTemplate } from "../email-templates/remind-review-sessions";
 import { parseTimeToMinutes } from "../utils/time-convert";
@@ -28,7 +29,7 @@ export const updateWordReview = async (
   performance: ReviewPerformance,
   studySessionId?: string,
 ) =>
-  authenticationAction(async (userId) => {
+  settingsAction(async (userId, settings) => {
     const word = await prisma.word.findUnique({ where: { id: wordId } });
     if (!word) {
       throw new Error("Word not found for this review session.");
@@ -63,21 +64,34 @@ export const updateWordReview = async (
     // --- Spaced Repetition Algorithm (Simplified) ---
     let newInterval: number;
 
+    const isCustom =
+      settings.reviewAlgorithm === SpacedRepetitionAlgorithm.Custom;
+
     switch (performance) {
       case ReviewPerformance.Forgot:
-        newInterval = 1; // Reset interval to 1 day
+        newInterval = isCustom ? settings.forgottenInterval : 1;
         break;
       case ReviewPerformance.Hard:
-        newInterval = Math.max(1, Math.floor(currentInterval * 1.2));
+        newInterval = Math.max(
+          1,
+          isCustom ? settings.hardInterval : Math.floor(currentInterval * 1.2),
+        );
         break;
       case ReviewPerformance.Medium:
-        newInterval = Math.max(1, Math.floor(currentInterval * 2));
+        newInterval = Math.max(
+          1,
+          isCustom ? settings.mediumInterval : Math.floor(currentInterval * 2),
+        );
         break;
       case ReviewPerformance.Good:
-        newInterval = Math.floor(currentInterval * 3);
+        newInterval = Math.floor(
+          isCustom ? settings.goodInterval : currentInterval * 3,
+        );
         break;
       case ReviewPerformance.Easy:
-        newInterval = Math.floor(currentInterval * 4);
+        newInterval = Math.floor(
+          isCustom ? settings.easyInterval : currentInterval * 4,
+        );
         break;
       default:
         newInterval = currentInterval;

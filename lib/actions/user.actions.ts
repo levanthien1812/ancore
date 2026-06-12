@@ -267,10 +267,10 @@ export async function resetPassword(prevState: unknown, formData: FormData) {
 export const stopWordOfTheDay = async () =>
   authenticationAction(async (userId) => {
     try {
-      await prisma.user.update({
-        where: { id: userId },
+      await prisma.userSettings.update({
+        where: { userId: userId },
         data: {
-          wordOfTheDayStopped: true,
+          wordOfTheDayEnabled: false,
         },
       });
       return { success: true, message: "Word of the day stopped." };
@@ -282,10 +282,10 @@ export const stopWordOfTheDay = async () =>
 export const enableWordOfTheDay = async () =>
   authenticationAction(async (userId) => {
     try {
-      await prisma.user.update({
-        where: { id: userId },
+      await prisma.userSettings.update({
+        where: { userId: userId },
         data: {
-          wordOfTheDayStopped: false,
+          wordOfTheDayEnabled: true,
         },
       });
       return { success: true, message: "Word of the day enabled." };
@@ -293,19 +293,6 @@ export const enableWordOfTheDay = async () =>
       return { success: false, message: "Database error." };
     }
   });
-
-export const getWordOfTheDayPreference = async () =>
-  authenticationAction(
-    async (userId) => {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { wordOfTheDayStopped: true },
-      });
-
-      return { stopped: Boolean(user?.wordOfTheDayStopped) };
-    },
-    { stopped: false },
-  );
 
 export const saveUserSettings = async (
   prevState: unknown,
@@ -333,10 +320,11 @@ export const saveUserSettings = async (
       autoPlayPronunciation: formData.get("autoPlayPronunciation") === "true",
       dailyNewWordsGoal: parseInt(formData.get("dailyNewWordsGoal") as string),
       reviewAlgorithm: formData.get("reviewAlgorithm"),
-      familiarInterval: parseInt(formData.get("familiarInterval") as string),
-      easyInterval: parseInt(formData.get("easyInterval") as string),
       forgottenInterval: parseInt(formData.get("forgottenInterval") as string),
-      masteredInterval: parseInt(formData.get("masteredInterval") as string),
+      hardInterval: parseInt(formData.get("hardInterval") as string),
+      mediumInterval: parseInt(formData.get("mediumInterval") as string),
+      goodInterval: parseInt(formData.get("goodInterval") as string),
+      easyInterval: parseInt(formData.get("easyInterval") as string),
       dailyReminderEnabled: formData.get("dailyReminderEnabled") === "true",
       notificationTime: formData.get("notificationTime"),
       missedReviewReminderEnabled:
