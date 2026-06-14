@@ -137,161 +137,121 @@ export const updateUserOnboarding = async (
       };
     }
 
-    try {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          ...validatedFields.data,
-          level: validatedFields.data.level as UserLevel,
-          onboarded: true,
-        },
-      });
-      revalidatePath("/");
-      return { success: true, message: "Welcome!", errors: {} };
-    } catch (error) {
-      return { success: false, message: "Database error.", errors: {} };
-    }
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...validatedFields.data,
+        level: validatedFields.data.level as UserLevel,
+        onboarded: true,
+      },
+    });
+    revalidatePath("/");
+    return { success: true, message: "Welcome!", errors: {} };
   });
 
 export const forgotPassword = async (
   prevState: unknown,
   formData: FormData,
 ) => {
-  try {
-    const user = forgotPasswordFormSchema.parse({
-      email: formData.get("email"),
-    });
+  const user = forgotPasswordFormSchema.parse({
+    email: formData.get("email"),
+  });
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: user.email },
-    });
+  const existingUser = await prisma.user.findUnique({
+    where: { email: user.email },
+  });
 
-    if (!existingUser) {
-      // Don't reveal if email exists or not for security
-      return {
-        success: true,
-        message:
-          "If an account with that email exists, we've sent you a password reset link.",
-      };
-    }
-
-    // Generate a reset token (you might want to use a more secure method)
-    const resetToken = crypto.randomUUID();
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: {
-        resetToken,
-        resetTokenExpiry,
-      },
-    });
-
-    // Here you would typically send an email with the reset link
-    // For now, we'll just return success
-    console.log(`Reset link: /reset-password?token=${resetToken}`);
-
+  if (!existingUser) {
+    // Don't reveal if email exists or not for security
     return {
       success: true,
       message:
         "If an account with that email exists, we've sent you a password reset link.",
     };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        message: error.issues[0].message,
-      };
-    }
-
-    return {
-      success: false,
-      message: "Something went wrong",
-    };
   }
+
+  // Generate a reset token (you might want to use a more secure method)
+  const resetToken = crypto.randomUUID();
+  const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
+
+  await prisma.user.update({
+    where: { id: existingUser.id },
+    data: {
+      resetToken,
+      resetTokenExpiry,
+    },
+  });
+
+  // Here you would typically send an email with the reset link
+  // For now, we'll just return success
+  console.log(`Reset link: /reset-password?token=${resetToken}`);
+
+  return {
+    success: true,
+    message:
+      "If an account with that email exists, we've sent you a password reset link.",
+  };
 };
 
 export async function resetPassword(prevState: unknown, formData: FormData) {
-  try {
-    const user = resetPasswordFormSchema.parse({
-      password: formData.get("password"),
-      confirmPassword: formData.get("confirmPassword"),
-      token: formData.get("token"),
-    });
+  const user = resetPasswordFormSchema.parse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+    token: formData.get("token"),
+  });
 
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        resetToken: user.token,
-        resetTokenExpiry: {
-          gt: new Date(),
-        },
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      resetToken: user.token,
+      resetTokenExpiry: {
+        gt: new Date(),
       },
-    });
+    },
+  });
 
-    if (!existingUser) {
-      return {
-        success: false,
-        message: "Invalid or expired reset token",
-      };
-    }
-
-    await prisma.user.update({
-      where: { id: existingUser.id },
-      data: {
-        password: hashSync(user.password),
-        resetToken: null,
-        resetTokenExpiry: null,
-      },
-    });
-
-    return {
-      success: true,
-      message:
-        "Password reset successfully. You can now sign in with your new password.",
-    };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return {
-        success: false,
-        message: error.issues[0].message,
-      };
-    }
-
+  if (!existingUser) {
     return {
       success: false,
-      message: "Something went wrong",
+      message: "Invalid or expired reset token",
     };
   }
+
+  await prisma.user.update({
+    where: { id: existingUser.id },
+    data: {
+      password: hashSync(user.password),
+      resetToken: null,
+      resetTokenExpiry: null,
+    },
+  });
+
+  return {
+    success: true,
+    message:
+      "Password reset successfully. You can now sign in with your new password.",
+  };
 }
 
 export const stopWordOfTheDay = async () =>
   authenticationAction(async (userId) => {
-    try {
-      await prisma.userSettings.update({
-        where: { userId: userId },
-        data: {
-          wordOfTheDayEnabled: false,
-        },
-      });
-      return { success: true, message: "Word of the day stopped." };
-    } catch (error) {
-      return { success: false, message: "Database error." };
-    }
+    await prisma.userSettings.update({
+      where: { userId: userId },
+      data: {
+        wordOfTheDayEnabled: false,
+      },
+    });
+    return { success: true, message: "Word of the day stopped." };
   });
 
 export const enableWordOfTheDay = async () =>
   authenticationAction(async (userId) => {
-    try {
-      await prisma.userSettings.update({
-        where: { userId: userId },
-        data: {
-          wordOfTheDayEnabled: true,
-        },
-      });
-      return { success: true, message: "Word of the day enabled." };
-    } catch (error) {
-      return { success: false, message: "Database error." };
-    }
+    await prisma.userSettings.update({
+      where: { userId: userId },
+      data: {
+        wordOfTheDayEnabled: true,
+      },
+    });
+    return { success: true, message: "Word of the day enabled." };
   });
 
 export const saveUserSettings = async (
@@ -335,10 +295,6 @@ export const saveUserSettings = async (
     });
 
     if (!validatedFields.success) {
-      console.log("Validation failed!");
-      console.log(formData.get("reviewReminderTime"));
-      console.log(validatedFields.error.flatten().fieldErrors);
-
       return {
         success: false,
         message: "Validation failed.",
@@ -346,26 +302,16 @@ export const saveUserSettings = async (
       };
     }
 
-    console.log("Validation passed!", validatedFields.data);
-
-    try {
-      await prisma.userSettings.upsert({
-        where: { userId: userId },
-        update: validatedFields.data,
-        create: {
-          userId: userId,
-          ...validatedFields.data,
-        },
-      });
-      revalidatePath("/settings"); // Revalidate the settings page to show updated values
-      return { success: true, message: "Settings saved successfully." };
-    } catch (error) {
-      console.error("Failed to save user settings:", error);
-      return {
-        success: false,
-        message: "Database error: Failed to save settings.",
-      };
-    }
+    await prisma.userSettings.upsert({
+      where: { userId: userId },
+      update: validatedFields.data,
+      create: {
+        userId: userId,
+        ...validatedFields.data,
+      },
+    });
+    revalidatePath("/settings"); // Revalidate the settings page to show updated values
+    return { success: true, message: "Settings saved successfully." };
   });
 
 export const getUserSettings = async () =>
@@ -387,15 +333,11 @@ export const updateUserSettingsByField = async (
   value: UserSettings[keyof UserSettings],
 ) =>
   authenticationAction(async (userId) => {
-    try {
-      await prisma.userSettings.update({
-        where: { userId: userId },
-        data: {
-          [field]: value,
-        },
-      });
-      revalidatePath("/settings");
-    } catch (error) {
-      console.error("Failed to update user settings:", error);
-    }
+    await prisma.userSettings.update({
+      where: { userId: userId },
+      data: {
+        [field]: value,
+      },
+    });
+    revalidatePath("/settings");
   }, null);

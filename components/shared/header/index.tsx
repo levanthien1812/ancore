@@ -5,6 +5,7 @@ import Logo from "@/public/images/logo-ancore-cut.png";
 import UserButton from "./user-button";
 import AddOrEditWord from "../../add-word/add-word";
 import { auth } from "@/auth";
+import NotificationButton from "./notification-button";
 
 const Header = async () => {
   const session = await auth();
@@ -24,7 +25,8 @@ const Header = async () => {
             />
           </Link>
         </div>
-        <div className="flex gap-1 sm:gap-2">
+        <div className="flex gap-1 sm:gap-2 items-center">
+          <NotificationButton />
           <AddOrEditWord />
           <UserButton user={session?.user} />
         </div>

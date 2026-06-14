@@ -15,16 +15,24 @@ export async function authenticationAction<T>(
   fn: (userId: string) => Promise<T>,
   fallback?: T,
 ): Promise<T> {
-  const session = await auth();
+  try {
+    const session = await auth();
 
-  if (!session?.user?.id) {
+    if (!session?.user?.id) {
+      if (fallback !== undefined) {
+        return fallback;
+      }
+      throw new Error("UNAUTHORIZED");
+    }
+
+    return await fn(session.user.id);
+  } catch (error) {
+    console.error("Action error:", error);
     if (fallback !== undefined) {
       return fallback;
     }
-    throw new Error("UNAUTHORIZED");
+    throw new Error("Something went wrong!");
   }
-
-  return fn(session.user.id);
 }
 
 /**
@@ -35,14 +43,14 @@ export async function settingsAction<T>(
   fn: (userId: string, settings: UserSettings) => Promise<T>,
   fallback?: T,
 ): Promise<T> {
-  return authenticationAction(async (userId) => {
+  return await authenticationAction(async (userId) => {
     const settings = await getCachedUserSettings(userId);
 
     if (!settings) {
       throw new Error("USER_SETTINGS_NOT_FOUND");
     }
 
-    return fn(userId, settings);
+    return await fn(userId, settings);
   }, fallback);
 }
 

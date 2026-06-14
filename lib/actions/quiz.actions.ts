@@ -557,42 +557,34 @@ export const cleanupAbandonedQuizzes = async () =>
   authenticationAction(async () => {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-    try {
-      const abandonedQuizzes = await prisma.quiz.findMany({
-        where: {
-          completedAt: null, // The quiz was never finished
-          createdAt: {
-            lt: twentyFourHoursAgo, // It was created more than 24 hours ago
-          },
+    const abandonedQuizzes = await prisma.quiz.findMany({
+      where: {
+        completedAt: null, // The quiz was never finished
+        createdAt: {
+          lt: twentyFourHoursAgo, // It was created more than 24 hours ago
         },
-        select: {
-          id: true,
-        },
-      });
+      },
+      select: {
+        id: true,
+      },
+    });
 
-      if (abandonedQuizzes.length === 0) {
-        return { success: true, message: "No abandoned quizzes to clean up." };
-      }
-
-      const { count } = await prisma.quiz.deleteMany({
-        where: {
-          id: {
-            in: abandonedQuizzes.map((q) => q.id),
-          },
-        },
-      });
-
-      return {
-        success: true,
-        message: `Cleaned up ${count} abandoned quizzes.`,
-      };
-    } catch (error) {
-      console.error("Error cleaning up abandoned quizzes:", error);
-      return {
-        success: false,
-        message: "Failed to clean up abandoned quizzes.",
-      };
+    if (abandonedQuizzes.length === 0) {
+      return { success: true, message: "No abandoned quizzes to clean up." };
     }
+
+    const { count } = await prisma.quiz.deleteMany({
+      where: {
+        id: {
+          in: abandonedQuizzes.map((q) => q.id),
+        },
+      },
+    });
+
+    return {
+      success: true,
+      message: `Cleaned up ${count} abandoned quizzes.`,
+    };
   });
 
 export const updateQuizAnswer = async (
@@ -600,174 +592,163 @@ export const updateQuizAnswer = async (
   userAnswer: string | null,
 ) =>
   authenticationAction(async (userId) => {
-    try {
-      const quizAnswer = await prisma.quizAnswer.findFirst({
-        where: { id: answerId, quiz: { userId } },
-        include: {
-          quizQuestion: {
-            include: { words: { include: { meanings: true } } },
-          },
+    const quizAnswer = await prisma.quizAnswer.findFirst({
+      where: { id: answerId, quiz: { userId } },
+      include: {
+        quizQuestion: {
+          include: { words: { include: { meanings: true } } },
         },
-      });
+      },
+    });
 
-      if (!quizAnswer || !quizAnswer.quizQuestion) {
-        throw new Error("Quiz answer or question not found.");
-      }
+    if (!quizAnswer || !quizAnswer.quizQuestion) {
+      throw new Error("Quiz answer or question not found.");
+    }
 
-      let isCorrect = false;
-      let isSkipped = false;
+    let isCorrect = false;
+    let isSkipped = false;
 
-      if (userAnswer === null || !quizAnswer.quizQuestion.answer) {
-        isSkipped = true;
+    if (userAnswer === null || !quizAnswer.quizQuestion.answer) {
+      isSkipped = true;
+    } else {
+      if (quizAnswer.quizQuestion.type === QuestionType.Matching) {
+        try {
+          const userObj = JSON.parse(userAnswer);
+          const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
+          const correctKeys = Object.keys(correctObj);
+          isCorrect =
+            correctKeys.length === Object.keys(userObj).length &&
+            correctKeys.every((key) => userObj[key] === correctObj[key]);
+        } catch (e) {
+          isCorrect = false;
+        }
       } else {
-        if (quizAnswer.quizQuestion.type === QuestionType.Matching) {
-          try {
-            const userObj = JSON.parse(userAnswer);
-            const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
-            const correctKeys = Object.keys(correctObj);
-            isCorrect =
-              correctKeys.length === Object.keys(userObj).length &&
-              correctKeys.every((key) => userObj[key] === correctObj[key]);
-          } catch (e) {
-            isCorrect = false;
+        isCorrect =
+          userAnswer.trim().toLowerCase() ===
+          quizAnswer.quizQuestion.answer.trim().toLowerCase();
+      }
+    }
+
+    const answer = await prisma.quizAnswer.update({
+      where: { id: answerId },
+      data: {
+        userAnswer,
+        isCorrect,
+        isWrong: isSkipped ? false : !isCorrect,
+        isSkipped,
+        isUnreached: false,
+      },
+      include: {
+        quizQuestion: { include: { words: { include: { meanings: true } } } },
+      },
+    });
+
+    // --- Mastery Level Update Algorithm ---
+    const questionWords = answer?.quizQuestion?.words;
+    if (questionWords && questionWords.length > 0) {
+      for (const word of questionWords) {
+        let newMasteryLevel = word.masteryLevel;
+
+        if (isCorrect) {
+          // Promote the word
+          if (word.masteryLevel === MasteryLevel.New) {
+            newMasteryLevel = MasteryLevel.Learning;
+          } else if (word.masteryLevel === MasteryLevel.Learning) {
+            newMasteryLevel = MasteryLevel.Familiar;
+          } else if (word.masteryLevel === MasteryLevel.Familiar) {
+            newMasteryLevel = MasteryLevel.Mastered;
           }
         } else {
-          isCorrect =
-            userAnswer.trim().toLowerCase() ===
-            quizAnswer.quizQuestion.answer.trim().toLowerCase();
-        }
-      }
-
-      const answer = await prisma.quizAnswer.update({
-        where: { id: answerId },
-        data: {
-          userAnswer,
-          isCorrect,
-          isWrong: isSkipped ? false : !isCorrect,
-          isSkipped,
-          isUnreached: false,
-        },
-        include: {
-          quizQuestion: { include: { words: { include: { meanings: true } } } },
-        },
-      });
-
-      // --- Mastery Level Update Algorithm ---
-      const questionWords = answer?.quizQuestion?.words;
-      if (questionWords && questionWords.length > 0) {
-        for (const word of questionWords) {
-          let newMasteryLevel = word.masteryLevel;
-
-          if (isCorrect) {
-            // Promote the word
-            if (word.masteryLevel === MasteryLevel.New) {
-              newMasteryLevel = MasteryLevel.Learning;
-            } else if (word.masteryLevel === MasteryLevel.Learning) {
-              newMasteryLevel = MasteryLevel.Familiar;
-            } else if (word.masteryLevel === MasteryLevel.Familiar) {
-              newMasteryLevel = MasteryLevel.Mastered;
-            }
-          } else {
-            // Demote the word
-            if (word.masteryLevel === MasteryLevel.Mastered) {
-              newMasteryLevel = MasteryLevel.Familiar;
-            } else if (word.masteryLevel === MasteryLevel.Familiar) {
-              newMasteryLevel = MasteryLevel.Learning;
-            }
-          }
-
-          if (newMasteryLevel !== word.masteryLevel) {
-            await prisma.word.update({
-              where: { id: word.id },
-              data: { masteryLevel: newMasteryLevel },
-            });
+          // Demote the word
+          if (word.masteryLevel === MasteryLevel.Mastered) {
+            newMasteryLevel = MasteryLevel.Familiar;
+          } else if (word.masteryLevel === MasteryLevel.Familiar) {
+            newMasteryLevel = MasteryLevel.Learning;
           }
         }
+
+        if (newMasteryLevel !== word.masteryLevel) {
+          await prisma.word.update({
+            where: { id: word.id },
+            data: { masteryLevel: newMasteryLevel },
+          });
+        }
       }
-      return { isCorrect, correctAnswer: quizAnswer.quizQuestion.answer };
-    } catch (error) {
-      console.error("Failed to update quiz question:", error);
-      // Optionally return a value to indicate failure
     }
+    return { isCorrect, correctAnswer: quizAnswer.quizQuestion.answer };
   });
 
 export const logQuizResult = async (quizId: string, durationSeconds: number) =>
   authenticationAction(async (userId) => {
-    try {
-      // Fetch the questions from the log to calculate the final score
+    // Fetch the questions from the log to calculate the final score
 
-      const answersInSession = await prisma.quizAnswer.findMany({
-        where: {
-          quizId: quizId,
-          quiz: { userId },
-        },
-        select: {
-          isCorrect: true,
-          userAnswer: true,
-          isSkipped: true,
-          isUnreached: true,
-          isWrong: true,
-        },
-      });
+    const answersInSession = await prisma.quizAnswer.findMany({
+      where: {
+        quizId: quizId,
+        quiz: { userId },
+      },
+      select: {
+        isCorrect: true,
+        userAnswer: true,
+        isSkipped: true,
+        isUnreached: true,
+        isWrong: true,
+      },
+    });
 
-      const totalQuestions = answersInSession.length;
-      const correctAnswers = answersInSession.filter((a) => a.isCorrect).length;
-      const skippedQuestions = answersInSession.filter(
-        (a) => a.isSkipped,
-      ).length;
-      const wrongAnswers = answersInSession.filter((a) => a.isWrong).length;
-      const unreachedQuestions = answersInSession.filter(
-        (a) => a.isUnreached,
-      ).length;
+    const totalQuestions = answersInSession.length;
+    const correctAnswers = answersInSession.filter((a) => a.isCorrect).length;
+    const skippedQuestions = answersInSession.filter((a) => a.isSkipped).length;
+    const wrongAnswers = answersInSession.filter((a) => a.isWrong).length;
+    const unreachedQuestions = answersInSession.filter(
+      (a) => a.isUnreached,
+    ).length;
 
-      const completedQuestions = totalQuestions - unreachedQuestions;
+    const completedQuestions = totalQuestions - unreachedQuestions;
 
-      // Calculate quiz status based on performance
-      let status: QuizStatus;
-      // If there are unreached questions, the user quit early
-      if (completedQuestions < totalQuestions) {
-        status = QuizStatus.InProgress;
+    // Calculate quiz status based on performance
+    let status: QuizStatus;
+    // If there are unreached questions, the user quit early
+    if (completedQuestions < totalQuestions) {
+      status = QuizStatus.InProgress;
+    } else {
+      if (correctAnswers === totalQuestions) {
+        status = QuizStatus.Perfect;
+      } else if (correctAnswers / totalQuestions >= 0.8) {
+        status = QuizStatus.Excellent;
       } else {
-        if (correctAnswers === totalQuestions) {
-          status = QuizStatus.Perfect;
-        } else if (correctAnswers / totalQuestions >= 0.8) {
-          status = QuizStatus.Excellent;
-        } else {
-          status = QuizStatus.NeedsReview;
-        }
+        status = QuizStatus.NeedsReview;
       }
-      // Update the main quiz log with the final details
-      const updatedSession = await prisma.quiz.update({
-        where: { id: quizId, userId },
-        data: {
-          completedAt: new Date(),
-          durationSeconds,
-          correctAnswers,
-          totalQuestions,
-          wrongAnswers,
-          skippedQuestions,
-          completedQuestions,
-          unreachedQuestions,
-          status,
-        },
-        include: {
-          quizAnswers: {
-            include: {
-              quizQuestion: {
-                include: { words: { include: { meanings: true } } },
-              },
-            },
-            orderBy: {
-              createdAt: "asc",
+    }
+    // Update the main quiz log with the final details
+    const updatedSession = await prisma.quiz.update({
+      where: { id: quizId, userId },
+      data: {
+        completedAt: new Date(),
+        durationSeconds,
+        correctAnswers,
+        totalQuestions,
+        wrongAnswers,
+        skippedQuestions,
+        completedQuestions,
+        unreachedQuestions,
+        status,
+      },
+      include: {
+        quizAnswers: {
+          include: {
+            quizQuestion: {
+              include: { words: { include: { meanings: true } } },
             },
           },
+          orderBy: {
+            createdAt: "asc",
+          },
         },
-      });
+      },
+    });
 
-      return updatedSession as QuizWithAnswers;
-    } catch (error) {
-      console.error("Failed to log quiz result:", error);
-    }
+    return updatedSession as QuizWithAnswers;
   });
 
 export const getQuiz = async (quizId: string) =>
@@ -828,48 +809,43 @@ export const getRecentQuizzes = async () =>
  */
 export const retryQuizSession = async (quizId: string) =>
   authenticationAction(async (userId) => {
-    try {
-      // 1. Find the original quiz log and its associated questions
-      const originalSession = await prisma.quiz.findUnique({
-        where: { id: quizId, userId },
-        include: { quizAnswers: true },
-      });
+    // 1. Find the original quiz log and its associated questions
+    const originalSession = await prisma.quiz.findUnique({
+      where: { id: quizId, userId },
+      include: { quizAnswers: true },
+    });
 
-      if (!originalSession) {
-        return { success: false, message: "Original quiz session not found." };
-      }
-
-      // 2. Create the new session and answers in a transaction
-      const result = await prisma.$transaction(async (tx) => {
-        // Create a new InProgress session
-        const newSession = await tx.quiz.create({
-          data: {
-            userId,
-            totalQuestions: originalSession.totalQuestions,
-            totalWords: originalSession.totalWords,
-            status: "InProgress",
-            durationSeconds: 0,
-          },
-        });
-
-        // Create new answer placeholders linked to the original questions
-        const newAnswersData = originalSession.quizAnswers.map((ans) => ({
-          quizId: newSession.id,
-          quizQuestionId: ans.quizQuestionId,
-        }));
-
-        await tx.quizAnswer.createMany({
-          data: newAnswersData,
-        });
-
-        return newSession;
-      });
-
-      return { success: true, quizId: result.id };
-    } catch (error) {
-      console.error("Retry quiz error:", error);
-      return { success: false, message: "Failed to create retry session." };
+    if (!originalSession) {
+      return { success: false, message: "Original quiz session not found." };
     }
+
+    // 2. Create the new session and answers in a transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create a new InProgress session
+      const newSession = await tx.quiz.create({
+        data: {
+          userId,
+          totalQuestions: originalSession.totalQuestions,
+          totalWords: originalSession.totalWords,
+          status: "InProgress",
+          durationSeconds: 0,
+        },
+      });
+
+      // Create new answer placeholders linked to the original questions
+      const newAnswersData = originalSession.quizAnswers.map((ans) => ({
+        quizId: newSession.id,
+        quizQuestionId: ans.quizQuestionId,
+      }));
+
+      await tx.quizAnswer.createMany({
+        data: newAnswersData,
+      });
+
+      return newSession;
+    });
+
+    return { success: true, quizId: result.id };
   });
 
 export const getLatestIncompleteQuiz = async () =>

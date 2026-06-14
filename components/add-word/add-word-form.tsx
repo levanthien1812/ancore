@@ -6,6 +6,7 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
@@ -36,7 +37,12 @@ import {
   saveWord,
 } from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
-import { CEFR_LEVELS, CEFRLevel, MASTERY_LEVELS } from "@/lib/constants/enums";
+import {
+  CEFR_LEVELS,
+  CEFRLevel,
+  MASTERY_LEVELS,
+  NotificationType,
+} from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -49,6 +55,7 @@ import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
 import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 import PasteWordTips from "./paste-word-tips";
 import { useLayout } from "../layout/layout-context";
+import { createNotification } from "@/lib/actions/notification.actions";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -68,6 +75,7 @@ const AddOrEditWordForm = ({
   initialWord,
 }: AddOrEditWordFormProps) => {
   const { settings } = useLayout();
+  const processedSuccessRef = useRef(false);
   const { refetch: refetchTodayCount } = useQuery({
     queryKey: ["wordsAddedToday"],
     queryFn: () => getWordsAddedToday(),
@@ -265,7 +273,7 @@ const AddOrEditWordForm = ({
         setWordExistsError(null);
       }
     },
-    [debouncedCheckWord, reset, setValue],
+    [debouncedCheckWord, reset, setValue, setEnteredWord, word],
   );
 
   const onSubmit = (data: WordWithMeanings) => {
@@ -365,7 +373,8 @@ const AddOrEditWordForm = ({
   }, [initialWord, word, wordOfTheDay, checkWord]);
 
   useEffect(() => {
-    if (state && state.success) {
+    if (state && state.success && !processedSuccessRef.current) {
+      processedSuccessRef.current = true;
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });
       queryClient.invalidateQueries({
@@ -379,11 +388,13 @@ const AddOrEditWordForm = ({
       if (!word) {
         const goal = settings?.dailyNewWordsGoal ?? 5;
         refetchTodayCount().then((result) => {
-          if (result.data === goal) {
-            toast.success(
-              `Congratulations! You've reached your daily goal of ${goal} words! 🎊`,
-              { duration: 5000 },
-            );
+          if (result.data && result.data === goal) {
+            createNotification({
+              type: NotificationType.DailyNewWordsGoal,
+              title: "Daily Goal Reached!",
+              message: `Congratulations! You've reached your daily goal of ${goal} words! 🎊`,
+              actionUrl: "/words",
+            });
           }
         });
       }

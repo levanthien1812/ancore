@@ -128,74 +128,63 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       ...wordData
     } = validatedFields.data;
 
-    try {
-      if (wordId) {
-        const existingWord = await prisma.word.findFirst({
-          where: { id: wordId, userId },
-        });
+    if (wordId) {
+      const existingWord = await prisma.word.findFirst({
+        where: { id: wordId, userId },
+      });
 
-        if (!existingWord) {
-          return {
-            success: false,
-            message: "Word not found or permission denied.",
-          };
-        }
-
-        await prisma.$transaction([
-          prisma.word.update({
-            where: { id: wordId },
-            data: { ...wordData, isOriginal },
-          }),
-          prisma.wordMeaning.deleteMany({ where: { wordId } }),
-          prisma.wordMeaning.createMany({
-            data: meaningData.map((meaning) => ({
-              ...meaning,
-              wordId: wordId,
-            })),
-          }),
-        ]);
-      } else {
-        const word = await prisma.word.create({
-          data: {
-            ...wordData,
-            isOriginal,
-            userId,
-          },
-        });
-
-        await prisma.wordMeaning.createMany({
-          data: meaningData.map((meaning) => ({ ...meaning, wordId: word.id })),
-        });
-
-        if (word) {
-          const now = new Date();
-          const initialInterval = 1;
-
-          await prisma.wordReview.create({
-            data: {
-              userId: word.userId,
-              wordId: word.id,
-              completedAt: null,
-              intervalDays: initialInterval,
-              scheduledAt: new Date(
-                now.setDate(now.getDate() + initialInterval),
-              ),
-            },
-          });
-        }
-      }
-
-      revalidatePath("/words");
-
-      return { success: true, message: "Word saved successfully." };
-    } catch (error: unknown) {
-      if (error instanceof Error) {
+      if (!existingWord) {
         return {
           success: false,
-          message: error.message || "Database error: Failed to save word.",
+          message: "Word not found or permission denied.",
         };
       }
+
+      await prisma.$transaction([
+        prisma.word.update({
+          where: { id: wordId },
+          data: { ...wordData, isOriginal },
+        }),
+        prisma.wordMeaning.deleteMany({ where: { wordId } }),
+        prisma.wordMeaning.createMany({
+          data: meaningData.map((meaning) => ({
+            ...meaning,
+            wordId: wordId,
+          })),
+        }),
+      ]);
+    } else {
+      const word = await prisma.word.create({
+        data: {
+          ...wordData,
+          isOriginal,
+          userId,
+        },
+      });
+
+      await prisma.wordMeaning.createMany({
+        data: meaningData.map((meaning) => ({ ...meaning, wordId: word.id })),
+      });
+
+      if (word) {
+        const now = new Date();
+        const initialInterval = 1;
+
+        await prisma.wordReview.create({
+          data: {
+            userId: word.userId,
+            wordId: word.id,
+            completedAt: null,
+            intervalDays: initialInterval,
+            scheduledAt: new Date(now.setDate(now.getDate() + initialInterval)),
+          },
+        });
+      }
     }
+
+    revalidatePath("/words");
+
+    return { success: true, message: "Word saved successfully." };
   });
 
 export const saveMeaning = async (meaning: WordMeaning) =>
@@ -563,28 +552,24 @@ export const deleteWords = async (prevState: unknown, formData: FormData) =>
   authenticationAction(async (userId) => {
     const wordIds = formData.getAll("ids") as string[];
 
-    try {
-      await prisma.$transaction([
-        prisma.wordMeaning.deleteMany({
-          where: { wordId: { in: wordIds } },
-        }),
-        prisma.wordReview.deleteMany({
-          where: { wordId: { in: wordIds } },
-        }),
-        prisma.word.deleteMany({
-          where: {
-            id: { in: wordIds },
-            userId,
-          },
-        }),
-      ]);
+    await prisma.$transaction([
+      prisma.wordMeaning.deleteMany({
+        where: { wordId: { in: wordIds } },
+      }),
+      prisma.wordReview.deleteMany({
+        where: { wordId: { in: wordIds } },
+      }),
+      prisma.word.deleteMany({
+        where: {
+          id: { in: wordIds },
+          userId,
+        },
+      }),
+    ]);
 
-      revalidatePath("/words");
+    revalidatePath("/words");
 
-      return { success: true, message: "Words deleted successfully." };
-    } catch (error) {
-      return { success: false, message: "Failed to delete words." };
-    }
+    return { success: true, message: "Words deleted successfully." };
   });
 
 export const bulkUpdateWords = async (prevState: unknown, formData: FormData) =>
@@ -603,21 +588,17 @@ export const bulkUpdateWords = async (prevState: unknown, formData: FormData) =>
       return { success: false, message: "No updates provided." };
     }
 
-    try {
-      await prisma.word.updateMany({
-        where: {
-          id: { in: wordIds },
-          userId,
-        },
-        data,
-      });
+    await prisma.word.updateMany({
+      where: {
+        id: { in: wordIds },
+        userId,
+      },
+      data,
+    });
 
-      revalidatePath("/words");
+    revalidatePath("/words");
 
-      return { success: true, message: "Words updated successfully." };
-    } catch (error) {
-      return { success: false, message: "Failed to update words." };
-    }
+    return { success: true, message: "Words updated successfully." };
   });
 
 export const checkWordExists = async (word: string) =>
@@ -643,7 +624,6 @@ export const fillWithAI = async (
   authenticationAction(async (userId) => {
     // Reduce token usage by checking for an existing original (AI-generated) word record
     if (!additionalInfo) {
-      console.log("Entered!");
       const existingWord = await prisma.word.findFirst({
         where: {
           word: word.toLowerCase(),
