@@ -104,7 +104,7 @@ const TalkInterface = ({
 
         const result = await getChatResponse(apiHistory);
 
-        if (result.success && result.data) {
+        if (result && result.success && result.data) {
           const aiMessage: Message = {
             ...INITIAL_MESSAGE,
             role: "assistant",
@@ -136,7 +136,7 @@ const TalkInterface = ({
           // Speak the AI message after it's rendered
           speakText(aiMessage.content);
         } else {
-          toast.error(result.message);
+          toast.error("Failed to get AI response.");
         }
       });
     },
@@ -181,7 +181,7 @@ const TalkInterface = ({
         queryClient.invalidateQueries({ queryKey: ["talkSessions"] });
         toast.success("Conversation saved to your history!");
       } else {
-        alert(result.message);
+        toast.error("Failed to save conversation.");
       }
     });
   }, [messages, queryClient, sessionId]);
