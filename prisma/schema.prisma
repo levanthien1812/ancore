@@ -43,6 +43,7 @@ model User {
   notes         Note[]
   talks         TalkSession[]
   settings      UserSettings?
+  notifications Notification[]
 }
 
 model Account {
@@ -356,4 +357,20 @@ enum QuizResultMode {
 enum SpacedRepetitionAlgorithm {
   Default
   Custom
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  actionUrl String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
 }

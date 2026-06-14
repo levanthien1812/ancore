@@ -1,5 +1,11 @@
 "use client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import LearningPreferences from "./learning-preferences";
 import ReviewSettings from "./review-settings";
 import QuizSettings from "./quiz-settings";
@@ -59,11 +65,11 @@ const Settings = () => {
   return (
     <div>
       <FormProvider {...methods}>
-        <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="">
           <Tabs
             defaultValue="learning-preferences"
             orientation="vertical"
-            className="flex flex-col md:flex-row gap-6"
+            className="flex-row gap-6 hidden md:flex"
           >
             <TabsList className="flex flex-col h-fit bg-transparent  rounded-none p-0 items-stretch min-w-[180px]">
               <TabsTrigger
@@ -97,7 +103,6 @@ const Settings = () => {
                 Notifications
               </TabsTrigger>
             </TabsList>
-
             <div className="flex-1 flex flex-col gap-2 custom-scrollbar-y h-[70vh] custom-scrollbar-y">
               <TabsContent
                 value="learning-preferences"
@@ -129,14 +134,51 @@ const Settings = () => {
               >
                 <Notifications />
               </TabsContent>
-
-              <div className="flex justify-end gap-2 mt-2 p-2 w-full rounded-md border bg-white/80 sticky bottom-0">
-                <Button type="submit" isLoading={isPending}>
-                  {isPending ? "Saving..." : "Save changes"}
-                </Button>
-              </div>
             </div>
           </Tabs>
+          <Accordion
+            type="single"
+            collapsible
+            defaultValue="learning-preferences"
+            className="w-full block md:hidden h-[70vh] overflow-y-auto no-scrollbar"
+          >
+            <AccordionItem value="learning-preferences">
+              <AccordionTrigger>Learning Preferences</AccordionTrigger>
+              <AccordionContent>
+                <LearningPreferences />
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="review-settings">
+              <AccordionTrigger>Review Settings</AccordionTrigger>
+              <AccordionContent>
+                <ReviewSettings />
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="quiz-settings">
+              <AccordionTrigger>Quiz Settings</AccordionTrigger>
+              <AccordionContent>
+                <QuizSettings />
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="space-repetition">
+              <AccordionTrigger>Space Repetition</AccordionTrigger>
+              <AccordionContent>
+                <SpacedRepetitionSettings />
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="notifications">
+              <AccordionTrigger>Notifications</AccordionTrigger>
+              <AccordionContent>
+                <Notifications />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          <div className="flex justify-end gap-2 mt-2 p-2 w-full rounded-md border bg-white/80 bottom-0">
+            <Button type="submit" isLoading={isPending}>
+              {isPending ? "Saving..." : "Save changes"}
+            </Button>
+          </div>
         </form>
       </FormProvider>
     </div>

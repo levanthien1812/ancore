@@ -203,3 +203,10 @@ export enum SpacedRepetitionAlgorithm {
   Default = "Default",
   Custom = "Custom",
 }
+
+export enum NotificationType {
+  Daily = "Daily",
+  MissedReview = "MissedReview",
+  Streak = "Streak",
+  DailyNewWordsGoal = "DailyNewWordsGoal",
+}

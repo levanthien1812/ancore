@@ -6,6 +6,8 @@ import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import Providers from "./providers";
 import { QueryProvider } from "@/lib/query-provider";
 import SelectionAddWord from "@/components/shared/selection-add-word";
+import { auth } from "@/auth";
+import NotificationListener from "@/lib/notification-listener";
 
 const font = DM_Sans({
   subsets: ["latin"],
@@ -20,11 +22,13 @@ export const metadata: Metadata = {
   description: `${APP_DESCRIPTION}`,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="en">
       <head>
@@ -34,7 +38,12 @@ export default function RootLayout({
         <QueryProvider>
           <Providers>
             {/* SelectionAddWord must be inside Providers to access Session and Query contexts */}
-            <SelectionAddWord />
+            {session?.user && (
+              <>
+                <SelectionAddWord />
+                <NotificationListener />
+              </>
+            )}
             {children}
           </Providers>
         </QueryProvider>

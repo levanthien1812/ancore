@@ -77,7 +77,7 @@ const UserButton = ({ user }: { user?: User }) => {
                 Settings
               </Button>
             </DialogTrigger>
-            <DialogContent className="min-w-[800px]">
+            <DialogContent className="md:min-w-[800px]">
               <DialogTitle>Settings</DialogTitle>
               <Settings />
             </DialogContent>
