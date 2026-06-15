@@ -143,18 +143,28 @@ const Meaning = memo(function Meaning({
     if (currentDef && currentDef.trim() !== "") {
       return;
     }
+
     const htmlData = e.clipboardData.getData("text/html");
     const parsed = parseWordFromCambridge(htmlData, true);
 
     if (parsed) {
       e.preventDefault();
+      let pos = parsed.pos || null;
+      let pronunciation = parsed.pronunciation || null;
+      if (!pos && index > 0) {
+        pos = getValues(`meanings.${index - 1}.partOfSpeech`);
+      }
+      if ((!pronunciation || pronunciation.trim() === "") && index > 0) {
+        pronunciation = getValues(`meanings.${index - 1}.pronunciation`);
+      }
+
       const newMeaning = {
         ...INITIAL_MEANING,
         id: "temp-" + Math.random(),
         definition: parsed.definition,
         guideWord: parsed.guideWord?.toLowerCase() || null,
-        pronunciation: parsed.pronunciation || null,
-        partOfSpeech: parsed.pos || null,
+        pronunciation: pronunciation,
+        partOfSpeech: pos,
         cefrLevel:
           parsed.cefr && CEFR_LEVELS.includes(parsed.cefr as CEFRLevel)
             ? (parsed.cefr as CEFRLevel)
