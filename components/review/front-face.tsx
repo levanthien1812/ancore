@@ -4,9 +4,11 @@ import { Badge } from "../ui/badge";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { Button } from "../ui/button";
 import {
+  ChevronsRight,
   CircleCheckBig,
   CircleDashed,
   Clock3,
+  FlipHorizontal2,
   Lightbulb,
   Sun,
 } from "lucide-react";
@@ -24,6 +26,7 @@ import {
   getDistinctPartsOfSpeech,
   getDistinctPronunciations,
 } from "@/lib/utils/get-distinct-values";
+import { MAXIMUM_EXAMPLES_IN_HINTS } from "@/lib/constants/constant";
 
 type Hint = Partial<
   Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
@@ -55,16 +58,18 @@ const FrontFace = ({
   setIsFlipped,
   onPerformanceUpdate,
   studySessionId,
+  isRepeated,
 }: {
   word: WordWithMeanings;
   setIsFlipped: (value: boolean) => void;
   onPerformanceUpdate: (performance: ReviewPerformance) => void;
   studySessionId?: string;
+  isRepeated?: boolean;
 }) => {
   const [showHint, setShowHint] = React.useState(false);
   const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
   const [hintList, setHintList] = useState<HintList>(INITIAL_HINT_LIST);
-  const { scrollNext } = useCarousel();
+  const { scrollNext, canScrollNext } = useCarousel();
   const [isReviewed, setIsReviewed] = useState(false);
   const session = useSession();
 
@@ -72,7 +77,10 @@ const FrontFace = ({
     const availableHints: Hint = {};
     if (word.tags && word.tags.length > 0) availableHints.tags = word.tags;
     if (word.meanings[0]?.examples && word.meanings[0].examples.length > 0)
-      availableHints.examples = word.meanings[0]?.examples;
+      availableHints.examples = word.meanings[0]?.examples.slice(
+        0,
+        MAXIMUM_EXAMPLES_IN_HINTS,
+      );
     if (word.meanings[0]?.synonyms && word.meanings[0].synonyms.length > 0)
       availableHints.synonyms = word.meanings[0]?.synonyms;
     if (word.meanings[0]?.antonyms && word.meanings[0].antonyms.length > 0)
@@ -201,7 +209,7 @@ const FrontFace = ({
   };
 
   const handleClickNeedMorePractice = () => {
-    wordReviewMutate(ReviewPerformance.Forgot);
+    wordReviewMutate(ReviewPerformance.Medium);
     onPerformanceUpdate("Medium");
     setIsReviewed(true);
     setIsFlipped(true);
@@ -248,7 +256,7 @@ const FrontFace = ({
           </div>
         )}
       </div>
-      {!isReviewed && (
+      {!isReviewed && !isRepeated && (
         <>
           {Object.keys(availableHints).length > 0 && !showHint && (
             <Button
@@ -256,7 +264,7 @@ const FrontFace = ({
               onClick={handleClickShowHint}
               variant={"link"}
             >
-              <Lightbulb width={14} height={14} className="text-primary-2" />
+              <Lightbulb width={16} height={16} className="text-primary-2" />
               Need a hint?
             </Button>
           )}
@@ -266,7 +274,7 @@ const FrontFace = ({
               onClick={handleClickNeedMorePractice}
               disabled={isUpdatingWordReview}
             >
-              <Clock3 width={14} height={14} className="text-yellow-500" />
+              <Clock3 width={16} height={16} className="text-yellow-500" />
               Needs more practice
             </Button>
             <Button
@@ -275,8 +283,8 @@ const FrontFace = ({
               disabled={isUpdatingWordReview}
             >
               <CircleCheckBig
-                width={14}
-                height={14}
+                width={16}
+                height={16}
                 className="text-green-500"
               />
               Mark as familiar
@@ -334,6 +342,34 @@ const FrontFace = ({
             I forgot this word.
           </Button>
         </>
+      )}
+      {isRepeated && (
+        <div className="flex justify-between gap-2 ">
+          <Button
+            className="border border-white bg-transparent hover:bg-white/10 flex-1"
+            onClick={() => setIsFlipped(true)}
+          >
+            <FlipHorizontal2
+              width={16}
+              height={16}
+              className="text-yellow-500"
+            />
+            Flip
+          </Button>
+          {canScrollNext && (
+            <Button
+              onClick={() => scrollNext()}
+              className="border border-white bg-transparent hover:bg-white/10 flex-1"
+            >
+              Next Word{" "}
+              <ChevronsRight
+                width={16}
+                height={16}
+                className="text-primary-2"
+              />
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );

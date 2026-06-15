@@ -15,7 +15,7 @@ const BackFace = ({ word }: { word: WordWithMeanings }) => {
         {canScrollNext && (
           <Button
             onClick={() => scrollNext()}
-            className="border-2 border-white bg-transparent ms-auto"
+            className="border border-white bg-transparent ms-auto"
           >
             Next Word{" "}
             <ChevronsRight width={14} height={14} className="text-primary-2" />

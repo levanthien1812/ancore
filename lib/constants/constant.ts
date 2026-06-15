@@ -298,3 +298,5 @@ export const REQUIRED_REVIEW_MASTERY_LEVELS: MasteryLevel[] = [
   MasteryLevel.New,
   MasteryLevel.Learning,
 ];
+
+export const MAXIMUM_EXAMPLES_IN_HINTS = 3;

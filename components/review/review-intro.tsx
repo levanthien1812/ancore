@@ -25,14 +25,13 @@ const ReviewIntro = ({ count }: { count: number }) => {
   );
   const [inputValue, setInputValue] = useState(10);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [forThisTimeOnly, setForThisTimeOnly] = useState(true);
 
   const {
     data: words,
     isLoading,
     refetch,
   } = useQuery<WordWithMeanings[]>({
-    queryKey: ["wordsToReview"],
+    queryKey: ["wordsToReview", reviewLimit],
     queryFn: async () => {
       const responseData = await getWordsToReview(reviewLimit);
       return responseData;
@@ -131,11 +130,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
               onChange={(e) => setInputValue(Number(e.target.value))}
             />
             <div className="flex gap-2 mt-4">
-              <Checkbox
-                id="forThisTimeOnly"
-                checked={forThisTimeOnly}
-                onCheckedChange={(value) => setForThisTimeOnly(!!value)}
-              />
+              <Checkbox id="forThisTimeOnly" checked={true} disabled />
               <Label htmlFor="forThisTimeOnly" className="text-right">
                 For this session only
               </Label>
