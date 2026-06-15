@@ -34,12 +34,14 @@ type Props = {
   table: Table<WordWithMeanings>;
   isSelectMode?: boolean;
   onToggleSelectMode?: (isActive: boolean) => void;
+  isLoadingAll?: boolean;
 };
 
 const WordFilter = ({
   table,
   isSelectMode = false,
   onToggleSelectMode,
+  isLoadingAll = false,
 }: Props) => {
   const [showFilters, setShowFilters] = useState(false);
   const { mode } = useLayout();
@@ -54,27 +56,19 @@ const WordFilter = ({
     }
   };
 
-  const areFiltersSet = useMemo(() => {
-    const { globalFilter } = table.getState();
+  const globalFilter = table.getState().globalFilter;
+  const masteryLevelFilter = table.getColumn("masteryLevel")?.getFilterValue();
+  const typeFilter = table.getColumn("type")?.getFilterValue();
+  const highlightedFilter = table.getColumn("highlighted")?.getFilterValue();
 
-    const masteryLevelFilter = table
-      .getColumn("masteryLevel")
-      ?.getFilterValue();
-    const typeFilter = table.getColumn("type")?.getFilterValue();
-    const highlightedFilter = table.getColumn("highlighted")?.getFilterValue();
+  const areFiltersSet = useMemo(() => {
     return (
       !!globalFilter ||
       !!masteryLevelFilter ||
       !!typeFilter ||
       highlightedFilter !== undefined
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    table.getState().globalFilter,
-    table.getColumn("masteryLevel")?.getFilterValue(),
-    table.getColumn("type")?.getFilterValue(),
-    table.getColumn("highlighted")?.getFilterValue(),
-  ]);
+  }, [globalFilter, masteryLevelFilter, typeFilter, highlightedFilter]);
 
   const handleToggleFilters = () => {
     setShowFilters((prev) => !prev);
@@ -83,14 +77,43 @@ const WordFilter = ({
   return (
     <>
       <div className="flex justify-between items-center gap-2">
-        <Input
-          placeholder="🔎 Search for words..."
-          value={(table.getState().globalFilter as string) ?? ""}
-          onChange={(event) => {
-            table.setGlobalFilter(event.target.value);
-          }}
-          className="w-full text-sm md:w-52"
-        />
+        <div className="flex-1 relative">
+          <Input
+            placeholder="🔎 Search for words..."
+            value={(table.getState().globalFilter as string) ?? ""}
+            onChange={(event) => {
+              table.setGlobalFilter(event.target.value);
+            }}
+            disabled={isLoadingAll}
+            className="w-full text-sm md:w-52"
+          />
+          {isLoadingAll && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin">
+                <svg
+                  className="w-4 h-4 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="flex justify-end gap-2">
           <Button
             variant={"secondary"}

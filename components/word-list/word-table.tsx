@@ -42,9 +42,15 @@ import { DEFAULT_WORDS_PER_PAGE_TABLE } from "@/lib/constants/constant";
 const WordTable = ({
   words,
   onClickTitle,
+  globalFilter: initialGlobalFilter = "",
+  onGlobalFilterChange,
+  isLoadingAll = false,
 }: {
   words: WordWithMeanings[];
   onClickTitle: (index: number) => void;
+  globalFilter?: string;
+  onGlobalFilterChange?: (value: string) => void;
+  isLoadingAll?: boolean;
 }) => {
   const columns = React.useMemo<ColumnDef<WordWithMeanings>[]>(
     () => [
@@ -87,7 +93,7 @@ const WordTable = ({
               icon={Volume2Icon}
               asButton
               size="sm"
-              onClick={(e) => handlePlayAudio(row.original.word)}
+              onClick={() => handlePlayAudio(row.original.word)}
               bgClass="bg-primary"
               hoverClass="hover:bg-primary/90"
               activeClass="active:bg-primary/80"
@@ -194,11 +200,21 @@ const WordTable = ({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [globalFilter, setGlobalFilter] = React.useState(initialGlobalFilter);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: DEFAULT_WORDS_PER_PAGE_TABLE,
   });
+
+  // Sync globalFilter changes to parent
+  React.useEffect(() => {
+    onGlobalFilterChange?.(globalFilter);
+  }, [globalFilter, onGlobalFilterChange]);
+
+  // Sync external globalFilter prop to internal state (only when prop changes)
+  React.useEffect(() => {
+    setGlobalFilter(initialGlobalFilter);
+  }, [initialGlobalFilter]);
 
   const table = useReactTable({
     data: words,
@@ -227,7 +243,7 @@ const WordTable = ({
 
   return (
     <div>
-      <WordFilter table={table} />
+      <WordFilter table={table} isLoadingAll={isLoadingAll} />
       <Table>
         <TableCaption>Word list</TableCaption>
         <TableHeader>

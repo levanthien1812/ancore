@@ -15,10 +15,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import {
-  DEFAULT_WORDS_PER_PAGE_GRID,
-  PAGE_SIZES,
-} from "@/lib/constants/constant";
+import { DEFAULT_WORDS_PER_PAGE_GRID } from "@/lib/constants/constant";
 import ActionsPanel from "./actions-panel";
 import Pagination from "./pagination";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,9 +24,15 @@ import { QUERY_KEY } from "@/lib/constants/queryKey";
 const WordGrid = ({
   words,
   onClickTitle,
+  globalFilter: initialGlobalFilter = "",
+  onGlobalFilterChange,
+  isLoadingAll = false,
 }: {
   words: WordWithMeanings[];
   onClickTitle: (index: number) => void;
+  globalFilter?: string;
+  onGlobalFilterChange?: (value: string) => void;
+  isLoadingAll?: boolean;
 }) => {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -86,7 +89,7 @@ const WordGrid = ({
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [globalFilter, setGlobalFilter] = useState(initialGlobalFilter);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -94,6 +97,16 @@ const WordGrid = ({
     pageIndex: 0,
     pageSize: DEFAULT_WORDS_PER_PAGE_GRID,
   });
+
+  // Sync globalFilter changes to parent
+  React.useEffect(() => {
+    onGlobalFilterChange?.(globalFilter);
+  }, [globalFilter, onGlobalFilterChange]);
+
+  // Sync external globalFilter prop to internal state (only when prop changes)
+  React.useEffect(() => {
+    setGlobalFilter(initialGlobalFilter);
+  }, [initialGlobalFilter]);
 
   const table = useReactTable({
     data: words,
@@ -133,6 +146,7 @@ const WordGrid = ({
         table={table}
         isSelectMode={isSelectMode}
         onToggleSelectMode={handleToggleSelectMode}
+        isLoadingAll={isLoadingAll}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {table.getRowModel().rows.map((row) => (

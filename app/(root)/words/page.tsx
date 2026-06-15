@@ -95,7 +95,13 @@ const WordsPage = () => {
   return (
     <div className="container mx-auto space-y-2 p-4">
       <h2 className="text-3xl">Word list</h2>
-      <WordList words={allWords} totalCount={totalCount} />
+      <WordList
+        words={allWords}
+        totalCount={totalCount}
+        hasNextPage={hasNextPage}
+        onFetchNextPage={fetchNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+      />
       {hasNextPage && (
         <div className="mt-4">
           <Button
