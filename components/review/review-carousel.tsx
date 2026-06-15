@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { logWordReview, startStudySession } from "@/lib/actions/review.actions";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
@@ -29,7 +29,6 @@ const ReviewCarousel = ({
   const [startTime] = useState(new Date());
   const [isPending, startTransition] = useTransition();
   const [sessionFinished, setSessionFinished] = useState(false);
-  const [isAllWordsReviewed, setIsAllWordsReviewed] = useState(false);
   const [studySessionId, setStudySessionId] = useState<string | null>(null);
   const [studySession, setStudySession] =
     useState<StudySessionWithWordReviews | null>(null);
@@ -95,13 +94,6 @@ const ReviewCarousel = ({
     if (shouldRepeat) {
       setReviewQueue((prev) => [...prev, currentWord]);
     }
-
-    const isLastCard = current + 1 === reviewQueue.length;
-    if (isLastCard && !shouldRepeat) {
-      setIsAllWordsReviewed(true);
-    } else {
-      setIsAllWordsReviewed(false);
-    }
   };
 
   const handleFinishSession = () => {
@@ -122,6 +114,10 @@ const ReviewCarousel = ({
       setSessionFinished(true);
     });
   };
+
+  const isAllWordsReviewed = useMemo(() => {
+    return current + 1 === reviewQueue.length;
+  }, [current, reviewQueue]);
 
   if (sessionFinished && studySession) {
     return (
@@ -155,6 +151,7 @@ const ReviewCarousel = ({
                 word={word}
                 onPerformanceUpdate={handlePerformanceUpdate}
                 studySessionId={studySessionId ?? undefined}
+                isRepeated={index + 1 > words.length}
               />
             </CarouselItem>
           ))}

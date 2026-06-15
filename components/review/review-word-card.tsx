@@ -10,10 +10,12 @@ const ReviewWordCard = ({
   word,
   onPerformanceUpdate,
   studySessionId,
+  isRepeated,
 }: {
   word: WordWithMeanings;
   onPerformanceUpdate: (performance: ReviewPerformance) => void;
   studySessionId?: string;
+  isRepeated?: boolean;
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -32,6 +34,7 @@ const ReviewWordCard = ({
             setIsFlipped={setIsFlipped}
             onPerformanceUpdate={onPerformanceUpdate}
             studySessionId={studySessionId}
+            isRepeated={isRepeated}
           />
         </div>
 
