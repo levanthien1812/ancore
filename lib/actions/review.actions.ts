@@ -182,15 +182,15 @@ export const startStudySession = async () =>
     return log.id;
   });
 
-export const logWordReview = async (
-  logId: string,
+export const updateReviewSession = async (
+  studySessionId: string,
   summary: {
     durationSeconds: number;
   },
 ) =>
   authenticationAction(async (userId) => {
-    const log = await prisma.studySession.update({
-      where: { id: logId, userId },
+    const session = await prisma.studySession.update({
+      where: { id: studySessionId, userId },
       data: {
         ...summary,
         completedAt: new Date(),
@@ -209,7 +209,7 @@ export const logWordReview = async (
     });
 
     revalidatePath("/review");
-    return log;
+    return session;
   });
 
 export const getStudySessions = async (date: Date) =>

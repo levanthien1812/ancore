@@ -9,7 +9,7 @@ import type { CarouselApi } from "@/components/ui/carousel";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
-import { logWordReview, startStudySession } from "@/lib/actions/review.actions";
+import { updateReviewSession } from "@/lib/actions/review.actions";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
@@ -20,30 +20,21 @@ import { useLayout } from "../layout/layout-context";
 const ReviewCarousel = ({
   words,
   onReviewMore,
+  studySessionId,
 }: {
   words: WordWithMeanings[];
   onReviewMore: () => void;
+  studySessionId: string | null;
 }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [startTime] = useState(new Date());
   const [isPending, startTransition] = useTransition();
   const [sessionFinished, setSessionFinished] = useState(false);
-  const [studySessionId, setStudySessionId] = useState<string | null>(null);
   const [studySession, setStudySession] =
     useState<StudySessionWithWordReviews | null>(null);
   const { settings } = useLayout();
   const [reviewQueue, setReviewQueue] = useState(words);
-
-  useEffect(() => {
-    const initLog = async () => {
-      const id = await startStudySession();
-      if (typeof id === "string") {
-        setStudySessionId(id);
-      }
-    };
-    initLog();
-  }, []);
 
   useEffect(() => {
     if (!api) {
@@ -70,6 +61,41 @@ const ReviewCarousel = ({
     };
   }, [api]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!sessionFinished) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    const handleInternalNavigation = (e: MouseEvent) => {
+      if (sessionFinished) return;
+
+      const target = e.target as HTMLElement;
+      const anchor = target.closest("a");
+      const tabTrigger = target.closest('[role="tab"]');
+
+      if (anchor || tabTrigger) {
+        const isConfirmed = window.confirm(
+          "You have a review in progress. Are you sure you want to leave?",
+        );
+        if (!isConfirmed) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("click", handleInternalNavigation, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("click", handleInternalNavigation, true);
+    };
+  }, [sessionFinished]);
+
   // Play pronunciation audio whenever the current word changes
   useEffect(() => {
     if (reviewQueue[current] && !sessionFinished) {
@@ -94,6 +120,14 @@ const ReviewCarousel = ({
     if (shouldRepeat) {
       setReviewQueue((prev) => [...prev, currentWord]);
     }
+
+    // Update session progress after each word to handle mid-session exits
+    const durationSeconds = Math.floor(
+      (new Date().getTime() - startTime.getTime()) / 1000,
+    );
+    if (studySessionId) {
+      updateReviewSession(studySessionId, { durationSeconds });
+    }
   };
 
   const handleFinishSession = () => {
@@ -102,7 +136,7 @@ const ReviewCarousel = ({
     );
     startTransition(async () => {
       if (studySessionId) {
-        const studySession = await logWordReview(studySessionId, {
+        const studySession = await updateReviewSession(studySessionId, {
           durationSeconds,
         });
         setStudySession(studySession);
