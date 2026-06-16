@@ -45,6 +45,7 @@ export enum PartOfSpeech {
   Expression = "expression",
   ComplexPreposition = "complex preposition",
   Phrase = "phrase",
+  Collocation = "collocation",
 }
 
 export const PARTS_OF_SPEECH: PartOfSpeech[] = [
@@ -61,6 +62,7 @@ export const PARTS_OF_SPEECH_PHRASES: PartOfSpeech[] = [
   PartOfSpeech.Expression,
   PartOfSpeech.ComplexPreposition,
   PartOfSpeech.Phrase,
+  PartOfSpeech.Collocation,
 ];
 
 export const SAMPLE_TOPICS = [

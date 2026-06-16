@@ -10,6 +10,7 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { Play } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getWordsToReview } from "@/lib/actions/word.actions";
+import { startStudySession } from "@/lib/actions/review.actions";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
@@ -25,6 +26,8 @@ const ReviewIntro = ({ count }: { count: number }) => {
   );
   const [inputValue, setInputValue] = useState(10);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [studySessionId, setStudySessionId] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   const {
     data: words,
@@ -44,9 +47,18 @@ const ReviewIntro = ({ count }: { count: number }) => {
     setReviewLimit(settings?.wordsPerReview);
   }, [settings]);
 
-  const handleStartReview = () => {
-    refetch();
-    setStarted(true);
+  const handleStartReview = async () => {
+    setIsStarting(true);
+    try {
+      const id = await startStudySession();
+      if (typeof id === "string") {
+        setStudySessionId(id);
+      }
+      await refetch();
+      setStarted(true);
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const handleSaveLimit = () => {
@@ -57,6 +69,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
 
   const handleReviewMore = () => {
     setStarted(false);
+    setStudySessionId(null);
     refetch();
   };
 
@@ -77,7 +90,11 @@ const ReviewIntro = ({ count }: { count: number }) => {
   if (started && words && words.length > 0) {
     return (
       <div className="h-full">
-        <ReviewCarousel words={words} onReviewMore={handleReviewMore} />
+        <ReviewCarousel
+          words={words}
+          onReviewMore={handleReviewMore}
+          studySessionId={studySessionId}
+        />
       </div>
     );
   }
@@ -150,9 +167,13 @@ const ReviewIntro = ({ count }: { count: number }) => {
           </PopoverContent>
         </Popover>
       </div>
-      <Button onClick={handleStartReview} size="lg" isLoading={isLoading}>
+      <Button
+        onClick={handleStartReview}
+        size="lg"
+        isLoading={isLoading || isStarting}
+      >
         <Play width={16} />
-        {isLoading ? "Loading..." : "Start Review"}
+        {isLoading || isStarting ? "Loading..." : "Start Review"}
       </Button>
     </div>
   );
