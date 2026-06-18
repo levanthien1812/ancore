@@ -12,4 +12,5 @@ export const QUERY_KEY = {
   GET_WEEK_COMPARISON: "getWeekComparison",
   GET_BEST_DAY: "getBestDay",
   GET_REVIEW_STATISTICS: "getReviewStatistics",
+  GET_MONTHLY_ACTIVITY: "getMonthlyActivity",
 };

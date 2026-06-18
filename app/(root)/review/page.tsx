@@ -2,6 +2,8 @@ import { getWordsToReviewCount } from "@/lib/actions/word.actions";
 import ReviewTabsWrapper from "@/components/review/review-tabs-wrapper";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 const ReviewPage = async ({
   searchParams,
 }: {
