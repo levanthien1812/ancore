@@ -5,6 +5,7 @@ import RecentWords from "@/components/home/recent-words";
 import { Suspense } from "react";
 import { OnboardingDialog } from "@/components/home/onboarding-dialog";
 import WordOfTheDay from "@/components/home/word-of-the-day";
+import DailyHeatMap from "@/components/home/daily-heat-map";
 
 export default async function Home() {
   return (
@@ -26,7 +27,8 @@ export default async function Home() {
           <WordCountByPeriodChart />
         </div>
         <div className="col-span-1 md:col-span-6 2xl:col-span-3 ">
-          <WordOfTheDay />
+          {/* <WordOfTheDay /> */}
+          <DailyHeatMap />
         </div>
       </div>
     </div>
