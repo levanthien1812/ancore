@@ -3,12 +3,13 @@ import { useCallback, useMemo, useState, memo, useRef, useEffect } from "react";
 import { debounce } from "@/lib/utils/debounce";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { WordType } from "@prisma/client";
 
 interface WordSuggestProps {
   enteredWord: string;
   setEnteredWord: (value: string) => void;
   existingWord?: string;
-  entryType?: "word" | "phrase";
+  entryType?: WordType;
   onPaste?: (e: React.ClipboardEvent) => void;
 }
 
@@ -16,7 +17,7 @@ const WordSuggest = memo(function WordSuggest({
   enteredWord,
   setEnteredWord,
   existingWord,
-  entryType = "word",
+  entryType = WordType.Word,
   onPaste,
 }: WordSuggestProps) {
   const [suggestedWordList, setSuggestedWordList] = useState<string[]>([]);
@@ -39,7 +40,7 @@ const WordSuggest = memo(function WordSuggest({
 
   const handleSuggest = useCallback(
     async (value: string) => {
-      if (entryType === "phrase") {
+      if (entryType === WordType.Phrase) {
         return;
       }
       const response = await fetch(`/api/datamuse?w=${value}`);
@@ -60,7 +61,7 @@ const WordSuggest = memo(function WordSuggest({
 
   const handleWordChange = async (value: string) => {
     setEnteredWord(value);
-    if (value.trim().length > 0 && entryType === "word") {
+    if (value.trim().length > 0 && entryType === WordType.Word) {
       setShowSuggestions(true);
       debouncedSuggest(value);
     } else {
@@ -81,13 +82,15 @@ const WordSuggest = memo(function WordSuggest({
         Word
       </Label>
       <Input
-        placeholder={entryType === "phrase" ? "Type a phrase" : "Type a word"}
+        placeholder={
+          entryType === WordType.Phrase ? "Type a phrase" : "Type a word"
+        }
         value={enteredWord}
         onChange={(e) => handleWordChange(e.target.value)}
         className="mt-1"
         onPaste={onPaste}
       />
-      {showSuggestions && entryType === "word" && (
+      {showSuggestions && entryType === WordType.Word && (
         <div className="absolute w-full top-14 left-0 bg-white border p-2 rounded-md z-20">
           <p className="text-gray-600 text-xs ">Suggestions</p>
           {suggestedWordList.length === 0 && (
