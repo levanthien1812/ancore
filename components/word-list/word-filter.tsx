@@ -9,6 +9,7 @@ import {
   FunnelX,
   MousePointer2,
   MousePointer2Off,
+  Trash,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -77,7 +78,7 @@ const WordFilter = ({
   return (
     <>
       <div className="flex justify-between items-center gap-2">
-        <div className="flex-1 relative">
+        <div className="flex-1 relative flex items-center gap-1">
           <Input
             placeholder="🔎 Search for words..."
             value={(table.getState().globalFilter as string) ?? ""}
@@ -87,6 +88,15 @@ const WordFilter = ({
             disabled={isLoadingAll}
             className="w-full text-sm md:w-52"
           />
+          {table.getState().globalFilter && (
+            <Button
+              type="button"
+              onClick={() => table.resetGlobalFilter()}
+              variant="ghost"
+            >
+              <Trash width={14} height={14} className="text-red-600" />
+            </Button>
+          )}
           {isLoadingAll && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
               <div className="animate-spin">

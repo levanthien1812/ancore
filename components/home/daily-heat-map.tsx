@@ -129,7 +129,7 @@ const DailyHeatMap = () => {
             })}
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t text-[10px] sm:text-xs text-muted-foreground">
+      <div className="flex flex-col items-center justify-between gap-2 pt-4 border-t text-[10px] sm:text-xs text-muted-foreground">
         <p>Goal: Add words, review, and take quizzes daily.</p>
         <div className="flex items-center gap-1.5">
           <span>Less</span>
