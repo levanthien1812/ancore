@@ -38,6 +38,7 @@ import { Button } from "../ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { MAXIMUM_EXAMPLES } from "@/lib/constants/constant";
 import { toast } from "sonner";
+import { WordType } from "@prisma/client";
 
 interface MeaningProps {
   index: number;
@@ -47,7 +48,7 @@ interface MeaningProps {
   getValues: UseFormGetValues<WordWithMeanings>;
   control: Control<WordWithMeanings>;
   errors: string[] | undefined;
-  entryType: "word" | "phrase";
+  entryType: WordType;
   count: number;
 }
 
@@ -236,7 +237,7 @@ const Meaning = memo(function Meaning({
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  {(entryType === "word"
+                  {(entryType === WordType.Word
                     ? PARTS_OF_SPEECH
                     : PARTS_OF_SPEECH_PHRASES
                   ).map((part) => (

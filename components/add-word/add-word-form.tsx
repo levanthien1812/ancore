@@ -12,6 +12,7 @@ import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import type { Word, WordMeaning } from "@prisma/client";
+import { WordType } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -84,8 +85,8 @@ const AddOrEditWordForm = ({
     word?.word || wordOfTheDay?.word || initialWord || "",
   );
   const queryClient = useQueryClient();
-  const [entryType, setEntryType] = useState<"word" | "phrase">(
-    word?.type === "Phrase" ? "phrase" : "word",
+  const [entryType, setEntryType] = useState<WordType>(
+    word?.type || WordType.Phrase,
   );
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
@@ -279,7 +280,7 @@ const AddOrEditWordForm = ({
   const onSubmit = (data: WordWithMeanings) => {
     const formData = new FormData();
 
-    formData.append("type", entryType === "word" ? "Word" : "Phrase");
+    formData.append("type", entryType);
 
     // Manually append all fields to FormData
     Object.entries(data).forEach(([key, value]) => {
@@ -345,7 +346,11 @@ const AddOrEditWordForm = ({
       guideWord,
     } = parsedContent;
 
+    const type =
+      parsedWord.split(" ").length > 1 ? WordType.Phrase : WordType.Word;
+
     handleWordChange(parsedWord);
+    setEntryType(type);
     replace([
       {
         ...INITIAL_MEANING,
@@ -434,17 +439,17 @@ const AddOrEditWordForm = ({
           <div className="flex gap-1">
             <Button
               type="button"
-              variant={entryType === "word" ? "default" : "outline"}
+              variant={entryType === WordType.Word ? "default" : "outline"}
               className="py-1 px-2 sm:px-4 rounded-full h-fit"
-              onClick={() => setEntryType("word")}
+              onClick={() => setEntryType(WordType.Word)}
             >
               Word
             </Button>
             <Button
               type="button"
-              variant={entryType === "phrase" ? "default" : "outline"}
+              variant={entryType === WordType.Phrase ? "default" : "outline"}
               className="py-1 px-2 sm:px-4 rounded-full h-fit"
-              onClick={() => setEntryType("phrase")}
+              onClick={() => setEntryType(WordType.Phrase)}
             >
               Phrase
             </Button>
