@@ -19,6 +19,7 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Skeleton } from "../ui/skeleton";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 // Helper function to determine the color class based on tasks completed
 const getDayColorClass = (tasksCompleted: number) => {
@@ -108,23 +109,56 @@ const DailyHeatMap = () => {
               const colorClass = getDayColorClass(tasksCompleted);
 
               return (
-                <div
-                  key={dateKey}
-                  className={cn(
-                    "h-8 w-8 rounded-md flex items-center justify-center text-xs font-medium",
-                    colorClass,
-                    {
-                      "ring-2 ring-blue-500 ring-offset-1": isToday(day),
-                    },
-                  )}
-                  title={
-                    activity
-                      ? `${format(day, "PPP")}\nWords Added: ${activity.wordsAdded}\nReview Sessions: ${activity.reviewSessions}\nQuizzes Taken: ${activity.quizzesTaken}\nTotal Tasks: ${activity.totalTasks}`
-                      : `${format(day, "PPP")}\nNo activity`
-                  }
-                >
-                  {format(day, "d")}
-                </div>
+                <Popover key={dateKey}>
+                  <PopoverTrigger className="flex justify-center">
+                    <div
+                      className={cn(
+                        "h-8 w-8 rounded-md flex items-center justify-center text-xs font-medium cursor-pointer hover:ring-2 hover:ring-gray-200 ring-offset-1",
+                        colorClass,
+                        {
+                          "ring-2 ring-blue-500 ring-offset-1": isToday(day),
+                        },
+                      )}
+                    >
+                      {format(day, "d")}
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-fit">
+                    <p className="text-primary-2 font-bold text-sm">
+                      {format(day, "PPP")}
+                    </p>
+                    {activity ? (
+                      <>
+                        <p className="text-muted-foreground text-xs">
+                          Words Added:{" "}
+                          <span className="font-bold text-primary text-sm">
+                            {activity.wordsAdded}
+                          </span>
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          Review Sessions:{" "}
+                          <span className="font-bold text-primary text-sm">
+                            {activity.reviewSessions}
+                          </span>
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          Quizzes Taken:{" "}
+                          <span className="font-bold text-primary text-sm">
+                            {activity.quizzesTaken}
+                          </span>
+                        </p>
+                        <p className="text-muted-foreground text-xs">
+                          Total Tasks:{" "}
+                          <span className="font-bold text-primary text-sm">
+                            {activity.totalTasks}
+                          </span>
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-gray-600 text-sm">No activity</p>
+                    )}
+                  </PopoverContent>
+                </Popover>
               );
             })}
       </div>

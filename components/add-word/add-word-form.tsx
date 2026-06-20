@@ -86,7 +86,7 @@ const AddOrEditWordForm = ({
   );
   const queryClient = useQueryClient();
   const [entryType, setEntryType] = useState<WordType>(
-    word?.type || WordType.Phrase,
+    word?.type || WordType.Word,
   );
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
