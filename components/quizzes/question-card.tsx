@@ -107,7 +107,7 @@ const QuestionCard = ({
 
   useEffect(() => {
     if (isActive && !isAnswered && timeLimit > 0 && timeLeft <= 0) {
-      handleSkip();
+      handleCheckAnswer();
     }
   }, [isActive, isAnswered, timeLimit, timeLeft, handleSkip]);
 
@@ -228,7 +228,11 @@ const QuestionCard = ({
               <Button
                 type="submit"
                 className="w-full"
-                disabled={selectedAnswer?.length === 0}
+                disabled={
+                  selectedAnswer?.length === 0 ||
+                  isUpdatingQuizAnswer ||
+                  isFinalizing
+                }
                 isLoading={isUpdatingQuizAnswer || isFinalizing}
               >
                 {!isLastQuestion ? "Next" : "Finish Quiz"}

@@ -122,7 +122,7 @@ const FillInTheBlankBody = ({
                 "bg-muted border-dashed text-muted-foreground":
                   isHint && !correctAnswer,
                 "bg-green-100 border-green-600": correctAnswer && isCorrect,
-                "bg-red-100 border-red-600": correctAnswer && isCorrect,
+                "bg-red-100 border-red-600": correctAnswer && !isCorrect,
               },
             )}
             aria-label={`Letter ${index + 1} of the word`}
