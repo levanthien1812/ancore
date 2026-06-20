@@ -48,7 +48,6 @@ const WordFilter = ({
   const { mode } = useLayout();
 
   const handleResetFilter = () => {
-    table.resetGlobalFilter();
     table.getColumn("masteryLevel")?.setFilterValue("");
     table.getColumn("type")?.setFilterValue("");
     const highlightedColumn = table.getColumn("highlighted");
@@ -192,7 +191,10 @@ const WordFilter = ({
             onValueChange={(value) =>
               table.getColumn("masteryLevel")?.setFilterValue(value)
             }
-            value={table.getColumn("masteryLevel")?.getFilterValue() as string}
+            value={
+              (table.getColumn("masteryLevel")?.getFilterValue() as string) ||
+              ""
+            }
           >
             <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Select Mastery level" />
@@ -211,7 +213,7 @@ const WordFilter = ({
             onValueChange={(value) =>
               table.getColumn("type")?.setFilterValue(value)
             }
-            value={table.getColumn("type")?.getFilterValue() as string}
+            value={(table.getColumn("type")?.getFilterValue() as string) || ""}
           >
             <SelectTrigger className="w-full md:w-32">
               <SelectValue placeholder="Type" />
