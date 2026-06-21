@@ -84,7 +84,7 @@ const WordList = ({
                 </button>
               </PopoverTrigger>
               <PopoverContent
-                className="w-120 overflow-hidden bg-primary p-4"
+                className="w-screen sm:w-120 overflow-hidden bg-primary p-4"
                 side="top"
               >
                 <WordDetail word={wordObj} showReviewStats={false} />
