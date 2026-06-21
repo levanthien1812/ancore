@@ -276,6 +276,8 @@ export const saveUserSettings = async (
       showResultsMode: formData.get("showResultsMode"),
       allowRetry: formData.get("allowRetry") === "true",
       includeAudioQuestions: formData.get("includeAudioQuestions") === "true",
+      includeFirstLetterInHint:
+        formData.get("includeFirstLetterInHint") === "true",
       showIpaPronunciation: formData.get("showIpaPronunciation") === "true",
       autoPlayPronunciation: formData.get("autoPlayPronunciation") === "true",
       dailyNewWordsGoal: parseInt(formData.get("dailyNewWordsGoal") as string),

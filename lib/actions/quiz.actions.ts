@@ -200,14 +200,16 @@ export const createQuizSession = async (
           const generatedGapHintArray = Array(wordLength).fill("_");
 
           if (wordLength > 0) {
-            generatedGapHintArray[0] = word.word[0];
+            if (settings.includeFirstLetterInHint) {
+              generatedGapHintArray[0] = word.word[0];
+            }
             const additionalHintCount = Math.floor(wordLength * 0.3);
             let hintsAdded = 0;
 
             while (hintsAdded < additionalHintCount) {
               const randomIndex = Math.floor(Math.random() * wordLength);
               if (
-                randomIndex !== 0 &&
+                (!settings.includeFirstLetterInHint || randomIndex !== 0) &&
                 generatedGapHintArray[randomIndex] === "_"
               ) {
                 generatedGapHintArray[randomIndex] = word.word[randomIndex];

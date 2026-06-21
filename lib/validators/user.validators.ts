@@ -81,6 +81,7 @@ export const userSettingsSchema = z.object({
   showResultsMode: z.nativeEnum(QuizResultMode),
   allowRetry: z.boolean(),
   includeAudioQuestions: z.boolean(),
+  includeFirstLetterInHint: z.boolean(),
   showIpaPronunciation: z.boolean(),
   autoPlayPronunciation: z.boolean(),
   dailyNewWordsGoal: z.number().int().min(1).max(100),
