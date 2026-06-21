@@ -303,12 +303,13 @@ model UserSettings {
   autoRepeatForgottenWords Boolean         @default(true)
 
   // 2. Quiz settings
-  questionsPerQuiz      Int            @default(10)
-  quizTypes             QuestionType[] @default([DefinitionToWord_Typing, WordToSynonym, Matching, FillInTheBlank])
-  timeLimitPerQuestion  Int            @default(0) // 0 means no limit, otherwise seconds per question
-  showResultsMode       QuizResultMode @default(AtTheEnd)
-  allowRetry            Boolean        @default(true)
-  includeAudioQuestions Boolean        @default(true)
+  questionsPerQuiz         Int            @default(10)
+  quizTypes                QuestionType[] @default([DefinitionToWord_Typing, WordToSynonym, Matching, FillInTheBlank])
+  timeLimitPerQuestion     Int            @default(0) // 0 means no limit, otherwise seconds per question
+  showResultsMode          QuizResultMode @default(AtTheEnd)
+  allowRetry               Boolean        @default(true)
+  includeAudioQuestions    Boolean        @default(true)
+  includeFirstLetterInHint Boolean        @default(true)
 
   // 3. Learning preference settings
   showIpaPronunciation  Boolean @default(true)

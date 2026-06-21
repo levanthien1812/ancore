@@ -139,7 +139,6 @@ const Settings = () => {
           <Accordion
             type="single"
             collapsible
-            defaultValue="learning-preferences"
             className="w-full block md:hidden h-[70vh] overflow-y-auto no-scrollbar"
           >
             <AccordionItem value="learning-preferences">

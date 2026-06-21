@@ -79,6 +79,7 @@ export const INITIAL_USER_SETTINGS: Omit<UserSettings, "id" | "userId"> = {
   showResultsMode: QuizResultMode.AfterEachQuestion,
   allowRetry: true,
   includeAudioQuestions: true,
+  includeFirstLetterInHint: true,
 
   // 3. Learning preference settings
   showIpaPronunciation: true,

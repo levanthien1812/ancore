@@ -172,6 +172,29 @@ const QuizSettings = () => {
             )}
           />
         </div>
+
+        {/* Include First Letter in Hint */}
+        <div className="flex flex-row items-center justify-between rounded-lg border p-4">
+          <div className="space-y-0.5">
+            <Label className="text-base" htmlFor="includeFirstLetterInHint">
+              Include First Letter in Hint
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              For typing questions, include the first letter of the word as part of the hint.
+            </p>
+          </div>
+          <Controller
+            control={control}
+            name="includeFirstLetterInHint"
+            render={({ field }) => (
+              <Switch
+                id="includeFirstLetterInHint"
+                checked={field.value}
+                onCheckedChange={field.onChange}
+              />
+            )}
+          />
+        </div>
       </CardContent>
     </Card>
   );

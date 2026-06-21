@@ -71,11 +71,15 @@ const QuestionCard = ({
       },
     });
 
-  const handleCheckAnswer = useCallback(() => {
-    if (selectedAnswer) {
-      updateQuizAnswerMutation({ userAnswer: selectedAnswer });
+  const handleCheckAnswer = useCallback((isTimeout: boolean = false) => {
+    if (isTimeout) {
+      updateQuizAnswerMutation({ userAnswer: selectedAnswer || null });
     } else {
-      toast.warning("Please select an answer or finish your answer first.");
+      if (selectedAnswer) {
+        updateQuizAnswerMutation({ userAnswer: selectedAnswer });
+      } else {
+        toast.warning("Please select an answer or finish your answer first.");
+      }
     }
   }, [selectedAnswer, updateQuizAnswerMutation]);
 
@@ -107,7 +111,7 @@ const QuestionCard = ({
 
   useEffect(() => {
     if (isActive && !isAnswered && timeLimit > 0 && timeLeft <= 0) {
-      handleCheckAnswer();
+      handleCheckAnswer(true);
     }
   }, [isActive, isAnswered, timeLimit, timeLeft, handleSkip]);
 
@@ -191,7 +195,7 @@ const QuestionCard = ({
             {isAnswered &&
               !isUpdatingQuizAnswer &&
               settings?.showResultsMode ===
-                QuizResultMode.AfterEachQuestion && (
+              QuizResultMode.AfterEachQuestion && (
                 <QuestionResult
                   question={question}
                   localIsCorrect={localIsCorrect}
@@ -211,7 +215,7 @@ const QuestionCard = ({
             )}
             {!isAnswered &&
               settings?.showResultsMode ===
-                QuizResultMode.AfterEachQuestion && (
+              QuizResultMode.AfterEachQuestion && (
                 <Button
                   type="submit"
                   disabled={
@@ -225,19 +229,19 @@ const QuestionCard = ({
               )}
             {(isAnswered ||
               settings?.showResultsMode === QuizResultMode.AtTheEnd) && (
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={
-                  selectedAnswer?.length === 0 ||
-                  isUpdatingQuizAnswer ||
-                  isFinalizing
-                }
-                isLoading={isUpdatingQuizAnswer || isFinalizing}
-              >
-                {!isLastQuestion ? "Next" : "Finish Quiz"}
-              </Button>
-            )}
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={
+                    selectedAnswer?.length === 0 ||
+                    isUpdatingQuizAnswer ||
+                    isFinalizing
+                  }
+                  isLoading={isUpdatingQuizAnswer || isFinalizing}
+                >
+                  {!isLastQuestion ? "Next" : "Finish Quiz"}
+                </Button>
+              )}
           </div>
         </CardContent>
       </form>

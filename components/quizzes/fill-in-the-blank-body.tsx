@@ -100,7 +100,7 @@ const FillInTheBlankBody = ({
   if (!question.gapHint) return null;
 
   return (
-    <div className="flex justify-center gap-1">
+    <div className="flex justify-center gap-x-1 gap-y-2 flex-wrap">
       {question.gapHint.split("").map((char, index) => {
         const isHint = char !== "_";
         return (
