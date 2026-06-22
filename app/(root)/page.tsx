@@ -13,20 +13,20 @@ export default async function Home() {
       <Suspense>
         <OnboardingDialog />
       </Suspense>
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-4">
-        <div className="col-span-1 md:col-span-6 2xl:col-span-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4">
+        <div className="col-span-1 lg:col-span-6 2xl:col-span-4">
           <Welcome />
         </div>
-        <div className="col-span-1 md:col-span-6 2xl:col-span-4">
+        <div className="col-span-1 lg:col-span-6 2xl:col-span-4">
           <WordCountByMasteryLevelChart />
         </div>
-        <div className="col-span-1 md:col-span-6 2xl:col-span-4 md:row-span-2">
+        <div className="col-span-1 lg:col-span-6 2xl:col-span-4 lg:row-span-2">
           <RecentWords />
         </div>
-        <div className="col-span-1 md:col-span-6 2xl:col-span-5 ">
+        <div className="col-span-1 lg:col-span-6 2xl:col-span-5 ">
           <WordCountByPeriodChart />
         </div>
-        <div className="col-span-1 md:col-span-6 2xl:col-span-3 ">
+        <div className="col-span-1 lg:col-span-6 2xl:col-span-3 ">
           {/* <WordOfTheDay /> */}
           <DailyHeatMap />
         </div>

@@ -75,6 +75,13 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
+  const usages = Array.from(
+    doc.querySelectorAll(".usage.dusage"),
+  )
+    .map((el) => el.textContent?.trim())
+    .filter((t): t is string => !!t)
+    .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
+
   return {
     word: wordText,
     pos,
@@ -85,5 +92,6 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     synonyms: synonyms.join(", "),
     antonyms: antonyms.join(", "),
     guideWord: guideWord || null,
+    usages: usages.join(", "),
   };
 };
