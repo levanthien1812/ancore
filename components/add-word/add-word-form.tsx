@@ -182,7 +182,7 @@ const AddOrEditWordForm = ({
         pronunciation: meaning.pronunciation ?? null,
         cefrLevel:
           meaning.cefrLevel &&
-          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+            CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
@@ -227,7 +227,7 @@ const AddOrEditWordForm = ({
         pronunciation: meaning.pronunciation ?? null,
         cefrLevel:
           meaning.cefrLevel &&
-          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+            CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
@@ -344,6 +344,7 @@ const AddOrEditWordForm = ({
       synonyms,
       antonyms,
       guideWord,
+      usages,
     } = parsedContent;
 
     const type =
@@ -366,6 +367,7 @@ const AddOrEditWordForm = ({
         examples: examples.length > 0 ? examples : [""],
         synonyms: synonyms || null,
         antonyms: antonyms || null,
+        usageNotes: usages || null,
       },
     ]);
     toast.success("Imported details from Cambridge Dictionary");
