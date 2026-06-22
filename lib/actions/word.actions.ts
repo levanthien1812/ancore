@@ -14,7 +14,10 @@ import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
 import { authenticationAction, settingsAction } from "./_helpers";
 import { buildWordOfTheDayPrompt } from "../ai-prompts/word-of-the-day";
 import { generateWordOfTheDayWithAI } from "@/app/services/generate-word-of-the-day-with-ai";
-import { DEFAULT_WORDS_PER_REVIEW } from "../constants/constant";
+import {
+  DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL,
+  DEFAULT_WORDS_PER_REVIEW,
+} from "../constants/constant";
 import { remindReviewSessionsTemplate } from "../email-templates/remind-review-sessions";
 import { resend } from "../resend";
 
@@ -143,7 +146,12 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       await prisma.$transaction([
         prisma.word.update({
           where: { id: wordId },
-          data: { ...wordData, isOriginal },
+          data: {
+            ...wordData,
+            isOriginal,
+            proficiencyScore:
+              DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL[wordData.masteryLevel],
+          },
         }),
         prisma.wordMeaning.deleteMany({ where: { wordId } }),
         prisma.wordMeaning.createMany({
@@ -483,9 +491,9 @@ export const getWordsToReview = async (
       where: {
         userId,
         scheduledAt: {
-          lte: new Date(), // Get all words due today or in the past
+          lte: new Date(),
         },
-        completedAt: null, // Exclude completed sessions
+        completedAt: null,
         word: {
           masteryLevel: {
             in: settings.includeWordLevels,
@@ -497,10 +505,10 @@ export const getWordsToReview = async (
       },
       orderBy: {
         _min: {
-          scheduledAt: "asc", // Prioritize words with earlier scheduled reviews
+          scheduledAt: "asc",
         },
       },
-      take: limit, // Limit the number of words per session
+      take: limit,
     });
 
     const uniqueWordIds = earliestDueReviews.map((item) => item.wordId);

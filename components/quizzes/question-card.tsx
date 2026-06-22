@@ -85,8 +85,6 @@ const QuestionCard = ({
 
   const handleSkip = useCallback(() => {
     setSelectedAnswer(null);
-    setLocalIsCorrect(false);
-    setIsAnswered(true);
     updateQuizAnswerMutation({ userAnswer: null });
     if (settings?.showResultsMode !== QuizResultMode.AfterEachQuestion) {
       onNext();
@@ -113,7 +111,7 @@ const QuestionCard = ({
     if (isActive && !isAnswered && timeLimit > 0 && timeLeft <= 0) {
       handleCheckAnswer(true);
     }
-  }, [isActive, isAnswered, timeLimit, timeLeft, handleSkip]);
+  }, [isActive, isAnswered, timeLimit, timeLeft, handleCheckAnswer]);
 
   const progressWidth = timeLimit > 0 ? (timeLeft / timeLimit) * 100 : 0;
 

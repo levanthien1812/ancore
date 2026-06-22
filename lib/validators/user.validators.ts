@@ -77,6 +77,7 @@ export const userSettingsSchema = z.object({
   autoRepeatForgottenWords: z.boolean(),
   questionsPerQuiz: z.number().int().min(1).max(50),
   quizTypes: z.array(z.nativeEnum(QuestionType)),
+  quizWordLevels: z.array(z.nativeEnum(MasteryLevel)),
   timeLimitPerQuestion: z.number().int().min(0).max(300), // 0 for no limit, max 5 minutes
   showResultsMode: z.nativeEnum(QuizResultMode),
   allowRetry: z.boolean(),

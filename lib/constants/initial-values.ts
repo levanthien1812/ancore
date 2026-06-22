@@ -37,6 +37,8 @@ export const INITIAL_WORD: Word = {
   audioUrl: "",
   highlighted: false,
   isOriginal: false,
+  proficiencyScore: 0,
+  lastReviewedAt: null,
 };
 
 export const defaultWordsCountByMasteryLevel: WordsCountByMasteryLevel = {
@@ -75,6 +77,11 @@ export const INITIAL_USER_SETTINGS: Omit<UserSettings, "id" | "userId"> = {
   // 2. Quiz settings
   questionsPerQuiz: 10,
   quizTypes: Object.values(QuizQuestionType),
+  quizWordLevels: [
+    MasteryLevel.Learning,
+    MasteryLevel.Familiar,
+    MasteryLevel.Mastered,
+  ],
   timeLimitPerQuestion: 0, // 0 means no limit
   showResultsMode: QuizResultMode.AfterEachQuestion,
   allowRetry: true,

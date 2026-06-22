@@ -270,6 +270,7 @@ export const saveUserSettings = async (
         formData.get("autoRepeatForgottenWords") === "true",
       questionsPerQuiz: parseInt(formData.get("questionsPerQuiz") as string),
       quizTypes: formData.getAll("quizTypes"),
+      quizWordLevels: formData.getAll("quizWordLevels"),
       timeLimitPerQuestion: parseInt(
         formData.get("timeLimitPerQuestion") as string,
       ),

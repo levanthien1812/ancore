@@ -19,8 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { QuestionType, QuizResultMode } from "@prisma/client";
-import { REQUIRED_QUESTION_TYPES } from "@/lib/constants/constant";
+import { MasteryLevel, QuestionType, QuizResultMode } from "@prisma/client";
+import { REQUIRED_QUESTION_TYPES, REQUIRED_QUIZ_MASTERY_LEVELS } from "@/lib/constants/constant";
 
 const QuizSettings = () => {
   const { register, control } = useFormContext();
@@ -84,6 +84,41 @@ const QuizSettings = () => {
             Select the types of questions to include in your quizzes.
           </p>
         </div>
+
+        {/* Mastery Levels to Include */}
+        <div className="grid gap-3">
+          <Label>Include Mastery Levels</Label>
+          <div className="flex flex-wrap gap-4 p-4 border rounded-lg">
+            {Object.values(MasteryLevel).map((level) => (
+              <div key={level} className="flex items-center gap-2">
+                <Controller
+                  control={control}
+                  name="quizWordLevels"
+                  render={({ field }) => (
+                    <Checkbox
+                      id={`level-${level}`}
+                      checked={field.value?.includes(level)}
+                      onCheckedChange={(checked) => {
+                        const newValue = checked
+                          ? [...(field.value || []), level]
+                          : field.value?.filter((v: string) => v !== level);
+                        setTimeout(() => field.onChange(newValue), 0);
+                      }}
+                      disabled={REQUIRED_QUIZ_MASTERY_LEVELS.includes(level)}
+                    />
+                  )}
+                />
+                <Label
+                  htmlFor={`level-${level}`}
+                  className="text-sm font-normal"
+                >
+                  {level}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
 
         {/* Time Limit Per Question */}
         <div className="grid gap-1.5">

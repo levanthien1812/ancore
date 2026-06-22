@@ -1,4 +1,4 @@
-import { MasteryLevel, QuestionType } from "@prisma/client";
+import { MasteryLevel, QuestionType, ReviewPerformance } from "@prisma/client";
 
 export const PAGE_SIZES = [10, 20, 50, 100];
 
@@ -299,4 +299,41 @@ export const REQUIRED_REVIEW_MASTERY_LEVELS: MasteryLevel[] = [
   MasteryLevel.Learning,
 ];
 
+export const REQUIRED_QUIZ_MASTERY_LEVELS: MasteryLevel[] = [
+  MasteryLevel.Familiar,
+];
+
 export const MAXIMUM_EXAMPLES_IN_HINTS = 3;
+
+export const DISTRACTOR_POOL_SIZE = 50;
+
+export const MAXIMUM_PROFICIENCY_SCORE = 100;
+export const MINIMUN_PROFICIENCY_SCORE = 0;
+
+export const REVIEW_PERFORMANCE_SCORE: Record<ReviewPerformance, number> = {
+  [ReviewPerformance.Forgot]: -20,
+  [ReviewPerformance.Hard]: -10,
+  [ReviewPerformance.Medium]: 10,
+  [ReviewPerformance.Good]: 20,
+  [ReviewPerformance.Easy]: 30,
+};
+
+export const QUIZ_CORRECT_SCORE: number = 20;
+export const QUIZ_INCORRECT_SCORE: number = -10;
+
+export const DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL: Record<
+  MasteryLevel,
+  number
+> = {
+  [MasteryLevel.New]: MINIMUN_PROFICIENCY_SCORE,
+  [MasteryLevel.Learning]: 25,
+  [MasteryLevel.Familiar]: 50,
+  [MasteryLevel.Mastered]: MAXIMUM_PROFICIENCY_SCORE,
+};
+
+export const AVERAGE_TIME_PER_QUESTION = 20;
+
+export const QUIZ_PRIORITY_WEIGHTS = {
+  PROFICIENCY: 3,
+  REVIEW_RECENCY: 1,
+};
