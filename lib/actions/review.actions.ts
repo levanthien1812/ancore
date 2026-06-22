@@ -23,6 +23,8 @@ import { ReviewPerformance } from "@prisma/client";
 import { remindReviewSessionsTemplate } from "../email-templates/remind-review-sessions";
 import { parseTimeToMinutes } from "../utils/time-convert";
 import { resend } from "../resend";
+import { clampTo100 } from "../utils/contrains";
+import { REVIEW_PERFORMANCE_SCORE } from "../constants/constant";
 
 export const updateWordReview = async (
   wordId: string,
@@ -132,6 +134,10 @@ export const updateWordReview = async (
         break;
     }
 
+    const newProficiencyScore = clampTo100(
+      word.proficiencyScore + REVIEW_PERFORMANCE_SCORE[performance],
+    );
+
     // --- Database Update ---
     const transactionOperations = [];
 
@@ -164,7 +170,12 @@ export const updateWordReview = async (
       }),
       prisma.word.update({
         where: { id: wordId },
-        data: { masteryLevel: newMasteryLevel, updatedAt: now },
+        data: {
+          masteryLevel: newMasteryLevel,
+          proficiencyScore: newProficiencyScore,
+          lastReviewedAt: now,
+          updatedAt: now,
+        },
       }),
     );
     await prisma.$transaction(transactionOperations);
@@ -276,22 +287,13 @@ export const getReviewInfo = async (wordId: string) => {
       nextReviewAt: null,
       nextReviewIn: null,
       overdueIn: null,
-      lastReviewAt: null,
+      lastReviewAt: word.lastReviewedAt,
       reviewedTimes: 0,
     };
-
-    // 1. Get reviewed times and last review date from completed sessions
-    const completedReviews = await prisma.wordReview.findFirst({
-      where: { wordId, userId, completedAt: { not: null } },
-      orderBy: { completedAt: "desc" }, // Most recent completed review first
-    });
 
     info.reviewedTimes = await prisma.wordReview.count({
       where: { wordId, userId, completedAt: { not: null } },
     });
-
-    info.lastReviewAt = completedReviews?.completedAt || null;
-
     // 2. Get next review date from the earliest uncompleted session
     const nextScheduledReview = await prisma.wordReview.findFirst({
       where: { wordId, userId, completedAt: null }, // Look for uncompleted

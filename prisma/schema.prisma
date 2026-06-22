@@ -92,18 +92,20 @@ enum UserLevel {
 }
 
 model Word {
-  id           String       @id @default(cuid())
-  word         String       @unique
-  type         WordType     @default(Word)
-  userId       String
-  user         User         @relation(fields: [userId], references: [id])
-  masteryLevel MasteryLevel
-  audioUrl     String?
-  tags         String?
-  highlighted  Boolean      @default(false)
-  isOriginal   Boolean      @default(false)
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id               String       @id @default(cuid())
+  word             String       @unique
+  type             WordType     @default(Word)
+  userId           String
+  user             User         @relation(fields: [userId], references: [id])
+  masteryLevel     MasteryLevel
+  audioUrl         String?
+  tags             String?
+  highlighted      Boolean      @default(false)
+  isOriginal       Boolean      @default(false)
+  proficiencyScore Int          @default(0)
+  lastReviewedAt   DateTime?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
   meanings WordMeaning[]
   reviews  WordReview[]
@@ -305,6 +307,7 @@ model UserSettings {
   // 2. Quiz settings
   questionsPerQuiz         Int            @default(10)
   quizTypes                QuestionType[] @default([DefinitionToWord_Typing, WordToSynonym, Matching, FillInTheBlank])
+  quizWordLevels           MasteryLevel[] @default([Learning, Familiar, Mastered])
   timeLimitPerQuestion     Int            @default(0) // 0 means no limit, otherwise seconds per question
   showResultsMode          QuizResultMode @default(AtTheEnd)
   allowRetry               Boolean        @default(true)

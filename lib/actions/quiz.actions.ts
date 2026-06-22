@@ -1,7 +1,6 @@
 "use server";
 import { prisma } from "@/db/prisma";
 import { quizQuestionSchema } from "../validators";
-import { buildDistractorGenerationPrompt } from "../ai-prompts/distractor-generation";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import {
@@ -11,10 +10,19 @@ import {
   QuizStatus,
   WordMeaning,
 } from "@prisma/client";
-import { generateDistractorsWithAi } from "@/app/services/generate-distractors-with-ai";
 import { QuizAnswerWithQuestion, QuizWithAnswers } from "../type";
 import { authenticationAction, settingsAction } from "./_helpers";
 import { revalidatePath } from "next/cache";
+import {
+  AVERAGE_TIME_PER_QUESTION,
+  DISTRACTOR_POOL_SIZE,
+  MAXIMUM_PROFICIENCY_SCORE,
+  QUIZ_CORRECT_SCORE,
+  QUIZ_INCORRECT_SCORE,
+  QUIZ_PRIORITY_WEIGHTS,
+} from "../constants/constant";
+import { getRandomElements } from "../utils/randomize";
+import { clampTo100 } from "../utils/contrains";
 
 export const createQuizSession = async (
   wordCount?: number,
@@ -31,15 +39,16 @@ export const createQuizSession = async (
     }
     const { words: wordsToQuiz } = quizData;
 
-    // 2. Get all user's words to use as a distractor pool
-    const allUserWords = await prisma.word.findMany({
-      where: { userId },
+    // 2. Get random words to use as a distractor pool
+    const distractorWords = await prisma.word.findMany({
+      // Exclude the mastered words
+      where: { userId, masteryLevel: { not: MasteryLevel.Mastered } },
       select: { word: true },
-      take: 30,
+      take: DISTRACTOR_POOL_SIZE,
     });
-    const distractorPool = allUserWords.map((w) => w.word);
+    const distractorPool = distractorWords.map((w) => w.word);
 
-    // Create a quizzes log first
+    // Create a quiz first
     const quiz = await prisma.quiz.create({
       data: {
         userId,
@@ -88,18 +97,6 @@ export const createQuizSession = async (
       }
     });
 
-    // --- Collect AI prompts to run in parallel ---
-    const aiCallPromises: Promise<any>[] = [];
-    const aiCallContexts: Array<{
-      word: WordWithMeanings;
-      questionType: QuestionType;
-      mainMeaning: WordMeaning;
-      isSynonym?: boolean;
-      correctAnswer?: string;
-      directionText?: string;
-      questionText?: string;
-    }> = [];
-
     // 3. Manually generate questions for each word
     for (const word of wordsToQuiz) {
       // Randomly pick a meaning that has a definition
@@ -127,6 +124,9 @@ export const createQuizSession = async (
       // Ensure DefinitionToWord_Typing is always available if the word has a definition
       if (
         mainMeaning.definition &&
+        !mainMeaning.definition
+          .toLowerCase()
+          .includes(word.word.toLowerCase()) &&
         !validTypes.includes(QuestionType.DefinitionToWord_Typing)
       ) {
         validTypes.push(QuestionType.DefinitionToWord_Typing);
@@ -157,7 +157,8 @@ export const createQuizSession = async (
       if (
         allExamples.some((ex) =>
           new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
-        )
+        ) ||
+        mainMeaning.definition.toLowerCase().includes(word.word.toLowerCase())
       ) {
         if (
           allowedQuizTypes.includes(QuestionType.FillInTheBlank) &&
@@ -273,19 +274,17 @@ export const createQuizSession = async (
                 w.toLowerCase() !== correctAnswer.toLowerCase(),
             );
 
-            const prompt = buildDistractorGenerationPrompt(
-              correctAnswer,
-              filteredPool,
-              word.word,
-            );
-            aiCallPromises.push(generateDistractorsWithAi(prompt));
-            aiCallContexts.push({
-              word,
-              questionType: selectedType,
-              mainMeaning,
-              isSynonym,
-              correctAnswer,
-              directionText,
+            const randomWords = getRandomElements(filteredPool, 3);
+            const options = shuffleArray([...randomWords, correctAnswer]);
+
+            questionsToLink.push({
+              newData: quizQuestionSchema.parse({
+                wordIds: [word.id],
+                question: directionText,
+                answer: correctAnswer,
+                options,
+                type: selectedType,
+              }),
             });
             wordsUsedInSingleQuestions.add(word.word);
             break;
@@ -293,14 +292,19 @@ export const createQuizSession = async (
         }
 
         if (selectedType === QuestionType.FillInTheBlank) {
-          // NOW MULTIPLE CHOICE
           const validExamples = allExamples.filter((ex) =>
             new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
           );
-          if (validExamples.length === 0) continue;
+          const hasDefinitionWithWord = mainMeaning.definition
+            .toLowerCase()
+            .includes(word.word.toLowerCase());
+          if (validExamples.length === 0 && !hasDefinitionWithWord) continue;
 
-          const example = shuffleArray([...validExamples])[0];
-          const questionText = example.replace(
+          const textToUseForGapHint = hasDefinitionWithWord
+            ? shuffleArray([...validExamples, mainMeaning.definition])[0]
+            : shuffleArray([...validExamples])[0];
+
+          const questionText = textToUseForGapHint.replace(
             new RegExp(`\\b${word.word}\\b`, "gi"),
             "_____",
           );
@@ -309,64 +313,24 @@ export const createQuizSession = async (
             (w) => w.toLowerCase() !== word.word.toLowerCase(),
           );
 
-          const prompt = buildDistractorGenerationPrompt(
-            word.word,
-            filteredPool,
-          );
-          aiCallPromises.push(generateDistractorsWithAi(prompt));
-          aiCallContexts.push({
-            word,
-            questionType: selectedType,
-            mainMeaning,
-            directionText: "Choose the correct word to fill in the blank:",
-            questionText,
+          const randomWords = getRandomElements(filteredPool, 3);
+          const options = shuffleArray([...randomWords, word.word]);
+
+          questionsToLink.push({
+            newData: quizQuestionSchema.parse({
+              wordIds: [word.id],
+              question: questionText,
+              answer: word.word,
+              options,
+              type: selectedType,
+              direction: "Choose the correct word to fill in the blank:",
+            }),
           });
           wordsUsedInSingleQuestions.add(word.word);
           break;
         }
       }
     }
-
-    // --- Execute all AI calls in parallel ---
-    const aiResponses = await Promise.all(aiCallPromises);
-
-    // --- Process AI responses and add to questionsToLink ---
-    aiResponses.forEach((object, idx) => {
-      const context = aiCallContexts[idx];
-      if (!object) return;
-
-      if (context.questionType === QuestionType.DefinitionToWord_Typing) {
-        // Definitions are now generated statically (typing)
-      } else if (context.questionType === QuestionType.FillInTheBlank) {
-        let distractors = object.distractors.map((d: string) => d.trim());
-        if (distractors.includes(context.word.word)) {
-          distractors = distractors.filter(
-            (d: string) => d.toLowerCase() !== context.word.word.toLowerCase(),
-          );
-        }
-        questionsToLink.push({
-          newData: quizQuestionSchema.parse({
-            wordIds: [context.word.id],
-            direction: context.directionText,
-            question: context.questionText,
-            type: QuestionType.FillInTheBlank,
-            options: shuffleArray([...distractors, context.word.word]),
-            answer: context.word.word,
-          }),
-        });
-      } else if (context.questionType === QuestionType.WordToSynonym) {
-        questionsToLink.push({
-          newData: quizQuestionSchema.parse({
-            wordIds: [context.word.id],
-            direction: context.directionText,
-            question: context.word.word,
-            type: QuestionType.WordToSynonym,
-            options: [...object.distractors, context.correctAnswer],
-            answer: context.correctAnswer,
-          }),
-        });
-      }
-    });
 
     // --- Question Type 4: Matching (if enough words) ---
     // Consider all words with definitions for matching questions
@@ -487,31 +451,52 @@ export const getWordsToQuiz = async ({
       });
     } else {
       // Get words automatically based on mastery level and review history
-      words = await prisma.word.findMany({
+      const candidates = await prisma.word.findMany({
         where: {
           userId,
           masteryLevel: {
-            in: [MasteryLevel.New, MasteryLevel.Learning],
+            in: settings.quizWordLevels,
           },
           meanings: {
             some: { definition: { not: "" } },
           },
         },
-        take: finalWordCount,
+        take: finalWordCount * 3,
         include: {
           meanings: true,
         },
-        orderBy: [
-          // Prioritize words that already have review history, then fall back to older words.
-          { reviews: { _count: "desc" } },
-          { createdAt: "asc" },
-        ],
+        orderBy: [{ proficiencyScore: "asc" }, { lastReviewedAt: "asc" }],
       });
+
+      const wordsWithPriority = candidates.map((word) => {
+        const daysSinceReview = word.lastReviewedAt
+          ? Math.floor(
+              (new Date().getTime() - word.lastReviewedAt.getTime()) /
+                (1000 * 60 * 60 * 24),
+            )
+          : 365; // treat never-reviewed words as highly due
+
+        const priority =
+          (MAXIMUM_PROFICIENCY_SCORE - word.proficiencyScore) *
+            QUIZ_PRIORITY_WEIGHTS.PROFICIENCY +
+          daysSinceReview * QUIZ_PRIORITY_WEIGHTS.REVIEW_RECENCY;
+
+        return {
+          ...word,
+          priority,
+        };
+      });
+
+      const sortedByPriority = wordsWithPriority.sort(
+        (a, b) => a.priority - b.priority,
+      );
+      words = sortedByPriority.slice(0, finalWordCount);
     }
 
     // --- Calculate Approximate Quiz Time ---
     let questionCount = 0;
-    const timePerQuestionInSeconds = 20; // Average time per question
+    const timePerQuestionInSeconds =
+      settings.timeLimitPerQuestion || AVERAGE_TIME_PER_QUESTION;
 
     for (const word of words) {
       const meaningsWithDef = word.meanings.filter(
@@ -650,6 +635,7 @@ export const updateQuizAnswer = async (
     if (questionWords && questionWords.length > 0) {
       for (const word of questionWords) {
         let newMasteryLevel = word.masteryLevel;
+        let newProficiencyScore = word.proficiencyScore;
 
         if (isCorrect) {
           // Promote the word
@@ -660,6 +646,10 @@ export const updateQuizAnswer = async (
           } else if (word.masteryLevel === MasteryLevel.Familiar) {
             newMasteryLevel = MasteryLevel.Mastered;
           }
+
+          newProficiencyScore = clampTo100(
+            word.proficiencyScore + QUIZ_CORRECT_SCORE,
+          );
         } else {
           // Demote the word
           if (word.masteryLevel === MasteryLevel.Mastered) {
@@ -667,12 +657,24 @@ export const updateQuizAnswer = async (
           } else if (word.masteryLevel === MasteryLevel.Familiar) {
             newMasteryLevel = MasteryLevel.Learning;
           }
+
+          newProficiencyScore = clampTo100(
+            word.proficiencyScore + QUIZ_INCORRECT_SCORE,
+          );
         }
 
-        if (newMasteryLevel !== word.masteryLevel) {
+        if (
+          newMasteryLevel !== word.masteryLevel ||
+          newProficiencyScore !== word.proficiencyScore
+        ) {
           await prisma.word.update({
             where: { id: word.id },
-            data: { masteryLevel: newMasteryLevel },
+            data: {
+              masteryLevel: newMasteryLevel,
+              proficiencyScore: newProficiencyScore,
+              lastReviewedAt: new Date(),
+              updatedAt: new Date(),
+            },
           });
         }
       }
@@ -682,7 +684,7 @@ export const updateQuizAnswer = async (
 
 export const logQuizResult = async (quizId: string, durationSeconds: number) =>
   authenticationAction(async (userId) => {
-    // Fetch the questions from the log to calculate the final score
+    // Fetch the questions from the quiz to calculate the final score
 
     const answersInSession = await prisma.quizAnswer.findMany({
       where: {
@@ -722,7 +724,7 @@ export const logQuizResult = async (quizId: string, durationSeconds: number) =>
         status = QuizStatus.NeedsReview;
       }
     }
-    // Update the main quiz log with the final details
+    // Update the main quiz quiz with the final details
     const updatedSession = await prisma.quiz.update({
       where: { id: quizId, userId },
       data: {
@@ -811,7 +813,7 @@ export const getRecentQuizzes = async () =>
  */
 export const retryQuizSession = async (quizId: string) =>
   authenticationAction(async (userId) => {
-    // 1. Find the original quiz log and its associated questions
+    // 1. Find the original quiz quiz and its associated questions
     const originalSession = await prisma.quiz.findUnique({
       where: { id: quizId, userId },
       include: { quizAnswers: true },

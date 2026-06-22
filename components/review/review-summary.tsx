@@ -16,7 +16,7 @@ const ReviewSummary = ({
 }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full">
-      <Card className="w-ful h-full">
+      <Card className="w-full h-full">
         <CardHeader>
           <CardTitle className="text-center">Session Complete!</CardTitle>
         </CardHeader>
