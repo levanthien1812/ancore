@@ -3,13 +3,7 @@ import { prisma } from "@/db/prisma";
 import { quizQuestionSchema } from "../validators";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
-import {
-  MasteryLevel,
-  QuestionType,
-  QuizQuestion,
-  QuizStatus,
-  WordMeaning,
-} from "@prisma/client";
+import { MasteryLevel, QuestionType, QuizStatus } from "@prisma/client";
 import { QuizAnswerWithQuestion, QuizWithAnswers } from "../type";
 import { authenticationAction, settingsAction } from "./_helpers";
 import { revalidatePath } from "next/cache";
@@ -60,76 +54,30 @@ export const createQuizSession = async (
     const questionsToLink: { questionId?: string; newData?: any }[] = [];
     const wordsUsedInSingleQuestions = new Set<string>(); // Track words used in single-word questions
 
-    // --- Optimization: Pre-fetch existing questions for all words ---
-    const wordIdsToQuiz = wordsToQuiz.map((w) => w.id);
-    const existingQuestions = await prisma.quizQuestion.findMany({
-      where: {
-        userId,
-        words: { some: { id: { in: wordIdsToQuiz } } },
-      },
-      include: { words: true }, // Include words to check if it's a single-word question
-    });
-
-    // Map for quick lookup: (wordId, questionType) -> QuizQuestion
-    // This is for single-word questions.
-    const existingSingleWordQuestionsMap = new Map<
-      string,
-      Map<QuestionType, QuizQuestion>
-    >();
-    existingQuestions.forEach((q) => {
-      const linkedWordsInQuiz = q.words.filter((w) =>
-        wordIdsToQuiz.includes(w.id),
-      );
-      if (
-        linkedWordsInQuiz.length === 1 &&
-        (q.type === QuestionType.DefinitionToWord_Typing ||
-          q.type === QuestionType.WordToSynonym ||
-          q.type === QuestionType.FillInTheBlank)
-      ) {
-        const wordId = linkedWordsInQuiz[0].id;
-        if (!existingSingleWordQuestionsMap.has(wordId)) {
-          existingSingleWordQuestionsMap.set(
-            wordId,
-            new Map<QuestionType, QuizQuestion>(),
-          );
-        }
-        existingSingleWordQuestionsMap.get(wordId)!.set(q.type, q);
-      }
-    });
-
     // 3. Manually generate questions for each word
     for (const word of wordsToQuiz) {
-      // Randomly pick a meaning that has a definition
-      const meaningsWithDef = word.meanings.filter(
-        (m) => m.definition.trim() !== "",
-      );
-      const mainMeaning =
-        shuffleArray([...meaningsWithDef])[0] || word.meanings[0];
+      const mainMeaning = word.meanings[0];
       if (!mainMeaning) continue;
 
-      const allExamples = word.meanings.flatMap((m) => m.examples || []);
+      const validExamples = word.meanings.flatMap(
+        (m) =>
+          m.examples.filter((ex) =>
+            new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
+          ) || [],
+      );
 
       // Determine valid question types for this word based on available data
-      let validTypes: QuestionType[] = [];
-
-      // Type 1: Definition
-      if (mainMeaning.definition) {
-        validTypes.push(QuestionType.DefinitionToWord_Typing);
-      }
+      const validTypes = new Set<QuestionType>();
 
       // Filter validTypes based on user settings.quizTypes
       const allowedQuizTypes = settings.quizTypes || [];
-      validTypes = validTypes.filter((type) => allowedQuizTypes.includes(type));
 
       // Ensure DefinitionToWord_Typing is always available if the word has a definition
       if (
         mainMeaning.definition &&
-        !mainMeaning.definition
-          .toLowerCase()
-          .includes(word.word.toLowerCase()) &&
-        !validTypes.includes(QuestionType.DefinitionToWord_Typing)
+        !mainMeaning.definition.toLowerCase().includes(word.word.toLowerCase())
       ) {
-        validTypes.push(QuestionType.DefinitionToWord_Typing);
+        validTypes.add(QuestionType.DefinitionToWord_Typing);
       }
 
       // Only add Synonym/Antonym if allowed by settings and data exists
@@ -145,190 +93,162 @@ export const createQuizSession = async (
             .map((a) => a.trim())
             .filter((a) => a.length > 0) || [];
 
-        if (
-          (synonyms.length > 0 || antonyms.length > 0) &&
-          !validTypes.includes(QuestionType.WordToSynonym)
-        ) {
-          validTypes.push(QuestionType.WordToSynonym);
+        if (synonyms.length > 0 || antonyms.length > 0) {
+          validTypes.add(QuestionType.WordToSynonym);
         }
       }
 
       // Type 3: Fill in the Blank
       if (
-        allExamples.some((ex) =>
-          new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
-        ) ||
+        validExamples.length > 0 ||
         mainMeaning.definition.toLowerCase().includes(word.word.toLowerCase())
       ) {
-        if (
-          allowedQuizTypes.includes(QuestionType.FillInTheBlank) &&
-          !validTypes.includes(QuestionType.FillInTheBlank)
-        ) {
-          validTypes.push(QuestionType.FillInTheBlank);
-        }
+        validTypes.add(QuestionType.FillInTheBlank);
       }
 
-      if (validTypes.length === 0) continue;
+      // console.log(validTypes);
+
+      if (validTypes.size === 0) continue;
 
       // Shuffle the valid types to pick one randomly
-      const shuffledValidTypes = shuffleArray([...validTypes]);
+      const shuffledValidTypes = shuffleArray(Array.from(validTypes));
+      const randomType = shuffledValidTypes[0];
 
-      for (const selectedType of shuffledValidTypes) {
-        // Check for existing question using the pre-fetched map
-        const existingQuestionForType = existingSingleWordQuestionsMap
-          .get(word.id)
-          ?.get(selectedType);
+      if (
+        !allowedQuizTypes.includes(randomType) &&
+        randomType !== QuestionType.DefinitionToWord_Typing
+      ) {
+        continue; // Skip if not allowed by settings (and not the required type)
+      }
 
-        if (existingQuestionForType) {
-          questionsToLink.push({ questionId: existingQuestionForType.id });
-          wordsUsedInSingleQuestions.add(word.word);
-          break;
-        }
+      if (randomType === QuestionType.DefinitionToWord_Typing) {
+        // NOW TYPING - Add hint logic for definition
+        const wordLength = word.word.length;
+        const generatedGapHintArray = Array(wordLength).fill("_");
 
-        // If no existing question, try to generate data for the selected type
-        // Re-check settings.quizTypes here to ensure we don't generate a question type
-        // that was filtered out, in case multiple types were valid for a word.
-        if (
-          !settings.quizTypes.includes(selectedType) &&
-          selectedType !== QuestionType.DefinitionToWord_Typing
-        ) {
-          continue; // Skip if not allowed by settings (and not the required type)
-        }
+        if (wordLength > 0) {
+          if (settings.includeFirstLetterInHint) {
+            generatedGapHintArray[0] = word.word[0];
+          }
+          const additionalHintCount = Math.floor(wordLength * 0.3);
+          let hintsAdded = 0;
 
-        if (selectedType === QuestionType.DefinitionToWord_Typing) {
-          // NOW TYPING - Add hint logic for definition
-          const wordLength = word.word.length;
-          const generatedGapHintArray = Array(wordLength).fill("_");
-
-          if (wordLength > 0) {
-            if (settings.includeFirstLetterInHint) {
-              generatedGapHintArray[0] = word.word[0];
-            }
-            const additionalHintCount = Math.floor(wordLength * 0.3);
-            let hintsAdded = 0;
-
-            while (hintsAdded < additionalHintCount) {
-              const randomIndex = Math.floor(Math.random() * wordLength);
-              if (
-                (!settings.includeFirstLetterInHint || randomIndex !== 0) &&
-                generatedGapHintArray[randomIndex] === "_"
-              ) {
-                generatedGapHintArray[randomIndex] = word.word[randomIndex];
-                hintsAdded++;
-              }
+          while (hintsAdded < additionalHintCount) {
+            const randomIndex = Math.floor(Math.random() * wordLength);
+            if (
+              (!settings.includeFirstLetterInHint || randomIndex !== 0) &&
+              generatedGapHintArray[randomIndex] === "_"
+            ) {
+              generatedGapHintArray[randomIndex] = word.word[randomIndex];
+              hintsAdded++;
             }
           }
-          const gapHint = generatedGapHintArray.join("");
+        }
+        const gapHint = generatedGapHintArray.join("");
 
-          questionsToLink.push({
-            newData: quizQuestionSchema.parse({
-              wordIds: [word.id],
-              direction: "Type the word that matches the definition below:",
-              question: mainMeaning.definition,
-              type: selectedType,
-              answer: word.word,
-              options: [], // Typing questions have no options
-              gapHint,
-            }),
-          });
-          wordsUsedInSingleQuestions.add(word.word);
-          break;
+        questionsToLink.push({
+          newData: quizQuestionSchema.parse({
+            wordIds: [word.id],
+            direction: "Type the word that matches the definition below:",
+            question: mainMeaning.definition,
+            type: randomType,
+            answer: word.word,
+            options: [], // Typing questions have no options
+            gapHint,
+          }),
+        });
+        wordsUsedInSingleQuestions.add(word.word);
+      }
+
+      if (randomType === QuestionType.WordToSynonym) {
+        const synonyms =
+          mainMeaning.synonyms
+            ?.split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0) || [];
+        const antonyms =
+          mainMeaning.antonyms
+            ?.split(",")
+            .map((a) => a.trim())
+            .filter((a) => a.length > 0) || [];
+
+        // Randomly decide to create a synonym or antonym question if both are available
+        const canCreateSynonym = synonyms.length > 0;
+        const canCreateAntonym = antonyms.length > 0;
+        let subQuestionType: "synonym" | "antonym" | null = null;
+
+        if (canCreateSynonym && canCreateAntonym) {
+          subQuestionType = Math.random() > 0.5 ? "synonym" : "antonym";
+        } else if (canCreateSynonym) {
+          subQuestionType = "synonym";
+        } else if (canCreateAntonym) {
+          subQuestionType = "antonym";
         }
 
-        if (selectedType === QuestionType.WordToSynonym) {
-          const synonyms =
-            mainMeaning.synonyms
-              ?.split(",")
-              .map((s) => s.trim())
-              .filter((s) => s.length > 0) || [];
-          const antonyms =
-            mainMeaning.antonyms
-              ?.split(",")
-              .map((a) => a.trim())
-              .filter((a) => a.length > 0) || [];
-
-          // Randomly decide to create a synonym or antonym question if both are available
-          const canCreateSynonym = synonyms.length > 0;
-          const canCreateAntonym = antonyms.length > 0;
-          let subQuestionType: "synonym" | "antonym" | null = null;
-
-          if (canCreateSynonym && canCreateAntonym) {
-            subQuestionType = Math.random() > 0.5 ? "synonym" : "antonym";
-          } else if (canCreateSynonym) {
-            subQuestionType = "synonym";
-          } else if (canCreateAntonym) {
-            subQuestionType = "antonym";
-          }
-
-          if (subQuestionType) {
-            const isSynonym = subQuestionType === "synonym";
-            const correctAnswers = isSynonym ? synonyms : antonyms;
-            const correctAnswer = correctAnswers[0]; // Pick the first one as the answer
-            const directionText = `Which of the following is a${
-              isSynonym ? " synonym" : "n antonym"
-            } for the word below?`;
-
-            const filteredPool = distractorPool.filter(
-              (w) =>
-                w.toLowerCase() !== word.word.toLowerCase() &&
-                w.toLowerCase() !== correctAnswer.toLowerCase(),
-            );
-
-            const randomWords = getRandomElements(filteredPool, 3);
-            const options = shuffleArray([...randomWords, correctAnswer]);
-
-            questionsToLink.push({
-              newData: quizQuestionSchema.parse({
-                wordIds: [word.id],
-                question: directionText,
-                answer: correctAnswer,
-                options,
-                type: selectedType,
-              }),
-            });
-            wordsUsedInSingleQuestions.add(word.word);
-            break;
-          }
-        }
-
-        if (selectedType === QuestionType.FillInTheBlank) {
-          const validExamples = allExamples.filter((ex) =>
-            new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
-          );
-          const hasDefinitionWithWord = mainMeaning.definition
-            .toLowerCase()
-            .includes(word.word.toLowerCase());
-          if (validExamples.length === 0 && !hasDefinitionWithWord) continue;
-
-          const textToUseForGapHint = hasDefinitionWithWord
-            ? shuffleArray([...validExamples, mainMeaning.definition])[0]
-            : shuffleArray([...validExamples])[0];
-
-          const questionText = textToUseForGapHint.replace(
-            new RegExp(`\\b${word.word}\\b`, "gi"),
-            "_____",
-          );
+        if (subQuestionType) {
+          const isSynonym = subQuestionType === "synonym";
+          const correctAnswers = isSynonym ? synonyms : antonyms;
+          const correctAnswer = correctAnswers[0]; // Pick the first one as the answer
+          const directionText = `Which of the following is a${
+            isSynonym ? " synonym" : "n antonym"
+          } for the word below?`;
 
           const filteredPool = distractorPool.filter(
-            (w) => w.toLowerCase() !== word.word.toLowerCase(),
+            (w) =>
+              w.toLowerCase() !== word.word.toLowerCase() &&
+              w.toLowerCase() !== correctAnswer.toLowerCase(),
           );
 
           const randomWords = getRandomElements(filteredPool, 3);
-          const options = shuffleArray([...randomWords, word.word]);
+          const options = shuffleArray([...randomWords, correctAnswer]);
 
           questionsToLink.push({
             newData: quizQuestionSchema.parse({
               wordIds: [word.id],
-              question: questionText,
-              answer: word.word,
+              question: word.word,
+              answer: correctAnswer,
               options,
-              type: selectedType,
-              direction: "Choose the correct word to fill in the blank:",
+              type: randomType,
+              direction: directionText,
             }),
           });
           wordsUsedInSingleQuestions.add(word.word);
-          break;
         }
+      }
+
+      if (randomType === QuestionType.FillInTheBlank) {
+        const hasDefinitionWithWord = mainMeaning.definition
+          .toLowerCase()
+          .includes(word.word.toLowerCase());
+        if (validExamples.length === 0 && !hasDefinitionWithWord) continue;
+
+        const textToUseForGapHint = hasDefinitionWithWord
+          ? shuffleArray([...validExamples, mainMeaning.definition])[0]
+          : shuffleArray([...validExamples])[0];
+
+        const questionText = textToUseForGapHint.replace(
+          new RegExp(`\\b${word.word}\\b`, "gi"),
+          "_____",
+        );
+
+        const filteredPool = distractorPool.filter(
+          (w) => w.toLowerCase() !== word.word.toLowerCase(),
+        );
+
+        const randomWords = getRandomElements(filteredPool, 3);
+        const options = shuffleArray([...randomWords, word.word]);
+
+        questionsToLink.push({
+          newData: quizQuestionSchema.parse({
+            wordIds: [word.id],
+            question: questionText,
+            answer: word.word,
+            options,
+            type: randomType,
+            direction: "Choose the correct word to fill in the blank:",
+          }),
+        });
+        wordsUsedInSingleQuestions.add(word.word);
       }
     }
 
@@ -353,33 +273,19 @@ export const createQuizSession = async (
         return randomMeaning.definition;
       });
 
-      // Check if a matching question already exists for this set of words.
-      // This is still a single DB query, which is fine outside the main loop.
-      const existingMatchingQuestion = await prisma.quizQuestion.findFirst({
-        where: {
-          userId,
+      questionsToLink.push({
+        newData: quizQuestionSchema.parse({
+          wordIds: matchingWords.map((w) => w.id),
+          direction: "Match each word to its corresponding definition.",
+          question: "", // No central question content for matching
           type: QuestionType.Matching,
-          words: { every: { id: { in: matchingWords.map((w) => w.id) } } }, // Check if ALL words are in the question
-        },
+          leftItems,
+          rightItems,
+          answer: JSON.stringify(
+            Object.fromEntries(leftItems.map((k, i) => [k, rightItems[i]])),
+          ),
+        }),
       });
-
-      if (!existingMatchingQuestion) {
-        questionsToLink.push({
-          newData: quizQuestionSchema.parse({
-            wordIds: matchingWords.map((w) => w.id),
-            direction: "Match each word to its corresponding definition.",
-            question: "", // No central question content for matching
-            type: QuestionType.Matching,
-            leftItems,
-            rightItems,
-            answer: JSON.stringify(
-              Object.fromEntries(leftItems.map((k, i) => [k, rightItems[i]])),
-            ),
-          }),
-        });
-      } else {
-        questionsToLink.push({ questionId: existingMatchingQuestion.id });
-      }
     }
 
     // 4. Save all generated questions to the database
