@@ -32,16 +32,13 @@ const FillInTheBlankBody = ({
     newUserInput[index] = value;
     setUserInput(newUserInput);
 
-    // Update parent
-    const isComplete = newUserInput.every(
-      (char, i) => question.gapHint![i] !== "_" || char !== "",
-    );
     const finalAnswer = newUserInput
       .map((char, i) =>
         question.gapHint![i] !== "_" ? question.gapHint![i] : char,
       )
       .join("");
-    setSelectedAnswer(isComplete ? finalAnswer : "");
+      
+    setSelectedAnswer(finalAnswer);
 
     // Move focus to the next empty input
     if (value && index < question.gapHint.length - 1) {
