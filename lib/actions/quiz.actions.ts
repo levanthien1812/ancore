@@ -347,24 +347,17 @@ export const getWordsToQuiz = async ({
           word: {
             in: wordList,
           },
-          meanings: {
-            some: { definition: { not: "" } },
-          },
         },
         include: {
           meanings: true,
         },
       });
     } else {
-      // Get words automatically based on mastery level and review history
       const candidates = await prisma.word.findMany({
         where: {
           userId,
           masteryLevel: {
             in: settings.quizWordLevels,
-          },
-          meanings: {
-            some: { definition: { not: "" } },
           },
         },
         take: finalWordCount * 3,
