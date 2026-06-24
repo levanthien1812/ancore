@@ -20,17 +20,68 @@ import { cn } from "@/lib/utils";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Skeleton } from "../ui/skeleton";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-
-// Helper function to determine the color class based on tasks completed
-const getDayColorClass = (tasksCompleted: number) => {
-  if (tasksCompleted >= 3) return "bg-yellow-600"; // Dark yellow
-  if (tasksCompleted === 2) return "bg-yellow-400"; // Normal yellow
-  if (tasksCompleted === 1) return "bg-yellow-300"; // Light yellow
-  return "bg-gray-200"; // Gray for no tasks
-};
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const DailyHeatMap = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedField, setSelectedField] = useState<
+    "totalTasks" | "wordsAdded" | "reviewSessions" | "quizzesTaken"
+  >("totalTasks");
+
+  const fieldConfig = {
+    totalTasks: {
+      goal: "Goal: Add words, review, and take quizzes daily.",
+      levels: [
+        { min: 0, max: 0, color: "bg-gray-200", title: "0 tasks completed" },
+        { min: 1, max: 1, color: "bg-yellow-300", title: "1 task completed" },
+        { min: 2, max: 2, color: "bg-yellow-400", title: "2 tasks completed" },
+        { min: 3, max: Infinity, color: "bg-yellow-600", title: "All 3 tasks completed" },
+      ],
+    },
+    wordsAdded: {
+      goal: "Goal: Add new words daily.",
+      levels: [
+        { min: 0, max: 0, color: "bg-gray-200", title: "0 words added" },
+        { min: 1, max: 4, color: "bg-yellow-300", title: "1 - 4 words added" },
+        { min: 5, max: 9, color: "bg-yellow-400", title: "5 - 9 words added" },
+        { min: 10, max: 14, color: "bg-yellow-500", title: "10 - 14 words added" },
+        { min: 15, max: Infinity, color: "bg-yellow-600", title: "15+ words added" },
+      ],
+    },
+    reviewSessions: {
+      goal: "Goal: Complete review sessions daily.",
+      levels: [
+        { min: 0, max: 0, color: "bg-gray-200", title: "0 review sessions completed" },
+        { min: 1, max: 1, color: "bg-yellow-300", title: "1 review session completed" },
+        { min: 2, max: 2, color: "bg-yellow-400", title: "2 review sessions completed" },
+        { min: 3, max: Infinity, color: "bg-yellow-600", title: "3+ review sessions completed" },
+      ],
+    },
+    quizzesTaken: {
+      goal: "Goal: Take quizzes daily.",
+      levels: [
+        { min: 0, max: 0, color: "bg-gray-200", title: "0 quizzes taken" },
+        { min: 1, max: 1, color: "bg-yellow-300", title: "1 quiz taken" },
+        { min: 2, max: 2, color: "bg-yellow-400", title: "2 quizzes taken" },
+        { min: 3, max: Infinity, color: "bg-yellow-600", title: "3+ quizzes taken" },
+      ],
+    },
+  };
+
+  const currentConfig = fieldConfig[selectedField];
+
+  const getDayColorClass = (value: number) => {
+    const matchedLevel = currentConfig.levels.find(
+      (level) => value >= level.min && value <= level.max
+    );
+    return matchedLevel ? matchedLevel.color : "bg-gray-200";
+  };
 
   const year = currentMonth.getFullYear();
   const month = currentMonth.getMonth() + 1; // getMonth() is 0-indexed
@@ -72,10 +123,31 @@ const DailyHeatMap = () => {
 
   return (
     <div className="bg-white p-4 rounded-2xl space-y-4 h-full">
-      <p className="text-xl sm:text-2xl font-bold text-primary">
-        Activity Heat Map{" "}
-        <Info width={16} height={16} className="inline text-muted-foreground" />
-      </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <p className="text-xl sm:text-2xl font-bold text-primary flex items-center gap-1.5">
+          Activity Heat Map{" "}
+          <Info width={16} height={16} className="inline text-muted-foreground" />
+        </p>
+
+        <Select
+          value={selectedField}
+          onValueChange={(value) =>
+            setSelectedField(
+              value as "totalTasks" | "wordsAdded" | "reviewSessions" | "quizzesTaken"
+            )
+          }
+        >
+          <SelectTrigger className="w-[180px] h-9">
+            <SelectValue placeholder="Select field" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="totalTasks">Total Tasks</SelectItem>
+            <SelectItem value="wordsAdded">Words Added</SelectItem>
+            <SelectItem value="reviewSessions">Review Sessions</SelectItem>
+            <SelectItem value="quizzesTaken">Quizzes Taken</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       <div className="flex justify-between items-center">
         <Button variant="ghost" size="icon" onClick={handlePreviousMonth}>
@@ -105,8 +177,8 @@ const DailyHeatMap = () => {
           : daysInMonth.map((day) => {
               const dateKey = format(day, "yyyy-MM-dd");
               const activity = activityMap.get(dateKey);
-              const tasksCompleted = activity?.totalTasks || 0;
-              const colorClass = getDayColorClass(tasksCompleted);
+              const fieldValue = activity ? activity[selectedField] : 0;
+              const colorClass = getDayColorClass(fieldValue);
 
               return (
                 <Popover key={dateKey}>
@@ -123,39 +195,95 @@ const DailyHeatMap = () => {
                       {format(day, "d")}
                     </div>
                   </PopoverTrigger>
-                  <PopoverContent className="w-fit">
-                    <p className="text-primary-2 font-bold text-sm">
+                  <PopoverContent className="w-48 p-3 space-y-2">
+                    <p className="text-primary-2 font-bold text-sm border-b pb-1">
                       {format(day, "PPP")}
                     </p>
                     {activity ? (
-                      <>
-                        <p className="text-muted-foreground text-xs">
-                          Words Added:{" "}
-                          <span className="font-bold text-primary text-sm">
+                      <div className="space-y-1">
+                        <div
+                          className={cn(
+                            "flex items-center justify-between gap-4 text-xs px-2 py-1 rounded-md",
+                            selectedField === "wordsAdded"
+                              ? "bg-yellow-50 text-yellow-700 font-semibold"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          <span>Words Added</span>
+                          <span
+                            className={cn(
+                              "font-bold text-sm",
+                              selectedField === "wordsAdded"
+                                ? "text-yellow-700"
+                                : "text-primary"
+                            )}
+                          >
                             {activity.wordsAdded}
                           </span>
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Review Sessions:{" "}
-                          <span className="font-bold text-primary text-sm">
+                        </div>
+                        <div
+                          className={cn(
+                            "flex items-center justify-between gap-4 text-xs px-2 py-1 rounded-md",
+                            selectedField === "reviewSessions"
+                              ? "bg-yellow-50 text-yellow-700 font-semibold"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          <span>Review Sessions</span>
+                          <span
+                            className={cn(
+                              "font-bold text-sm",
+                              selectedField === "reviewSessions"
+                                ? "text-yellow-700"
+                                : "text-primary"
+                            )}
+                          >
                             {activity.reviewSessions}
                           </span>
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Quizzes Taken:{" "}
-                          <span className="font-bold text-primary text-sm">
+                        </div>
+                        <div
+                          className={cn(
+                            "flex items-center justify-between gap-4 text-xs px-2 py-1 rounded-md",
+                            selectedField === "quizzesTaken"
+                              ? "bg-yellow-50 text-yellow-700 font-semibold"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          <span>Quizzes Taken</span>
+                          <span
+                            className={cn(
+                              "font-bold text-sm",
+                              selectedField === "quizzesTaken"
+                                ? "text-yellow-700"
+                                : "text-primary"
+                            )}
+                          >
                             {activity.quizzesTaken}
                           </span>
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Total Tasks:{" "}
-                          <span className="font-bold text-primary text-sm">
+                        </div>
+                        <div
+                          className={cn(
+                            "flex items-center justify-between gap-4 text-xs px-2 py-1 rounded-md border-t pt-1.5 mt-1",
+                            selectedField === "totalTasks"
+                              ? "bg-yellow-50 text-yellow-700 font-semibold"
+                              : "text-muted-foreground font-medium"
+                          )}
+                        >
+                          <span>Total Tasks</span>
+                          <span
+                            className={cn(
+                              "font-bold text-sm",
+                              selectedField === "totalTasks"
+                                ? "text-yellow-700"
+                                : "text-primary"
+                            )}
+                          >
                             {activity.totalTasks}
                           </span>
-                        </p>
-                      </>
+                        </div>
+                      </div>
                     ) : (
-                      <p className="text-gray-600 text-sm">No activity</p>
+                      <p className="text-gray-600 text-xs px-2">No activity</p>
                     )}
                   </PopoverContent>
                 </Popover>
@@ -163,26 +291,17 @@ const DailyHeatMap = () => {
             })}
       </div>
 
-      <div className="flex flex-col items-center justify-between gap-2 pt-4 border-t text-[10px] sm:text-xs text-muted-foreground">
-        <p>Goal: Add words, review, and take quizzes daily.</p>
+      <div className="flex flex-col items-center justify-between gap-2 pt-4 border-t text-[10px] sm:text-xs text-muted-foreground w-full">
+        <p>{currentConfig.goal}</p>
         <div className="flex items-center gap-1.5">
           <span>Less</span>
-          <div
-            className="h-3 w-3 rounded-sm bg-gray-200"
-            title="0 tasks completed"
-          ></div>
-          <div
-            className="h-3 w-3 rounded-sm bg-yellow-300"
-            title="1 task completed"
-          ></div>
-          <div
-            className="h-3 w-3 rounded-sm bg-yellow-400"
-            title="2 tasks completed"
-          ></div>
-          <div
-            className="h-3 w-3 rounded-sm bg-yellow-600"
-            title="All 3 tasks completed"
-          ></div>
+          {currentConfig.levels.map((level, idx) => (
+            <div
+              key={idx}
+              className={cn("h-3 w-3 rounded-sm", level.color)}
+              title={level.title}
+            ></div>
+          ))}
           <span>More</span>
         </div>
       </div>
