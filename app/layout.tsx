@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import "react-circular-progressbar/dist/styles.css";
+import 'react-indiana-drag-scroll/dist/style.css'
 import { APP_DESCRIPTION, APP_NAME } from "@/lib/constants";
 import Providers from "./providers";
 import { QueryProvider } from "@/lib/query-provider";
