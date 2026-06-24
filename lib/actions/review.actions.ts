@@ -24,7 +24,10 @@ import { remindReviewSessionsTemplate } from "../email-templates/remind-review-s
 import { parseTimeToMinutes } from "../utils/time-convert";
 import { resend } from "../resend";
 import { clampTo100 } from "../utils/contrains";
-import { REVIEW_PERFORMANCE_SCORE } from "../constants/constant";
+import {
+  DEFAULT_REVIEW_INTERVALS,
+  REVIEW_PERFORMANCE_SCORE,
+} from "../constants/constant";
 
 export const updateWordReview = async (
   wordId: string,
@@ -36,13 +39,6 @@ export const updateWordReview = async (
     if (!word) {
       throw new Error("Word not found for this review session.");
     }
-
-    // Find the most recent completed review session to determine the current interval for the algorithm.
-    // This is distinct from the session being marked as completed *now*.
-    const lastCompletedReview = await prisma.wordReview.findFirst({
-      where: { wordId, userId, completedAt: { not: null } },
-      orderBy: { completedAt: "desc" },
-    });
 
     const now = new Date();
     // Find the specific review session that is currently being completed (i.e., the pending one that was due)
@@ -57,63 +53,41 @@ export const updateWordReview = async (
       select: { id: true, intervalDays: true }, // Only need id and intervalDays from this one
     });
 
-    // If there's no previous completed review, use the initial interval (1 day, as set in word.actions.ts)
-    // Otherwise, use the intervalDays from the last completed review.
-    const currentInterval = lastCompletedReview
-      ? lastCompletedReview.intervalDays
-      : 1;
-
     // --- Spaced Repetition Algorithm (Simplified) ---
-    let newInterval: number;
-
     const isCustom =
       settings.reviewAlgorithm === SpacedRepetitionAlgorithm.Custom;
 
-    switch (performance) {
-      case ReviewPerformance.Forgot:
-        newInterval = isCustom ? settings.forgottenInterval : 1;
-        break;
-      case ReviewPerformance.Hard:
-        newInterval = Math.max(
-          1,
-          isCustom ? settings.hardInterval : Math.floor(currentInterval * 1.2),
-        );
-        break;
-      case ReviewPerformance.Medium:
-        newInterval = Math.max(
-          1,
-          isCustom ? settings.mediumInterval : Math.floor(currentInterval * 2),
-        );
-        break;
-      case ReviewPerformance.Good:
-        newInterval = Math.floor(
-          isCustom ? settings.goodInterval : currentInterval * 3,
-        );
-        break;
-      case ReviewPerformance.Easy:
-        newInterval = Math.floor(
-          isCustom ? settings.easyInterval : currentInterval * 4,
-        );
-        break;
-      default:
-        newInterval = currentInterval;
-    }
-    // --- End of Algorithm ---
+    const settingsIntervalMap = {
+      [ReviewPerformance.Forgot]: settings.forgottenInterval,
+      [ReviewPerformance.Hard]: settings.hardInterval,
+      [ReviewPerformance.Medium]: settings.mediumInterval,
+      [ReviewPerformance.Good]: settings.goodInterval,
+      [ReviewPerformance.Easy]: settings.easyInterval,
+    };
+
+    const newInterval = Math.max(
+      1,
+      isCustom
+        ? settingsIntervalMap[performance]
+        : DEFAULT_REVIEW_INTERVALS[performance],
+    );
+
     const newScheduledAt = new Date(now.getTime());
     newScheduledAt.setDate(newScheduledAt.getDate() + newInterval);
 
     const isPositiveResult =
       performance === ReviewPerformance.Good ||
       performance === ReviewPerformance.Easy;
-    const isNegativeResult =
-      performance === ReviewPerformance.Forgot ||
-      performance === ReviewPerformance.Hard;
 
     // --- Mastery Level Update Algorithm ---
     let newMasteryLevel = word.masteryLevel;
     switch (word.masteryLevel) {
       case MasteryLevel.New:
-        newMasteryLevel = MasteryLevel.Learning;
+        if (isPositiveResult) {
+          newMasteryLevel = MasteryLevel.Familiar;
+        } else {
+          newMasteryLevel = MasteryLevel.Learning;
+        }
         break;
       case MasteryLevel.Learning:
         if (isPositiveResult) {
@@ -121,14 +95,14 @@ export const updateWordReview = async (
         }
         break;
       case MasteryLevel.Familiar:
-        if (performance === ReviewPerformance.Forgot) {
+        if (!isPositiveResult) {
           newMasteryLevel = MasteryLevel.Learning; // Demote
-        } else if (isPositiveResult) {
+        } else {
           newMasteryLevel = MasteryLevel.Mastered;
         }
         break;
       case MasteryLevel.Mastered:
-        if (isNegativeResult) {
+        if (!isPositiveResult) {
           newMasteryLevel = MasteryLevel.Familiar; // Demote if user struggles
         }
         break;

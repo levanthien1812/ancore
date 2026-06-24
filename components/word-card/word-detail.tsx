@@ -17,6 +17,7 @@ import {
   Clock,
   EllipsisIcon,
   PenIcon,
+  Plus,
   RefreshCcw,
   Volume2Icon,
 } from "lucide-react";
@@ -37,6 +38,7 @@ import ConfirmActionDialog from "../shared/confirm-action-dialog";
 import { toast } from "sonner";
 import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 import { convertHoursToDaysHours } from "@/lib/utils/time-convert";
+import ScrollContainer from "react-indiana-drag-scroll";
 
 const WordDetail = ({
   word,
@@ -138,6 +140,14 @@ const WordDetail = ({
         ? format(reviewInfo.lastReviewAt, "dd/MM/yyyy")
         : "--",
       icon: <Clock className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
+      display: !!reviewInfo?.lastReviewAt,
+    },
+    {
+      text: "Added At",
+      value: word.createdAt
+        ? format(word.createdAt, "dd/MM/yyyy")
+        : "--",
+      icon: <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
       display: true,
     },
   ];
@@ -252,10 +262,10 @@ const WordDetail = ({
       {/* Skeleton */}
 
       {showReviewStats && (
-        <div className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around">
+        <ScrollContainer className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around" >
           {reviewStatsItems.map((item, index) => (
             <div
-              className={`${item.display ? "flex" : "hidden"} gap-2 md:gap-3 items-center`}
+              className={`${item.display ? "flex" : "hidden"} gap-2 md:gap-3 items-center min-w-[31%]`}
               key={index}
             >
               {item.icon}
@@ -271,7 +281,7 @@ const WordDetail = ({
               </div>
             </div>
           ))}
-        </div>
+        </ScrollContainer>
       )}
     </div>
   );

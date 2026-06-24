@@ -60,6 +60,7 @@
     "react-day-picker": "^9.11.1",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.66.0",
+    "react-indiana-drag-scroll": "^2.2.1",
     "recharts": "^2.15.4",
     "resend": "^6.12.4",
     "sonner": "^2.0.7",

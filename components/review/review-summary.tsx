@@ -28,7 +28,7 @@ const ReviewSummary = ({
           <div className="flex gap-4 justify-center pt-4">
             <Button onClick={onReviewMore}>Review more</Button>
             <Button variant="outline" asChild>
-              <Link href="/dashboard">Go to Dashboard</Link>
+              <Link href="/">Go to Dashboard</Link>
             </Button>
           </div>
         </CardContent>
