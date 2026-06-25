@@ -3,7 +3,6 @@ import { prisma } from "@/db/prisma";
 import { saveWordSchema } from "../validators";
 import { revalidatePath } from "next/cache";
 import { formatInTimeZone } from "date-fns-tz";
-import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
 import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
@@ -18,8 +17,7 @@ import {
   DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL,
   DEFAULT_WORDS_PER_REVIEW,
 } from "../constants/constant";
-import { remindReviewSessionsTemplate } from "../email-templates/remind-review-sessions";
-import { resend } from "../resend";
+import { getReviewPlan } from "../utils/distribution";
 
 export const getWordListByFilter = async (wordFilter: WordFitler) =>
   authenticationAction(
@@ -484,35 +482,43 @@ export const getWordsToReview = async (
   limit: number = DEFAULT_WORDS_PER_REVIEW,
 ) =>
   settingsAction(async (userId, settings) => {
-    // 1. Find unique wordIds that have a review session due,
-    //    ordered by the earliest scheduledAt of their due sessions.
-    const earliestDueReviews = await prisma.wordReview.groupBy({
-      by: ["wordId"],
-      where: {
-        userId,
-        scheduledAt: {
-          lte: new Date(),
-        },
-        completedAt: null,
-        word: {
-          masteryLevel: {
-            in: settings.includeWordLevels,
+    const wordsByMasteryLevel = await getWordsCountPerMasteryLevel();
+    const distributions = getReviewPlan(
+      settings.includeWordLevels,
+      limit,
+      wordsByMasteryLevel,
+    );
+
+    const reviewsResult = await Promise.all(
+      distributions.map(async (dist) => {
+        const reviews = await prisma.wordReview.groupBy({
+          by: ["wordId"],
+          where: {
+            userId,
+            scheduledAt: {
+              lte: new Date(),
+            },
+            completedAt: null,
+            word: {
+              masteryLevel: dist.level,
+            },
           },
-        },
-      },
-      _min: {
-        scheduledAt: true,
-      },
-      orderBy: {
-        _min: {
-          scheduledAt: "asc",
-        },
-      },
-      take: limit,
-    });
+          _min: {
+            scheduledAt: true,
+          },
+          orderBy: {
+            _min: {
+              scheduledAt: "asc",
+            },
+          },
+          take: dist.count,
+        });
+        return reviews;
+      }),
+    );
 
-    const uniqueWordIds = earliestDueReviews.map((item) => item.wordId);
-
+    const totalReviews = reviewsResult.flat();
+    const uniqueWordIds = totalReviews.map((item) => item.wordId);
     if (uniqueWordIds.length === 0) {
       return [];
     }
@@ -526,13 +532,9 @@ export const getWordsToReview = async (
       },
       include: { meanings: true },
     });
+    // console.log(words.map((w) => ({ word: w.word, level: w.masteryLevel })));
 
-    // Reorder the fetched words based on the `uniqueWordIds` order
-    const orderedWords = uniqueWordIds
-      .map((wordId) => words.find((word) => word.id === wordId))
-      .filter(Boolean) as WordWithMeanings[]; // Filter out any potential undefineds
-
-    return orderedWords;
+    return words;
   });
 
 export const getWordsToReviewCount = async () =>

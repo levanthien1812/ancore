@@ -56,19 +56,17 @@ const WordFilter = ({
     }
   };
 
-  const globalFilter = table.getState().globalFilter;
   const masteryLevelFilter = table.getColumn("masteryLevel")?.getFilterValue();
   const typeFilter = table.getColumn("type")?.getFilterValue();
   const highlightedFilter = table.getColumn("highlighted")?.getFilterValue();
 
   const areFiltersSet = useMemo(() => {
     return (
-      !!globalFilter ||
       !!masteryLevelFilter ||
       !!typeFilter ||
       highlightedFilter !== undefined
     );
-  }, [globalFilter, masteryLevelFilter, typeFilter, highlightedFilter]);
+  }, [masteryLevelFilter, typeFilter, highlightedFilter]);
 
   const handleToggleFilters = () => {
     setShowFilters((prev) => !prev);
@@ -186,7 +184,7 @@ const WordFilter = ({
         </div>
       </div>
       {showFilters && (
-        <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1">
+        <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1 bg-blue-300 bg-diagonal-stripes">
           <Select
             onValueChange={(value) =>
               table.getColumn("masteryLevel")?.setFilterValue(value)
@@ -196,7 +194,7 @@ const WordFilter = ({
               ""
             }
           >
-            <SelectTrigger className="w-full md:w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px] bg-white">
               <SelectValue placeholder="Select Mastery level" />
             </SelectTrigger>
             <SelectContent>
@@ -215,7 +213,7 @@ const WordFilter = ({
             }
             value={(table.getColumn("type")?.getFilterValue() as string) || ""}
           >
-            <SelectTrigger className="w-full md:w-32">
+            <SelectTrigger className="w-full md:w-32 bg-white">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>

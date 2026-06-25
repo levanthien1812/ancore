@@ -74,7 +74,7 @@ const ActionsPanel = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40">
+    <div className="fixed bottom-0 left-0 right-0 border-t border-gray-200 shadow-lg p-4 z-40 bg-blue-300 bg-diagonal-stripes">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="text-sm font-medium">
           {selectedIds.size} word{selectedIds.size > 1 ? "s" : ""} selected
