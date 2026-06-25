@@ -646,7 +646,7 @@ const AddOrEditWordForm = ({
           </div>
         </div>
       </div>
-      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border bg-white/80 sticky bottom-0">
+      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 bg-blue-300/80 bg-diagonal-stripes">
         {word && (
           <Button
             variant={"secondary"}

@@ -122,3 +122,10 @@ export const DEFAULT_REVIEW_INTERVALS: Record<ReviewPerformance, number> = {
   [ReviewPerformance.Good]: 4,
   [ReviewPerformance.Easy]: 5,
 };
+
+export const REVIEW_MASTERY_WEIGHTS: Record<MasteryLevel, number> = {
+  [MasteryLevel.New]: 5,
+  [MasteryLevel.Learning]: 4,
+  [MasteryLevel.Familiar]: 3,
+  [MasteryLevel.Mastered]: 2,
+};
