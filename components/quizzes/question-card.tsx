@@ -13,6 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { QuizResultMode } from "@prisma/client";
 import { useLayout } from "../layout/layout-context";
 import QuestionResult from "./question-result";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 const QuestionCard = ({
   answerId,
@@ -208,7 +209,7 @@ const QuestionCard = ({
           {/* Display the main question content, if it exists */}
           {question.question && (
             <CardTitle className="text-lg leading-snug pt-2 text-primary">
-              {question.question}
+              {normalizeText(question.question)}
             </CardTitle>
           )}
         </CardHeader>

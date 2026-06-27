@@ -36,11 +36,27 @@ export const createQuizSession = async (
     // 2. Get random words to use as a distractor pool
     const distractorWords = await prisma.word.findMany({
       // Exclude the mastered words
-      where: { userId, masteryLevel: { not: MasteryLevel.Mastered } },
-      select: { word: true },
+      where: {
+        userId,
+        masteryLevel: { not: MasteryLevel.Mastered },
+      },
+      select: {
+        word: true,
+        meanings: { select: { partOfSpeech: true }, take: 1 },
+      },
       take: DISTRACTOR_POOL_SIZE,
     });
-    const distractorPool = distractorWords.map((w) => w.word);
+    const distractorPool = distractorWords
+      .map((w) => ({
+        word: w.word,
+        partOfSpeech: w.meanings[0]?.partOfSpeech || null,
+      }))
+      .filter(
+        (w) =>
+          !wordsToQuiz.some(
+            (word) => word.word.toLowerCase() === w.word.toLowerCase(),
+          ),
+      );
 
     // Create a quiz first
     const quiz = await prisma.quiz.create({
@@ -56,14 +72,12 @@ export const createQuizSession = async (
 
     // 3. Manually generate questions for each word
     for (const word of wordsToQuiz) {
-      const mainMeaning = word.meanings[0];
-      if (!mainMeaning) continue;
+      const randomIndex = Math.floor(Math.random() * word.meanings.length);
+      const randomMeaning = word.meanings[randomIndex];
+      if (!randomMeaning) continue;
 
-      const validExamples = word.meanings.flatMap(
-        (m) =>
-          m.examples.filter((ex) =>
-            new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
-          ) || [],
+      const validExamples = randomMeaning.examples.filter((ex) =>
+        new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
       );
 
       // Determine valid question types for this word based on available data
@@ -74,8 +88,10 @@ export const createQuizSession = async (
 
       // Ensure DefinitionToWord_Typing is always available if the word has a definition
       if (
-        mainMeaning.definition &&
-        !mainMeaning.definition.toLowerCase().includes(word.word.toLowerCase())
+        randomMeaning.definition &&
+        !randomMeaning.definition
+          .toLowerCase()
+          .includes(word.word.toLowerCase())
       ) {
         validTypes.add(QuestionType.DefinitionToWord_Typing);
       }
@@ -83,12 +99,12 @@ export const createQuizSession = async (
       // Only add Synonym/Antonym if allowed by settings and data exists
       if (allowedQuizTypes.includes(QuestionType.WordToSynonym)) {
         const synonyms =
-          mainMeaning.synonyms
+          randomMeaning.synonyms
             ?.split(",")
             .map((s) => s.trim())
             .filter((s) => s.length > 0) || [];
         const antonyms =
-          mainMeaning.antonyms
+          randomMeaning.antonyms
             ?.split(",")
             .map((a) => a.trim())
             .filter((a) => a.length > 0) || [];
@@ -101,7 +117,7 @@ export const createQuizSession = async (
       // Type 3: Fill in the Blank
       if (
         validExamples.length > 0 ||
-        mainMeaning.definition.toLowerCase().includes(word.word.toLowerCase())
+        randomMeaning.definition.toLowerCase().includes(word.word.toLowerCase())
       ) {
         validTypes.add(QuestionType.FillInTheBlank);
       }
@@ -150,7 +166,7 @@ export const createQuizSession = async (
           newData: quizQuestionSchema.parse({
             wordIds: [word.id],
             direction: "Type the word that matches the definition below:",
-            question: mainMeaning.definition,
+            question: randomMeaning.definition,
             type: randomType,
             answer: word.word,
             options: [], // Typing questions have no options
@@ -162,12 +178,12 @@ export const createQuizSession = async (
 
       if (randomType === QuestionType.WordToSynonym) {
         const synonyms =
-          mainMeaning.synonyms
+          randomMeaning.synonyms
             ?.split(",")
             .map((s) => s.trim())
             .filter((s) => s.length > 0) || [];
         const antonyms =
-          mainMeaning.antonyms
+          randomMeaning.antonyms
             ?.split(",")
             .map((a) => a.trim())
             .filter((a) => a.length > 0) || [];
@@ -193,14 +209,13 @@ export const createQuizSession = async (
             isSynonym ? " synonym" : "n antonym"
           } for the word below?`;
 
-          const filteredPool = distractorPool.filter(
-            (w) =>
-              w.toLowerCase() !== word.word.toLowerCase() &&
-              w.toLowerCase() !== correctAnswer.toLowerCase(),
+          let randomWords = getRandomElements(
+            distractorPool.map((w) => w.word),
+            3,
           );
-
-          const randomWords = getRandomElements(filteredPool, 3);
+          randomWords = randomWords.filter((w) => w !== correctAnswer);
           const options = shuffleArray([...randomWords, correctAnswer]);
+          if (options.length < 4) continue;
 
           questionsToLink.push({
             newData: quizQuestionSchema.parse({
@@ -217,13 +232,13 @@ export const createQuizSession = async (
       }
 
       if (randomType === QuestionType.FillInTheBlank) {
-        const hasDefinitionWithWord = mainMeaning.definition
+        const hasDefinitionWithWord = randomMeaning.definition
           .toLowerCase()
           .includes(word.word.toLowerCase());
         if (validExamples.length === 0 && !hasDefinitionWithWord) continue;
 
         const textToUseForGapHint = hasDefinitionWithWord
-          ? shuffleArray([...validExamples, mainMeaning.definition])[0]
+          ? shuffleArray([...validExamples, randomMeaning.definition])[0]
           : shuffleArray([...validExamples])[0];
 
         const questionText = textToUseForGapHint.replace(
@@ -231,11 +246,31 @@ export const createQuizSession = async (
           "_____",
         );
 
-        const filteredPool = distractorPool.filter(
-          (w) => w.toLowerCase() !== word.word.toLowerCase(),
-        );
+        const targetPos = randomMeaning.partOfSpeech;
+        let randomWords: string[] = [];
 
-        const randomWords = getRandomElements(filteredPool, 3);
+        if (targetPos) {
+          const samePosWords = distractorPool
+            .filter((w) => w.partOfSpeech === targetPos)
+            .map((w) => w.word);
+          const otherPosWords = distractorPool
+            .filter((w) => w.partOfSpeech !== targetPos)
+            .map((w) => w.word);
+
+          if (samePosWords.length >= 3) {
+            randomWords = getRandomElements(samePosWords, 3);
+          } else {
+            randomWords = [
+              ...samePosWords,
+              ...getRandomElements(otherPosWords, 3 - samePosWords.length),
+            ];
+          }
+        } else {
+          randomWords = getRandomElements(
+            distractorPool.map((w) => w.word),
+            3,
+          );
+        }
         const options = shuffleArray([...randomWords, word.word]);
 
         questionsToLink.push({

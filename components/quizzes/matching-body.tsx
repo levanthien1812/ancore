@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { QuizQuestion } from "@prisma/client";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 type MatchItem = {
   id: string;
@@ -148,8 +149,12 @@ const MatchingBody = ({
                   )}
                   onClick={() => handleClickSelectedMatch(leftId)}
                 >
-                  <div className="space-y-3 col-span-1">{leftId}</div>
-                  <div className="space-y-3 col-span-2">{rightId}</div>
+                  <div className="space-y-3 col-span-1">
+                    {normalizeText(leftId)}
+                  </div>
+                  <div className="space-y-3 col-span-2">
+                    {normalizeText(rightId)}
+                  </div>
                 </div>
                 {index !== Object.entries(selectedMatchs).length - 1 && (
                   <Separator decorative className="col-span-3" />
@@ -179,7 +184,7 @@ const MatchingBody = ({
               onClick={() => handleLeftClick(item)}
               className={getItemClasses(item, true)}
             >
-              {item.text}
+              {normalizeText(item.text)}
             </div>
           ))}
         </div>
@@ -190,7 +195,7 @@ const MatchingBody = ({
               onClick={() => handleRightClick(item)}
               className={getItemClasses(item, false)}
             >
-              {item.text}
+              {normalizeText(item.text)}
             </div>
           ))}
         </div>
