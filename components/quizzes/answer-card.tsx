@@ -87,13 +87,13 @@ const AnswerCard = ({
               {answer.retried && (
                 <span
                   className={cn(
-                    "flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-full border",
+                    "flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0 rounded-full border",
                     answer.isCorrectAfterRetry
                       ? "bg-green-50 border-green-200 text-green-700"
                       : "bg-red-50 border-red-200 text-red-600",
                   )}
                 >
-                  <RotateCcw width={10} />
+                  <RotateCcw width={14} className="me-1"/>
                   {answer.isCorrectAfterRetry ? "✓" : "✗"}
                 </span>
               )}
@@ -155,7 +155,7 @@ const AnswerCard = ({
                       : "bg-red-50 border-red-200 text-red-700",
                   )}
                 >
-                  <RotateCcw width={12} className="shrink-0" />
+                  <RotateCcw width={16} className="shrink-0" />
                   <span className="font-semibold">Retry:</span>
                   {answer.isCorrectAfterRetry ? (
                     <span>Correct on retry ✓</span>

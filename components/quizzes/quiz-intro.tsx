@@ -49,7 +49,7 @@ const QuizIntro = ({
           const increment = prev < 40 ? 8 : prev < 70 ? 6 : 2;
           return prev + increment;
         });
-      }, 300);
+      }, 400);
     } else {
       setProgress(0);
     }
