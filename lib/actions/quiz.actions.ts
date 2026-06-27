@@ -783,6 +783,58 @@ export const getLatestIncompleteQuiz = async () =>
     };
   });
 
+export const updateQuizAnswerRetry = async (
+  answerId: string,
+  userAnswerRetry: string | null,
+) =>
+  authenticationAction(async (userId) => {
+    const quizAnswer = await prisma.quizAnswer.findFirst({
+      where: { id: answerId, quiz: { userId } },
+      include: {
+        quizQuestion: true,
+      },
+    });
+
+    if (!quizAnswer || !quizAnswer.quizQuestion) {
+      throw new Error("Quiz answer or question not found.");
+    }
+
+    let isCorrectAfterRetry = false;
+
+    if (userAnswerRetry !== null && quizAnswer.quizQuestion.answer) {
+      if (quizAnswer.quizQuestion.type === "Matching") {
+        try {
+          const userObj = JSON.parse(userAnswerRetry);
+          const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
+          const correctKeys = Object.keys(correctObj);
+          isCorrectAfterRetry =
+            correctKeys.length === Object.keys(userObj).length &&
+            correctKeys.every((key) => userObj[key] === correctObj[key]);
+        } catch {
+          isCorrectAfterRetry = false;
+        }
+      } else {
+        isCorrectAfterRetry =
+          userAnswerRetry.trim().toLowerCase() ===
+          quizAnswer.quizQuestion.answer.trim().toLowerCase();
+      }
+    }
+
+    await prisma.quizAnswer.update({
+      where: { id: answerId },
+      data: {
+        retried: true,
+        userAnswerRetry,
+        isCorrectAfterRetry,
+      },
+    });
+
+    return {
+      isCorrectAfterRetry,
+      correctAnswer: quizAnswer.quizQuestion.answer,
+    };
+  });
+
 export const deleteQuiz = async (quizId: string) =>
   authenticationAction(async (userId) => {
     await prisma.$transaction([

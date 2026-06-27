@@ -8,7 +8,7 @@ import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
 import { QuizQuestionWithWords } from "@/lib/type";
 import { toast } from "sonner";
-import { updateQuizAnswer } from "@/lib/actions/quiz.actions";
+import { updateQuizAnswer, updateQuizAnswerRetry } from "@/lib/actions/quiz.actions";
 import { useMutation } from "@tanstack/react-query";
 import { QuizResultMode } from "@prisma/client";
 import { useLayout } from "../layout/layout-context";
@@ -23,6 +23,7 @@ const QuestionCard = ({
   isActive,
   totalQuestions,
   isFinalizing,
+  isRetryMode = false,
 }: {
   answerId: string;
   question: QuizQuestionWithWords;
@@ -32,9 +33,11 @@ const QuestionCard = ({
   isActive: boolean;
   totalQuestions: number;
   isFinalizing: boolean;
+  isRetryMode?: boolean;
 }) => {
   const { settings } = useLayout();
-  const timeLimit = settings?.timeLimitPerQuestion || 0;
+  // In retry mode, no time limit applies
+  const timeLimit = isRetryMode ? 0 : (settings?.timeLimitPerQuestion || 0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -50,23 +53,39 @@ const QuestionCard = ({
 
   const { mutate: updateQuizAnswerMutation, isPending: isUpdatingQuizAnswer } =
     useMutation({
-      mutationFn: (data: { userAnswer: string | null }) =>
-        updateQuizAnswer(answerId, data.userAnswer),
-      mutationKey: ["updateQuizAnswer", answerId],
+      mutationFn: async (data: { userAnswer: string | null }) => {
+        if (isRetryMode) {
+          const result = await updateQuizAnswerRetry(answerId, data.userAnswer);
+          return { isCorrectAfterRetry: result?.isCorrectAfterRetry ?? false, correctAnswer: result?.correctAnswer ?? null };
+        } else {
+          const result = await updateQuizAnswer(answerId, data.userAnswer);
+          return { isCorrect: result?.isCorrect ?? false, correctAnswer: result?.correctAnswer ?? null };
+        }
+      },
+      mutationKey: isRetryMode
+        ? ["updateQuizAnswerRetry", answerId]
+        : ["updateQuizAnswer", answerId],
       onSuccess: (data) => {
-        if (
-          data &&
-          settings?.showResultsMode === QuizResultMode.AfterEachQuestion
-        ) {
-          const audio = new Audio(
-            data.isCorrect
-              ? "/sounds/correct-answer-sound.mp3"
-              : "/sounds/wrong-answer-sound.mp3",
-          );
-          audio.play().catch((err) => console.error("Audio play failed:", err));
-          setLocalIsCorrect(data.isCorrect);
-          setCorrectAnswer(data.correctAnswer);
-          setIsAnswered(true);
+        if (data) {
+          console.log(data)
+          const isCorrect: boolean = isRetryMode
+            ? !!("isCorrectAfterRetry" in data && data.isCorrectAfterRetry)
+            : !!("isCorrect" in data && data.isCorrect);
+          // In retry mode always show result; in normal mode respect setting
+          if (
+            isRetryMode ||
+            settings?.showResultsMode === QuizResultMode.AfterEachQuestion
+          ) {
+            const audio = new Audio(
+              isCorrect
+                ? "/sounds/correct-answer-sound.mp3"
+                : "/sounds/wrong-answer-sound.mp3",
+            );
+            audio.play().catch((err) => console.error("Audio play failed:", err));
+            setLocalIsCorrect(isCorrect);
+            setCorrectAnswer(data.correctAnswer);
+            setIsAnswered(true);
+          }
         }
       },
     });
@@ -85,11 +104,17 @@ const QuestionCard = ({
 
   const handleSkip = useCallback(() => {
     setSelectedAnswer(null);
-    updateQuizAnswerMutation({ userAnswer: null });
-    if (settings?.showResultsMode !== QuizResultMode.AfterEachQuestion) {
+    if (isRetryMode) {
+      // In retry mode, skip goes directly to next without showing result
+      updateQuizAnswerMutation({ userAnswer: null });
       onNext();
+    } else {
+      updateQuizAnswerMutation({ userAnswer: null });
+      if (settings?.showResultsMode !== QuizResultMode.AfterEachQuestion) {
+        onNext();
+      }
     }
-  }, [onNext, updateQuizAnswerMutation, settings?.showResultsMode]);
+  }, [isRetryMode, onNext, updateQuizAnswerMutation, settings?.showResultsMode]);
 
   useEffect(() => {
     // If the card is not active, ensure timer is stopped and reset
@@ -120,7 +145,9 @@ const QuestionCard = ({
     if (isUpdatingQuizAnswer) return;
     if (!isAnswered) {
       handleCheckAnswer();
-      if (settings?.showResultsMode === QuizResultMode.AtTheEnd) {
+      // In retry mode, always show the result (like AfterEachQuestion);
+      // in AtTheEnd mode without retry, move immediately
+      if (!isRetryMode && settings?.showResultsMode === QuizResultMode.AtTheEnd) {
         onNext();
       }
     } else {
@@ -192,8 +219,9 @@ const QuestionCard = ({
           <div className="mt-4 space-y-2">
             {isAnswered &&
               !isUpdatingQuizAnswer &&
-              settings?.showResultsMode ===
-              QuizResultMode.AfterEachQuestion && (
+              (isRetryMode ||
+                settings?.showResultsMode ===
+                QuizResultMode.AfterEachQuestion) && (
                 <QuestionResult
                   question={question}
                   localIsCorrect={localIsCorrect}
@@ -212,8 +240,9 @@ const QuestionCard = ({
               </Button>
             )}
             {!isAnswered &&
-              settings?.showResultsMode ===
-              QuizResultMode.AfterEachQuestion && (
+              (isRetryMode ||
+                settings?.showResultsMode ===
+                QuizResultMode.AfterEachQuestion) && (
                 <Button
                   type="submit"
                   disabled={
@@ -226,20 +255,27 @@ const QuestionCard = ({
                 </Button>
               )}
             {(isAnswered ||
-              settings?.showResultsMode === QuizResultMode.AtTheEnd) && (
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={
-                    selectedAnswer?.length === 0 ||
-                    isUpdatingQuizAnswer ||
-                    isFinalizing
-                  }
-                  isLoading={isUpdatingQuizAnswer || isFinalizing}
-                >
-                  {!isLastQuestion ? "Next" : "Finish Quiz"}
-                </Button>
-              )}
+              (!isRetryMode &&
+                settings?.showResultsMode === QuizResultMode.AtTheEnd)) && (
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={
+                  selectedAnswer?.length === 0 ||
+                  isUpdatingQuizAnswer ||
+                  isFinalizing
+                }
+                isLoading={isUpdatingQuizAnswer || isFinalizing}
+              >
+                {!isLastQuestion
+                  ? isRetryMode
+                    ? "Next Retry"
+                    : "Next"
+                  : isRetryMode
+                    ? "Finish Retry"
+                    : "Finish Quiz"}
+              </Button>
+            )}
           </div>
         </CardContent>
       </form>

@@ -51,8 +51,6 @@ export function getReviewPlan(
     });
   }
 
-  console.log({ initial });
-
   // 3. Apply availability caps + compute leftover
   let leftover = 0;
 

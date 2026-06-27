@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircle, XCircle, HelpCircle } from "lucide-react";
+import { CheckCircle, XCircle, HelpCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuizQuestionType, QuizQuestionTypeLabel } from "@/lib/constants/enums";
 import { QuizAnswerWithQuestion } from "@/lib/type";
@@ -83,7 +83,20 @@ const AnswerCard = ({
               {QuizQuestionTypeLabel[answer.quizQuestion.type]}
             </div>
 
-            <div className="ms-auto">
+            <div className="ms-auto flex items-center gap-1">
+              {answer.retried && (
+                <span
+                  className={cn(
+                    "flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-full border",
+                    answer.isCorrectAfterRetry
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-red-50 border-red-200 text-red-600",
+                  )}
+                >
+                  <RotateCcw width={10} />
+                  {answer.isCorrectAfterRetry ? "✓" : "✗"}
+                </span>
+              )}
               {answer.isCorrect && (
                 <CheckCircle width={18} className="text-green-500 ml-2" />
               )}{" "}
@@ -130,6 +143,31 @@ const AnswerCard = ({
                       answer.quizQuestion.answer,
                     )}
                   </div>
+                </div>
+              )}
+              {/* Retry result */}
+              {answer.retried && (
+                <div
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-2 py-1.5 text-xs border mt-1",
+                    answer.isCorrectAfterRetry
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-red-50 border-red-200 text-red-700",
+                  )}
+                >
+                  <RotateCcw width={12} className="shrink-0" />
+                  <span className="font-semibold">Retry:</span>
+                  {answer.isCorrectAfterRetry ? (
+                    <span>Correct on retry ✓</span>
+                  ) : answer.userAnswerRetry ? (
+                    <span>
+                      Answered&nbsp;
+                      <span className="font-medium">{answer.userAnswerRetry}</span>
+                      &nbsp;— still incorrect
+                    </span>
+                  ) : (
+                    <span>Skipped on retry</span>
+                  )}
                 </div>
               )}
             </div>
