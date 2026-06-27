@@ -18,6 +18,7 @@ import {
   DEFAULT_WORDS_PER_REVIEW,
 } from "../constants/constant";
 import { getReviewPlan } from "../utils/distribution";
+import { shuffleArray } from "../utils/shuffle-array";
 
 export const getWordListByFilter = async (wordFilter: WordFitler) =>
   authenticationAction(
@@ -534,7 +535,7 @@ export const getWordsToReview = async (
     });
     // console.log(words.map((w) => ({ word: w.word, level: w.masteryLevel })));
 
-    return words;
+    return shuffleArray(words);
   });
 
 export const getWordsToReviewCount = async () =>

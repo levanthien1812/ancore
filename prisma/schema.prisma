@@ -189,17 +189,20 @@ model Quiz {
 }
 
 model QuizAnswer {
-  id             String       @id @default(cuid())
-  quizQuestionId String
-  quizQuestion   QuizQuestion @relation(fields: [quizQuestionId], references: [id])
-  quizId         String
-  quiz           Quiz         @relation(fields: [quizId], references: [id])
-  userAnswer     String?
-  isCorrect      Boolean?     @default(false)
-  isWrong        Boolean?     @default(false)
-  isSkipped      Boolean?     @default(false)
-  isUnreached    Boolean?     @default(true)
-  createdAt      DateTime     @default(now())
+  id                  String       @id @default(cuid())
+  quizQuestionId      String
+  quizQuestion        QuizQuestion @relation(fields: [quizQuestionId], references: [id])
+  quizId              String
+  quiz                Quiz         @relation(fields: [quizId], references: [id])
+  userAnswer          String?
+  isCorrect           Boolean?     @default(false)
+  isWrong             Boolean?     @default(false)
+  isSkipped           Boolean?     @default(false)
+  isUnreached         Boolean?     @default(true)
+  createdAt           DateTime     @default(now())
+  retried             Boolean      @default(false)
+  userAnswerRetry     String?
+  isCorrectAfterRetry Boolean?     @default(false)
 
   @@unique([quizQuestionId, quizId])
 }
