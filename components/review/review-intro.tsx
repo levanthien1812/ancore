@@ -17,6 +17,8 @@ import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { useLayout } from "../layout/layout-context";
 import { INITIAL_USER_SETTINGS } from "@/lib/constants/initial-values";
+import { MAXIMUM_WORDS_IN_REVIEW, MINIMUM_WORDS_IN_REVIEW } from "@/lib/constants/constant";
+import { toast } from "sonner";
 
 const ReviewIntro = ({ count }: { count: number }) => {
   const [started, setStarted] = useState(false);
@@ -62,7 +64,8 @@ const ReviewIntro = ({ count }: { count: number }) => {
   };
 
   const handleSaveLimit = () => {
-    if (inputValue < 1) return;
+    if (inputValue < MINIMUM_WORDS_IN_REVIEW) return toast.warning(`Minimum number of words to review is ${MINIMUM_WORDS_IN_REVIEW}`)
+    if (inputValue > MAXIMUM_WORDS_IN_REVIEW) return toast.warning(`Maximum number of words to review is ${MAXIMUM_WORDS_IN_REVIEW}`)
     setReviewLimit(inputValue);
     setIsPopoverOpen(false);
   };
