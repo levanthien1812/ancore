@@ -3,6 +3,7 @@ import { CheckCircle, XCircle, HelpCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuizQuestionType, QuizQuestionTypeLabel } from "@/lib/constants/enums";
 import { QuizAnswerWithQuestion } from "@/lib/type";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 const AnswerCard = ({
   answer,
@@ -28,8 +29,8 @@ const AnswerCard = ({
                 key={leftId}
                 className="grid grid-cols-3 gap-x-4 p-2 not-last:border-b"
               >
-                <div>{leftId}</div>
-                <div className="col-span-2">{rightId}</div>
+                <div>{normalizeText(leftId)}</div>
+                <div className="col-span-2">{normalizeText(rightId)}</div>
               </div>
             );
           },
@@ -120,7 +121,7 @@ const AnswerCard = ({
                   {answer.quizQuestion.direction}
                 </p>
                 <p className="text-lg text-primary font-bold">
-                  {answer.quizQuestion.question}
+                  {normalizeText(answer.quizQuestion.question)}
                 </p>
               </div>
               {answer.userAnswer && (

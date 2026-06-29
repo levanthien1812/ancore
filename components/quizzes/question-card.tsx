@@ -68,7 +68,6 @@ const QuestionCard = ({
         : ["updateQuizAnswer", answerId],
       onSuccess: (data) => {
         if (data) {
-          console.log(data)
           const isCorrect: boolean = isRetryMode
             ? !!("isCorrectAfterRetry" in data && data.isCorrectAfterRetry)
             : !!("isCorrect" in data && data.isCorrect);
