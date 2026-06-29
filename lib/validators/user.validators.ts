@@ -8,6 +8,12 @@ import {
   UserLevel,
 } from "@prisma/client";
 import z from "zod";
+import {
+  MAXIMUM_WORDS_IN_QUIZ,
+  MAXIMUM_WORDS_IN_REVIEW,
+  MINIMUM_WORDS_IN_QUIZ,
+  MINIMUM_WORDS_IN_REVIEW,
+} from "../constants/constant";
 
 export const signInFormSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -67,7 +73,11 @@ export const onboardingFormSchema = z.object({
 });
 
 export const userSettingsSchema = z.object({
-  wordsPerReview: z.number().int().min(1).max(50),
+  wordsPerReview: z
+    .number()
+    .int()
+    .min(MINIMUM_WORDS_IN_REVIEW)
+    .max(MAXIMUM_WORDS_IN_REVIEW),
   reviewFrequency: z.nativeEnum(ReviewFrequency),
   // time-format: 22:00
   reviewReminderTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
@@ -75,7 +85,11 @@ export const userSettingsSchema = z.object({
   includeWordLevels: z.array(z.nativeEnum(MasteryLevel)),
   prioritizeWeakWords: z.boolean(),
   autoRepeatForgottenWords: z.boolean(),
-  questionsPerQuiz: z.number().int().min(1).max(50),
+  questionsPerQuiz: z
+    .number()
+    .int()
+    .min(MINIMUM_WORDS_IN_QUIZ)
+    .max(MAXIMUM_WORDS_IN_QUIZ),
   quizTypes: z.array(z.nativeEnum(QuestionType)),
   quizWordLevels: z.array(z.nativeEnum(MasteryLevel)),
   timeLimitPerQuestion: z.number().int().min(0).max(300), // 0 for no limit, max 5 minutes

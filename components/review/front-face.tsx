@@ -5,21 +5,18 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { Button } from "../ui/button";
 import {
   ChevronsRight,
-  CircleCheckBig,
-  CircleDashed,
-  Clock3,
+  CircleCheckBig, Clock3,
   FlipHorizontal2,
   Lightbulb,
-  Sun,
+  Sun
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
 import { useSession } from "next-auth/react";
-import { ReviewPerformance, User, Word, WordMeaning } from "@prisma/client";
+import { ReviewPerformance, User, WordMeaning } from "@prisma/client";
 import { updateWordReview } from "@/lib/actions/review.actions";
 import { useCarousel } from "../ui/carousel";
 import { normalizeText } from "@/lib/utils/normalize-text";
-import { removeDuplicates } from "@/lib/utils/remove-duplicates";
 import PartsOfSpeech from "../word-list/parts-of-speech";
 import {
   getDistinctCefrLevels,
@@ -28,9 +25,9 @@ import {
 } from "@/lib/utils/get-distinct-values";
 import { MAXIMUM_EXAMPLES_IN_HINTS } from "@/lib/constants/constant";
 
-type Hint = Partial<
-  Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
->;
+type Hint = Partial<Pick<
+  WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">>
+;
 type HintLevel = keyof Hint;
 type HintList = {
   field: HintLevel;
@@ -39,15 +36,14 @@ type HintList = {
 }[];
 
 const FieldLabelMap: Record<HintLevel, string> = {
-  tags: "Tags/Topics",
-
+  guideWord: "Guide word",
   examples: "Example",
   synonyms: "Synonyms",
   antonyms: "Antonyms",
 };
 
 const INITIAL_HINT_LIST: HintList = [
-  { field: "tags", value: "" },
+  { field: "guideWord", value: "" },
   { field: "examples", value: "" },
   { field: "synonyms", value: "" },
   { field: "antonyms", value: "" },
@@ -75,16 +71,17 @@ const FrontFace = ({
 
   const availableHints = useMemo(() => {
     const availableHints: Hint = {};
-    if (word.tags && word.tags.length > 0) availableHints.tags = word.tags;
-    if (word.meanings[0]?.examples && word.meanings[0].examples.length > 0)
-      availableHints.examples = word.meanings[0]?.examples.slice(
+    const primaryMeaning = word.meanings[0]
+    if (primaryMeaning?.guideWord && primaryMeaning.guideWord.length > 0) availableHints.guideWord = primaryMeaning?.guideWord;
+    if (primaryMeaning?.examples && primaryMeaning.examples.length > 0)
+      availableHints.examples = primaryMeaning?.examples.slice(
         0,
         MAXIMUM_EXAMPLES_IN_HINTS,
-      );
-    if (word.meanings[0]?.synonyms && word.meanings[0].synonyms.length > 0)
-      availableHints.synonyms = word.meanings[0]?.synonyms;
-    if (word.meanings[0]?.antonyms && word.meanings[0].antonyms.length > 0)
-      availableHints.antonyms = word.meanings[0]?.antonyms;
+      );  
+    if (primaryMeaning?.synonyms && primaryMeaning.synonyms.length > 0)
+      availableHints.synonyms = primaryMeaning?.synonyms;
+    if (primaryMeaning?.antonyms && primaryMeaning.antonyms.length > 0)
+      availableHints.antonyms = primaryMeaning?.antonyms;
     return availableHints;
   }, [word]);
 
@@ -185,7 +182,7 @@ const FrontFace = ({
 
   const handleClickMarkAsFamiliar = () => {
     switch (hintLevel) {
-      case "tags":
+      case "guideWord":
         wordReviewMutate(ReviewPerformance.Good);
         onPerformanceUpdate("Good");
         break;
@@ -298,7 +295,7 @@ const FrontFace = ({
               </div>
               <div key={currentHint.field} className="text-white mt-2">
                 {FieldLabelMap[currentHint.field]}:{" "}
-                {currentHint.field === "tags" ||
+                {currentHint.field === "guideWord" ||
                   currentHint.field === "synonyms" ||
                   (currentHint.field === "antonyms" && (
                     <span className="text-primary-2 text-sm">

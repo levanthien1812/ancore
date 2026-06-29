@@ -129,3 +129,8 @@ export const REVIEW_MASTERY_WEIGHTS: Record<MasteryLevel, number> = {
   [MasteryLevel.Familiar]: 3,
   [MasteryLevel.Mastered]: 2,
 };
+
+export const MINIMUM_WORDS_IN_QUIZ = 3;
+export const MINIMUM_WORDS_IN_REVIEW = 3;
+export const MAXIMUM_WORDS_IN_QUIZ = 20;
+export const MAXIMUM_WORDS_IN_REVIEW = 20;
