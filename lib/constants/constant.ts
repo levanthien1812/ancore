@@ -1,3 +1,5 @@
+import { MasteryLevel, QuestionType, ReviewPerformance } from "@prisma/client";
+
 export const PAGE_SIZES = [10, 20, 50, 100];
 
 export const CORRECT_ENCOURAGEMENTS = [
@@ -50,229 +52,6 @@ export const DEFAULT_WORDS_PER_FETCH = 100;
 export const DEFAULT_WORDS_PER_PAGE_TABLE = 10;
 export const DEFAULT_WORDS_PER_PAGE_GRID = 20;
 
-export const ENGLISH_TOPICS = [
-  {
-    id: 1,
-    topic: "My daily routine",
-    subTopics: [
-      "Morning habits",
-      "Work or study schedule",
-      "Evening routine",
-      "Weekend routine",
-      "Time management",
-    ],
-  },
-  {
-    id: 2,
-    topic: "My job and career goals",
-    subTopics: [
-      "Current job responsibilities",
-      "Dream career",
-      "Skills to improve",
-      "Work challenges",
-      "Future plans",
-    ],
-  },
-  {
-    id: 3,
-    topic: "A memorable childhood memory",
-    subTopics: [
-      "Favorite childhood game",
-      "School memories",
-      "Family trips",
-      "Funny accidents",
-      "Life lessons from childhood",
-    ],
-  },
-  {
-    id: 4,
-    topic: "My hometown or city",
-    subTopics: [
-      "Famous places",
-      "Local food",
-      "Transportation",
-      "Weather",
-      "Things to improve",
-    ],
-  },
-  {
-    id: 5,
-    topic: "My hobbies and free time activities",
-    subTopics: [
-      "Indoor hobbies",
-      "Outdoor activities",
-      "Learning new skills",
-      "Relaxation methods",
-      "Weekend interests",
-    ],
-  },
-  {
-    id: 6,
-    topic: "A person I admire",
-    subTopics: [
-      "Why I admire them",
-      "Their achievements",
-      "Lessons learned from them",
-      "Their personality",
-      "How they inspire me",
-    ],
-  },
-  {
-    id: 7,
-    topic: "Travel experiences",
-    subTopics: [
-      "Best trip ever",
-      "Worst travel experience",
-      "Dream destination",
-      "Travel tips",
-      "Travel with friends or family",
-    ],
-  },
-  {
-    id: 8,
-    topic: "Food and cooking",
-    subTopics: [
-      "Favorite dishes",
-      "Cooking skills",
-      "Street food",
-      "Healthy eating",
-      "Foods I dislike",
-    ],
-  },
-  {
-    id: 9,
-    topic: "Technology in daily life",
-    subTopics: [
-      "Smartphone usage",
-      "Social media habits",
-      "Artificial intelligence",
-      "Online learning",
-      "Technology addiction",
-    ],
-  },
-  {
-    id: 10,
-    topic: "Education and learning",
-    subTopics: [
-      "School memories",
-      "Useful subjects",
-      "Learning methods",
-      "Online courses",
-      "Challenges in studying",
-    ],
-  },
-  {
-    id: 11,
-    topic: "Health and exercise",
-    subTopics: [
-      "Exercise habits",
-      "Sleep schedule",
-      "Healthy diet",
-      "Stress management",
-      "Bad habits to quit",
-    ],
-  },
-  {
-    id: 12,
-    topic: "Movies, TV shows, and books",
-    subTopics: [
-      "Favorite genres",
-      "Recent movies watched",
-      "Book recommendations",
-      "Characters I like",
-      "Entertainment habits",
-    ],
-  },
-  {
-    id: 13,
-    topic: "Friendship",
-    subTopics: [
-      "Qualities of a good friend",
-      "Making friends",
-      "Maintaining friendships",
-      "Childhood friends",
-      "Friendship conflicts",
-    ],
-  },
-  {
-    id: 14,
-    topic: "Family relationships",
-    subTopics: [
-      "Family traditions",
-      "Responsibilities at home",
-      "Generation gap",
-      "Family support",
-      "Spending time together",
-    ],
-  },
-  {
-    id: 15,
-    topic: "Money and spending habits",
-    subTopics: [
-      "Saving money",
-      "Budgeting",
-      "Impulse buying",
-      "Financial goals",
-      "Expensive purchases",
-    ],
-  },
-  {
-    id: 16,
-    topic: "Social issues",
-    subTopics: [
-      "Pollution",
-      "Traffic problems",
-      "Education inequality",
-      "Internet behavior",
-      "Climate change",
-    ],
-  },
-  {
-    id: 17,
-    topic: "Success and failure",
-    subTopics: [
-      "Personal achievements",
-      "Biggest failure",
-      "Lessons learned",
-      "Definition of success",
-      "Overcoming setbacks",
-    ],
-  },
-  {
-    id: 18,
-    topic: "Cultural differences",
-    subTopics: [
-      "Food culture",
-      "Festivals",
-      "Communication styles",
-      "Customs and traditions",
-      "Travel observations",
-    ],
-  },
-  {
-    id: 19,
-    topic: "My future plans",
-    subTopics: [
-      "Career goals",
-      "Places to visit",
-      "Skills to learn",
-      "Lifestyle goals",
-      "Personal development",
-    ],
-  },
-  {
-    id: 20,
-    topic: "Problems in modern society",
-    subTopics: [
-      "Work stress",
-      "Phone addiction",
-      "Fake news",
-      "Loneliness",
-      "Rising living costs",
-    ],
-  },
-];
-
 export enum QuizEvaluationLevel {
   NeedsPractice = "Needs Practice",
   Fair = "Fair",
@@ -288,3 +67,70 @@ export enum QuizEvaluationEncouragement {
   Awesome = "Awesome work! Keep it up!",
   Outstanding = "Outstanding performance! You're doing amazing!",
 }
+
+export const REQUIRED_QUESTION_TYPES: QuestionType[] = [
+  QuestionType.DefinitionToWord_Typing,
+];
+export const REQUIRED_REVIEW_MASTERY_LEVELS: MasteryLevel[] = [
+  MasteryLevel.New,
+  MasteryLevel.Learning,
+];
+
+export const REQUIRED_QUIZ_MASTERY_LEVELS: MasteryLevel[] = [
+  MasteryLevel.Familiar,
+];
+
+export const MAXIMUM_EXAMPLES_IN_HINTS = 3;
+
+export const DISTRACTOR_POOL_SIZE = 50;
+
+export const MAXIMUM_PROFICIENCY_SCORE = 100;
+export const MINIMUN_PROFICIENCY_SCORE = 0;
+
+export const REVIEW_PERFORMANCE_SCORE: Record<ReviewPerformance, number> = {
+  [ReviewPerformance.Forgot]: -20,
+  [ReviewPerformance.Hard]: -10,
+  [ReviewPerformance.Medium]: 10,
+  [ReviewPerformance.Good]: 20,
+  [ReviewPerformance.Easy]: 30,
+};
+
+export const QUIZ_CORRECT_SCORE: number = 20;
+export const QUIZ_INCORRECT_SCORE: number = -10;
+
+export const DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL: Record<
+  MasteryLevel,
+  number
+> = {
+  [MasteryLevel.New]: MINIMUN_PROFICIENCY_SCORE,
+  [MasteryLevel.Learning]: 25,
+  [MasteryLevel.Familiar]: 50,
+  [MasteryLevel.Mastered]: MAXIMUM_PROFICIENCY_SCORE,
+};
+
+export const AVERAGE_TIME_PER_QUESTION = 20;
+
+export const QUIZ_PRIORITY_WEIGHTS = {
+  PROFICIENCY: 3,
+  REVIEW_RECENCY: 1,
+};
+
+export const DEFAULT_REVIEW_INTERVALS: Record<ReviewPerformance, number> = {
+  [ReviewPerformance.Forgot]: 1,
+  [ReviewPerformance.Hard]: 2,
+  [ReviewPerformance.Medium]: 3,
+  [ReviewPerformance.Good]: 4,
+  [ReviewPerformance.Easy]: 5,
+};
+
+export const REVIEW_MASTERY_WEIGHTS: Record<MasteryLevel, number> = {
+  [MasteryLevel.New]: 4,
+  [MasteryLevel.Learning]: 3,
+  [MasteryLevel.Familiar]: 2,
+  [MasteryLevel.Mastered]: 1,
+};
+
+export const MINIMUM_WORDS_IN_QUIZ = 3;
+export const MINIMUM_WORDS_IN_REVIEW = 3;
+export const MAXIMUM_WORDS_IN_QUIZ = 20;
+export const MAXIMUM_WORDS_IN_REVIEW = 20;

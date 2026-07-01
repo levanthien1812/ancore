@@ -7,12 +7,13 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import React, { startTransition, useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 
 const CredentialsSignupForm = () => {
-  const [data, action] = useActionState(signUpWithCredentials, {
-    success: false,
-    message: "",
-  });
+  const [data, action] = useActionState(
+    signUpWithCredentials,
+    INITIAL_ACTION_STATE,
+  );
 
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");

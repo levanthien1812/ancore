@@ -7,34 +7,34 @@ import {
 } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
-import { logWordReview, startStudySession } from "@/lib/actions/review.actions";
+import { updateReviewSession } from "@/lib/actions/review.actions";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
 import { StudySessionWithWordReviews } from "@/lib/type";
+import { ReviewPerformance } from "@prisma/client";
+import { useLayout } from "../layout/layout-context";
 
-const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
+const ReviewCarousel = ({
+  words,
+  onReviewMore,
+  studySessionId,
+}: {
+  words: WordWithMeanings[];
+  onReviewMore: () => void;
+  studySessionId: string | null;
+}) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [startTime] = useState(new Date());
   const [isPending, startTransition] = useTransition();
   const [sessionFinished, setSessionFinished] = useState(false);
-  const [isAllWordsReviewed, setIsAllWordsReviewed] = useState(false);
-  const [studySessionId, setStudySessionId] = useState<string | null>(null);
   const [studySession, setStudySession] =
     useState<StudySessionWithWordReviews | null>(null);
-
-  useEffect(() => {
-    const initLog = async () => {
-      const id = await startStudySession();
-      if (typeof id === "string") {
-        setStudySessionId(id);
-      }
-    };
-    initLog();
-  }, []);
+  const { settings } = useLayout();
+  const [reviewQueue, setReviewQueue] = useState(words);
 
   useEffect(() => {
     if (!api) {
@@ -61,19 +61,72 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
     };
   }, [api]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!sessionFinished) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+
+    const handleInternalNavigation = (e: MouseEvent) => {
+      if (sessionFinished) return;
+
+      const target = e.target as HTMLElement;
+      const anchor = target.closest("a");
+      const tabTrigger = target.closest('[role="tab"]');
+
+      if (anchor || tabTrigger) {
+        const isConfirmed = window.confirm(
+          "You have a review in progress. Are you sure you want to leave?",
+        );
+        if (!isConfirmed) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("click", handleInternalNavigation, true);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("click", handleInternalNavigation, true);
+    };
+  }, [sessionFinished]);
+
   // Play pronunciation audio whenever the current word changes
   useEffect(() => {
-    if (words[current] && !sessionFinished) {
-      handlePlayAudio(words[current].word);
+    if (reviewQueue[current] && !sessionFinished) {
+      handlePlayAudio(
+        reviewQueue[current].word,
+        settings?.autoPlayPronunciation,
+      );
     }
-  }, [current, words, sessionFinished]);
+  }, [current, reviewQueue, sessionFinished, settings?.autoPlayPronunciation]);
 
-  const handlePerformanceUpdate = () => {
-    const currentWord = words[current];
+  const handlePerformanceUpdate = (performance: ReviewPerformance) => {
+    const currentWord = reviewQueue[current];
     if (!currentWord) return;
 
-    if (current + 1 === words.length) {
-      setIsAllWordsReviewed(true);
+    const isForgotten = performance === ReviewPerformance.Forgot;
+    // Only allow words from the original batch to be re-queued.
+    // This ensures that "extra" words are only shown once, even if forgotten again.
+    const isOriginalWord = current < words.length;
+    const shouldRepeat =
+      isForgotten && settings?.autoRepeatForgottenWords && isOriginalWord;
+
+    if (shouldRepeat) {
+      setReviewQueue((prev) => [...prev, currentWord]);
+    }
+
+    // Update session progress after each word to handle mid-session exits
+    const durationSeconds = Math.floor(
+      (new Date().getTime() - startTime.getTime()) / 1000,
+    );
+    if (studySessionId) {
+      updateReviewSession(studySessionId, { durationSeconds });
     }
   };
 
@@ -83,7 +136,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
     );
     startTransition(async () => {
       if (studySessionId) {
-        const studySession = await logWordReview(studySessionId, {
+        const studySession = await updateReviewSession(studySessionId, {
           durationSeconds,
         });
         setStudySession(studySession);
@@ -96,17 +149,23 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
     });
   };
 
+  const isAllWordsReviewed = useMemo(() => {
+    return current + 1 === reviewQueue.length;
+  }, [current, reviewQueue]);
+
   if (sessionFinished && studySession) {
-    return <ReviewSummary studySession={studySession} />;
+    return (
+      <ReviewSummary studySession={studySession} onReviewMore={onReviewMore} />
+    );
   }
   if (words.length === 0) return null;
 
   return (
     <div className="relative h-full">
       <div className="flex gap-1">
-        {words.map((word, index) => (
+        {reviewQueue.map((word, index) => (
           <div
-            key={word.id}
+            key={`${word.id}-${index}`}
             className={cn("h-1 rounded-full flex-1", {
               "bg-primary/90": index === current,
               "bg-muted": index !== current,
@@ -120,12 +179,13 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
         opts={{ watchDrag: false }}
       >
         <CarouselContent className="h-full">
-          {words.map((word) => (
-            <CarouselItem key={word.id} className="h-full">
+          {reviewQueue.map((word, index) => (
+            <CarouselItem key={`${word.id}-${index}`} className="h-full">
               <ReviewWordCard
                 word={word}
                 onPerformanceUpdate={handlePerformanceUpdate}
                 studySessionId={studySessionId ?? undefined}
+                isRepeated={index + 1 > words.length}
               />
             </CarouselItem>
           ))}
@@ -135,7 +195,7 @@ const ReviewCarousel = ({ words }: { words: WordWithMeanings[] }) => {
       </Carousel>
       <div className="mt-4 px-8 flex justify-center absolute top-0 right-0 gap-2 items-center w-full">
         <p className="text-white text-sm">
-          {current + 1} of {words.length}
+          {current + 1} of {reviewQueue.length}
         </p>
         {isAllWordsReviewed && (
           <Button

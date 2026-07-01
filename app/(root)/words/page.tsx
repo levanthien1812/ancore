@@ -47,20 +47,38 @@ const WordsPage = () => {
     return (
       <div className="container mx-auto space-y-2 p-4">
         <h2 className="text-3xl">Word list</h2>
-        {mode === "list" && (
-          <div className="space-y-2">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <Skeleton className="h-12 w-full" key={index} />
-            ))}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-7 w-20" />
+            <Skeleton className="h-7 w-20" />
           </div>
-        )}
-        {mode === "grid" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
-            {Array.from({ length: 10 }).map((_, index) => (
-              <Skeleton className="h-36 sm:h-28 w-full" key={index} />
-            ))}
+          <Skeleton className="h-8 w-16" />
+        </div>
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-48" />
+          <div className="flex items-center space-x-2">
+            <Skeleton className="h-10 w-24" />
+            <Skeleton className="h-10 w-52" />
+            <Skeleton className="h-10 w-28" />
           </div>
-        )}
+        </div>
+
+        <div className="mt-4">
+          {mode === "list" && (
+            <div className="space-y-2">
+              {Array.from({ length: 10 }).map((_, index) => (
+                <Skeleton className="h-12 w-full" key={index} />
+              ))}
+            </div>
+          )}
+          {mode === "grid" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2">
+              {Array.from({ length: 20 }).map((_, index) => (
+                <Skeleton className="h-36 sm:h-32 w-full" key={index} />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -95,9 +113,15 @@ const WordsPage = () => {
   return (
     <div className="container mx-auto space-y-2 p-4">
       <h2 className="text-3xl">Word list</h2>
-      <WordList words={allWords} totalCount={totalCount} />
+      <WordList
+        words={allWords}
+        totalCount={totalCount}
+        hasNextPage={hasNextPage}
+        onFetchNextPage={fetchNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+      />
       {hasNextPage && (
-        <div className="mt-4">
+        <div className="mt-2">
           <Button
             variant={"outline"}
             onClick={() => fetchNextPage()}

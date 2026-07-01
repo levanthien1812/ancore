@@ -44,6 +44,8 @@ export enum PartOfSpeech {
   Idiom = "idiom",
   Expression = "expression",
   ComplexPreposition = "complex preposition",
+  Phrase = "phrase",
+  Collocation = "collocation",
 }
 
 export const PARTS_OF_SPEECH: PartOfSpeech[] = [
@@ -59,6 +61,8 @@ export const PARTS_OF_SPEECH_PHRASES: PartOfSpeech[] = [
   PartOfSpeech.Idiom,
   PartOfSpeech.Expression,
   PartOfSpeech.ComplexPreposition,
+  PartOfSpeech.Phrase,
+  PartOfSpeech.Collocation,
 ];
 
 export const SAMPLE_TOPICS = [
@@ -85,15 +89,15 @@ export const SAMPLE_TOPICS = [
 ];
 
 export enum QuizQuestionType {
-  MultipleChoice_DefinitionToWord = "MultipleChoice_DefinitionToWord",
-  MultipleChoice_WordToSynonym = "MultipleChoice_WordToSynonym",
+  DefinitionToWord_Typing = "DefinitionToWord_Typing",
+  WordToSynonym = "WordToSynonym",
   Matching = "Matching",
   FillInTheBlank = "FillInTheBlank",
 }
 
 export enum QuizQuestionTypeLabel {
-  MultipleChoice_DefinitionToWord = "Definition",
-  MultipleChoice_WordToSynonym = "Synonym/Antonym",
+  DefinitionToWord_Typing = "Definition",
+  WordToSynonym = "Synonym/Antonym",
   Matching = "Matching",
   FillInTheBlank = "Fill in the blank",
 }
@@ -169,9 +173,42 @@ export const REVIEW_PERIOD_LABEL: Record<ReviewPeriod, string> = {
 };
 
 export const REVIEW_PERFORMANCE_COLOR: Record<ReviewPerformance, string> = {
-  [ReviewPerformance.Forgot]: "#FF5555",
-  [ReviewPerformance.Hard]: "#3B82F6",
-  [ReviewPerformance.Medium]: "#F59E0B",
-  [ReviewPerformance.Good]: "#8B5CF6",
-  [ReviewPerformance.Easy]: "#22C55E",
+  [ReviewPerformance.Forgot]: "#BDE8F5",
+  [ReviewPerformance.Hard]: "#4988C4",
+  [ReviewPerformance.Medium]: "#1C4D8D",
+  [ReviewPerformance.Good]: "#2C5EAD",
+  [ReviewPerformance.Easy]: "#0F2854",
 };
+
+export enum ReviewFrequency {
+  Daily = "Daily",
+  Every2Days = "Every2Days",
+  Custom = "Custom",
+}
+
+export enum DayOfWeek {
+  Monday = "Monday",
+  Tuesday = "Tuesday",
+  Wednesday = "Wednesday",
+  Thursday = "Thursday",
+  Friday = "Friday",
+  Saturday = "Saturday",
+  Sunday = "Sunday",
+}
+
+export enum QuizResultMode {
+  AfterEachQuestion = "AfterEachQuestion",
+  AtTheEnd = "AtTheEnd",
+}
+
+export enum SpacedRepetitionAlgorithm {
+  Default = "Default",
+  Custom = "Custom",
+}
+
+export enum NotificationType {
+  Daily = "Daily",
+  MissedReview = "MissedReview",
+  Streak = "Streak",
+  DailyNewWordsGoal = "DailyNewWordsGoal",
+}

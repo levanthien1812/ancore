@@ -2,11 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { shuffleArray } from "@/lib/utils/shuffle-array";
-import React, { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { QuizQuestion } from "@prisma/client";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 type MatchItem = {
   id: string;
@@ -16,9 +17,11 @@ type MatchItem = {
 const MatchingBody = ({
   question,
   setSelectedAnswer,
+  correctAnswer,
 }: {
   question: QuizQuestion;
   setSelectedAnswer: (answer: string) => void;
+  correctAnswer: string | null;
 }) => {
   const [selectedMatchs, setSelectedMatchs] = useState<Record<string, string>>(
     {},
@@ -34,17 +37,17 @@ const MatchingBody = ({
     [question.leftItems],
   );
 
-  const [leftItems, setLeftItems] = useState<MatchItem[]>(initialLeftItems);
-  const [rightItems, setRightItems] = useState<MatchItem[]>([]);
+  const initialRightItems = useMemo(
+    () =>
+      shuffleArray([...question.rightItems]).map((item) => ({
+        id: item,
+        text: item,
+      })),
+    [question.rightItems],
+  );
 
-  useEffect(() => {
-    const shuffled = shuffleArray([...question.rightItems]).map((item) => ({
-      id: item,
-      text: item,
-    }));
-    setRightItems(shuffled);
-    setLeftItems(initialLeftItems);
-  }, [question.rightItems, initialLeftItems]);
+  const [leftItems, setLeftItems] = useState<MatchItem[]>(initialLeftItems);
+  const [rightItems, setRightItems] = useState<MatchItem[]>(initialRightItems);
 
   const [selectedLeft, setSelectedLeft] = useState<MatchItem | null>(null);
 
@@ -106,8 +109,8 @@ const MatchingBody = ({
   };
 
   const isCorrectMatch = (leftId: string, rightId: string) => {
-    if (!question.answer || !selectedMatchs) return false;
-    const correctAnswerMap = JSON.parse(question.answer) as Record<
+    if (!correctAnswer || !selectedMatchs) return false;
+    const correctAnswerMap = JSON.parse(correctAnswer) as Record<
       string,
       string
     >;
@@ -116,7 +119,7 @@ const MatchingBody = ({
   };
 
   const isAllMatchsCorrect = () => {
-    if (!question.answer || !selectedMatchs) return false;
+    if (!correctAnswer || !selectedMatchs) return false;
     return Object.entries(selectedMatchs).every(([leftId, rightId]) => {
       return isCorrectMatch(leftId, rightId);
     });
@@ -128,8 +131,8 @@ const MatchingBody = ({
         <>
           <div
             className={cn("border rounded-md overflow-hidden", {
-              "border-green-600": question.answer && isAllMatchsCorrect,
-              "border-red-600": question.answer && !isAllMatchsCorrect,
+              "border-green-600": correctAnswer && isAllMatchsCorrect,
+              "border-red-600": correctAnswer && !isAllMatchsCorrect,
             })}
           >
             {Object.entries(selectedMatchs).map(([leftId, rightId], index) => (
@@ -139,15 +142,19 @@ const MatchingBody = ({
                     "grid grid-cols-3 gap-x-4 items-center cursor-pointer p-4",
                     {
                       "bg-green-100":
-                        question.answer && isCorrectMatch(leftId, rightId),
+                        correctAnswer && isCorrectMatch(leftId, rightId),
                       "bg-red-100":
-                        question.answer && !isCorrectMatch(leftId, rightId),
+                        correctAnswer && !isCorrectMatch(leftId, rightId),
                     },
                   )}
                   onClick={() => handleClickSelectedMatch(leftId)}
                 >
-                  <div className="space-y-3 col-span-1">{leftId}</div>
-                  <div className="space-y-3 col-span-2">{rightId}</div>
+                  <div className="space-y-3 col-span-1">
+                    {normalizeText(leftId)}
+                  </div>
+                  <div className="space-y-3 col-span-2">
+                    {normalizeText(rightId)}
+                  </div>
                 </div>
                 {index !== Object.entries(selectedMatchs).length - 1 && (
                   <Separator decorative className="col-span-3" />
@@ -155,7 +162,7 @@ const MatchingBody = ({
               </div>
             ))}
           </div>
-          {!question.answer && (
+          {!correctAnswer && (
             <div className="flex justify-end">
               <Button
                 type="button"
@@ -177,7 +184,7 @@ const MatchingBody = ({
               onClick={() => handleLeftClick(item)}
               className={getItemClasses(item, true)}
             >
-              {item.text}
+              {normalizeText(item.text)}
             </div>
           ))}
         </div>
@@ -188,7 +195,7 @@ const MatchingBody = ({
               onClick={() => handleRightClick(item)}
               className={getItemClasses(item, false)}
             >
-              {item.text}
+              {normalizeText(item.text)}
             </div>
           ))}
         </div>

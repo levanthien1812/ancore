@@ -1,0 +1,19 @@
+name: Review Reminder
+
+on:
+  schedule:
+    # every 10 minutes
+    - cron: "*/10 * * * *"
+
+  workflow_dispatch:
+
+jobs:
+  remind-users:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call reminder endpoint
+        run: |
+          curl -i \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://ancore-sage.vercel.app/api/cron/remind-review-session

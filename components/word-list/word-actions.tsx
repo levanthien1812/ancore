@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import AddOrEditWord from "../add-word/add-word";
 import { deleteWords } from "@/lib/actions/word.actions";
-import { initialActionState } from "@/lib/constants/initial-values";
+import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 import { useQueryClient } from "@tanstack/react-query";
 import ConfirmActionDialog from "../shared/confirm-action-dialog";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
@@ -23,7 +23,7 @@ const WordActions = ({ word }: { word: WordWithMeanings }) => {
 
   const [state, formAction, isLoading] = useActionState(
     deleteWords,
-    initialActionState,
+    INITIAL_ACTION_STATE,
   );
 
   const onDeleteSuccess = useEffectEvent(() => {

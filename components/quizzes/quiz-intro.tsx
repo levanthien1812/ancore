@@ -45,8 +45,8 @@ const QuizIntro = ({
       setProgress(0);
       interval = setInterval(() => {
         setProgress((prev) => {
-          if (prev >= 92) return prev; // Hold at 92% until the server actually responds
-          const increment = prev < 40 ? 8 : prev < 70 ? 3 : 0.5;
+          if (prev >= 96) return prev; // Hold at 92% until the server actually responds
+          const increment = prev < 40 ? 8 : prev < 70 ? 6 : 2;
           return prev + increment;
         });
       }, 400);

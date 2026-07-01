@@ -132,9 +132,10 @@ const ReviewStatsContent = ({
     const wordsReviewedChartConfig = {
       date: {
         label: "Total words",
-        color: "oklch(62.3% 0.214 259.815)",
+        color: "#1C4D8D",
       },
     } as ChartConfig;
+
     return (
       <div className="border rounded-md">
         <div className="px-4 py-2 bg-gray-100">
@@ -166,7 +167,7 @@ const ReviewStatsContent = ({
               <ChartLegend content={<ChartLegendContent />} />
               <Bar
                 dataKey="totalWords"
-                fill={`oklch(62.3% 0.214 259.815)`}
+                fill={`#1C4D8D`}
                 radius={[6, 6, 0, 0]}
                 fontSize={14}
                 barSize={30}

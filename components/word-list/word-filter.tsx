@@ -1,6 +1,10 @@
 "use client";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import { MASTERY_LEVELS } from "@/lib/constants/enums";
+import {
+  MASTERY_LEVELS,
+  PARTS_OF_SPEECH,
+  PARTS_OF_SPEECH_PHRASES,
+} from "@/lib/constants/enums";
 import { Button } from "../ui/button";
 import {
   ArrowDownAZ,
@@ -9,6 +13,7 @@ import {
   FunnelX,
   MousePointer2,
   MousePointer2Off,
+  Trash,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,54 +32,30 @@ import {
 } from "../ui/select";
 import { Checkbox } from "../ui/checkbox";
 import { Table } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useLayout } from "../layout/layout-context";
 
 type Props = {
   table: Table<WordWithMeanings>;
   isSelectMode?: boolean;
   onToggleSelectMode?: (isActive: boolean) => void;
+  isLoadingAll?: boolean;
 };
 
 const WordFilter = ({
   table,
   isSelectMode = false,
   onToggleSelectMode,
+  isLoadingAll = false,
 }: Props) => {
   const [showFilters, setShowFilters] = useState(false);
   const { mode } = useLayout();
 
   const handleResetFilter = () => {
-    table.resetGlobalFilter();
-    table.getColumn("masteryLevel")?.setFilterValue("");
-    table.getColumn("type")?.setFilterValue("");
-    const highlightedColumn = table.getColumn("highlighted");
-    if (highlightedColumn) {
-      highlightedColumn.setFilterValue(undefined);
-    }
+    table.resetColumnFilters();
   };
 
-  const areFiltersSet = useMemo(() => {
-    const { globalFilter } = table.getState();
-
-    const masteryLevelFilter = table
-      .getColumn("masteryLevel")
-      ?.getFilterValue();
-    const typeFilter = table.getColumn("type")?.getFilterValue();
-    const highlightedFilter = table.getColumn("highlighted")?.getFilterValue();
-    return (
-      !!globalFilter ||
-      !!masteryLevelFilter ||
-      !!typeFilter ||
-      highlightedFilter !== undefined
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    table.getState().globalFilter,
-    table.getColumn("masteryLevel")?.getFilterValue(),
-    table.getColumn("type")?.getFilterValue(),
-    table.getColumn("highlighted")?.getFilterValue(),
-  ]);
+  const areFiltersSet = table.getState().columnFilters.length > 0;
 
   const handleToggleFilters = () => {
     setShowFilters((prev) => !prev);
@@ -83,14 +64,52 @@ const WordFilter = ({
   return (
     <>
       <div className="flex justify-between items-center gap-2">
-        <Input
-          placeholder="🔎 Search for words..."
-          value={(table.getState().globalFilter as string) ?? ""}
-          onChange={(event) => {
-            table.setGlobalFilter(event.target.value);
-          }}
-          className="w-full text-sm md:w-52"
-        />
+        <div className="flex-1 relative flex items-center gap-1">
+          <Input
+            placeholder="🔎 Search for words..."
+            value={(table.getState().globalFilter as string) ?? ""}
+            onChange={(event) => {
+              table.setGlobalFilter(event.target.value);
+            }}
+            disabled={isLoadingAll}
+            className="w-full text-sm md:w-52"
+          />
+          {table.getState().globalFilter && (
+            <Button
+              type="button"
+              onClick={() => table.resetGlobalFilter()}
+              variant="ghost"
+            >
+              <Trash width={14} height={14} className="text-red-600" />
+            </Button>
+          )}
+          {isLoadingAll && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <div className="animate-spin">
+                <svg
+                  className="w-4 h-4 text-primary"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
         <div className="flex justify-end gap-2">
           <Button
             variant={"secondary"}
@@ -154,14 +173,39 @@ const WordFilter = ({
         </div>
       </div>
       {showFilters && (
-        <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1">
+        <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1 bg-blue-200 bg-diagonal-stripes">
+          <Select
+            onValueChange={(value) =>
+              table.getColumn("partOfSpeech")?.setFilterValue(value)
+            }
+            value={
+              (table.getColumn("partOfSpeech")?.getFilterValue() as string) ||
+              ""
+            }
+          >
+            <SelectTrigger className="w-full md:w-[180px] bg-white">
+              <SelectValue placeholder="Select Part of Speech" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {[...PARTS_OF_SPEECH, ...PARTS_OF_SPEECH_PHRASES].map((pos) => (
+                  <SelectItem key={pos} value={pos}>
+                    {pos}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
           <Select
             onValueChange={(value) =>
               table.getColumn("masteryLevel")?.setFilterValue(value)
             }
-            value={table.getColumn("masteryLevel")?.getFilterValue() as string}
+            value={
+              (table.getColumn("masteryLevel")?.getFilterValue() as string) ||
+              ""
+            }
           >
-            <SelectTrigger className="w-full md:w-[180px]">
+            <SelectTrigger className="w-full md:w-[180px] bg-white">
               <SelectValue placeholder="Select Mastery level" />
             </SelectTrigger>
             <SelectContent>
@@ -178,9 +222,9 @@ const WordFilter = ({
             onValueChange={(value) =>
               table.getColumn("type")?.setFilterValue(value)
             }
-            value={table.getColumn("type")?.getFilterValue() as string}
+            value={(table.getColumn("type")?.getFilterValue() as string) || ""}
           >
-            <SelectTrigger className="w-full md:w-32">
+            <SelectTrigger className="w-full md:w-32 bg-white">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>

@@ -5,11 +5,12 @@ export const QUERY_KEY = {
   GET_WORDS_LEARNED: "getWordsLearned",
   GET_WORDS_COUNT_BY_MASTERY_LEVEL: "getWordsCountByMasteryLevel",
   GET_WORDS_COUNT_BY_PERIOD: "getWordsCountByPeriod",
-  GET_REVIEW_LOGS: "getStudySessions",
+  GET_STUDY_SESSIONS: "getStudySessions",
   GET_NOTES: "getNotes",
   GET_QUIZ_LOGS: "getQuizs",
   GET_WORDS_THIS_WEEK: "getWordsThisWeek",
   GET_WEEK_COMPARISON: "getWeekComparison",
   GET_BEST_DAY: "getBestDay",
   GET_REVIEW_STATISTICS: "getReviewStatistics",
+  GET_MONTHLY_ACTIVITY: "getMonthlyActivity",
 };

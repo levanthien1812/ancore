@@ -45,7 +45,7 @@ const ConfirmActionDialog = ({
           {message && <ApiResponseStatus success={false} message={message} />}
 
           {children}
-          <DialogFooter>
+          <DialogFooter className="mt-2">
             <DialogClose asChild>
               <Button
                 type="button"

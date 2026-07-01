@@ -6,12 +6,10 @@ import { resetPassword } from "@/lib/actions/user.actions";
 import Link from "next/link";
 import React, { startTransition, useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 
 const ResetPasswordForm = ({ token }: { token: string }) => {
-  const [data, action] = useActionState(resetPassword, {
-    success: false,
-    message: "",
-  });
+  const [data, action] = useActionState(resetPassword, INITIAL_ACTION_STATE);
 
   const ResetPasswordButton = () => {
     const { pending } = useFormStatus();

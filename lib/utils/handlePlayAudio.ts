@@ -1,4 +1,5 @@
-export const handlePlayAudio = (text: string) => {
+export const handlePlayAudio = (text: string, enabled: boolean = true) => {
+  if (!enabled) return;
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();

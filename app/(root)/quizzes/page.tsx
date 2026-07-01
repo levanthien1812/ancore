@@ -22,13 +22,13 @@ const QuizzesPage = async ({ searchParams }: QuizzesPageProps) => {
     estimatedTimeInMinutes = result.estimatedTimeInMinutes;
   } else {
     // Default behavior: get words automatically
-    const result = await getWordsToQuiz({ wordCount: 10 });
+    const result = await getWordsToQuiz({});
     words = result.words;
     estimatedTimeInMinutes = result.estimatedTimeInMinutes;
   }
 
   return (
-    <div className="sm:min-w-[520px] sm:max-w-[25%] mx-auto h-full py-2 px-2 sm:px-4 md:px-0">
+    <div className="sm:min-w-[520px] sm:max-w-[33%] mx-auto h-full py-2 px-2 sm:px-4">
       <Suspense fallback={<div className="text-center py-8">Loading...</div>}>
         <QuizzesTabsWrapper
           words={words}

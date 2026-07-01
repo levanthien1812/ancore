@@ -1,16 +1,18 @@
 "use client";
 
 import { Input } from "../ui/input";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { QuizQuestion } from "@prisma/client";
 
 const FillInTheBlankBody = ({
   setSelectedAnswer,
   question,
+  correctAnswer,
 }: {
   question: QuizQuestion;
   setSelectedAnswer: (answer: string) => void;
+  correctAnswer: string | null;
 }) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -30,16 +32,13 @@ const FillInTheBlankBody = ({
     newUserInput[index] = value;
     setUserInput(newUserInput);
 
-    // Update parent
-    const isComplete = newUserInput.every(
-      (char, i) => question.gapHint![i] !== "_" || char !== "",
-    );
     const finalAnswer = newUserInput
       .map((char, i) =>
         question.gapHint![i] !== "_" ? question.gapHint![i] : char,
       )
       .join("");
-    setSelectedAnswer(isComplete ? finalAnswer : "");
+      
+    setSelectedAnswer(finalAnswer);
 
     // Move focus to the next empty input
     if (value && index < question.gapHint.length - 1) {
@@ -55,7 +54,12 @@ const FillInTheBlankBody = ({
     index: number,
   ) => {
     if (!question.gapHint) return;
-    if (e.key === "Backspace" && !userInput[index] && index > 0) {
+
+    // Support backspace navigation for desktop and devices that fire standard key events.
+    // e.keyCode 8 is a fallback for legacy mobile support.
+    const isBackspace = e.key === "Backspace" || e.keyCode === 8;
+
+    if (isBackspace && !userInput[index] && index > 0) {
       const prevGapIndex = question.gapHint.lastIndexOf("_", index - 1);
       if (prevGapIndex !== -1) {
         inputRefs.current[prevGapIndex]?.focus();
@@ -63,10 +67,37 @@ const FillInTheBlankBody = ({
     }
   };
 
+  /**
+   * Backspace on mobile devices often doesn't trigger KeyDown events when the input is empty.
+   * 'beforeinput' with inputType 'deleteContentBackward' is a reliable way to detect
+   * deletion intent and move focus back on modern mobile browsers.
+   */
+  const handleBeforeInput = (
+    e: React.SyntheticEvent<HTMLInputElement>,
+    index: number,
+  ) => {
+    const nativeEvent = e.nativeEvent as InputEvent;
+    if (
+      nativeEvent?.inputType === "deleteContentBackward" &&
+      !userInput[index] &&
+      index > 0
+    ) {
+      const prevGapIndex = question.gapHint!.lastIndexOf("_", index - 1);
+      if (prevGapIndex !== -1) {
+        inputRefs.current[prevGapIndex]?.focus();
+      }
+    }
+  };
+
+  const isCorrect = useMemo(() => {
+    if (!correctAnswer) return false;
+    return correctAnswer.toLowerCase() === userInput.join("").toLowerCase();
+  }, [correctAnswer, userInput]);
+
   if (!question.gapHint) return null;
 
   return (
-    <div className="flex justify-center gap-1">
+    <div className="flex justify-center gap-x-1 gap-y-2 flex-wrap">
       {question.gapHint.split("").map((char, index) => {
         const isHint = char !== "_";
         return (
@@ -79,17 +110,16 @@ const FillInTheBlankBody = ({
             maxLength={1}
             value={isHint ? char : userInput[index]}
             onChange={(e) => handleInputChange(e, index)}
+            onBeforeInput={(e) => handleBeforeInput(e, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
-            disabled={isHint || !!question.answer}
+            disabled={isHint || !!correctAnswer}
             className={cn(
               "w-12 h-14 text-base md:text-2xl text-center font-bold px-1",
               {
                 "bg-muted border-dashed text-muted-foreground":
-                  isHint && !question.answer,
-                "bg-green-100 border-green-600":
-                  question.answer && question.answer === userInput.join(""),
-                "bg-red-100 border-red-600":
-                  question.answer && question.answer !== userInput.join(""),
+                  isHint && !correctAnswer,
+                "bg-green-100 border-green-600": correctAnswer && isCorrect,
+                "bg-red-100 border-red-600": correctAnswer && !isCorrect,
               },
             )}
             aria-label={`Letter ${index + 1} of the word`}

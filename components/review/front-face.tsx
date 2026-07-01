@@ -3,16 +3,31 @@ import React, { useMemo, useState } from "react";
 import { Badge } from "../ui/badge";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { Button } from "../ui/button";
-import { CircleCheckBig, Lightbulb, Sun } from "lucide-react";
+import {
+  ChevronsRight,
+  CircleCheckBig,
+  Clock3,
+  FlipHorizontal2,
+  Lightbulb,
+  Sun,
+} from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
 import { useSession } from "next-auth/react";
-import { ReviewPerformance, User, Word, WordMeaning } from "@prisma/client";
+import { ReviewPerformance, User, WordMeaning } from "@prisma/client";
 import { updateWordReview } from "@/lib/actions/review.actions";
 import { useCarousel } from "../ui/carousel";
+import { normalizeText } from "@/lib/utils/normalize-text";
+import PartsOfSpeech from "../word-list/parts-of-speech";
+import {
+  getDistinctCefrLevels,
+  getDistinctPartsOfSpeech,
+  getDistinctPronunciations,
+} from "@/lib/utils/get-distinct-values";
+import { MAXIMUM_EXAMPLES_IN_HINTS } from "@/lib/constants/constant";
 
 type Hint = Partial<
-  Pick<Word, "tags"> & Pick<WordMeaning, "synonyms" | "antonyms" | "examples">
+  Pick<WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">
 >;
 type HintLevel = keyof Hint;
 type HintList = {
@@ -22,15 +37,14 @@ type HintList = {
 }[];
 
 const FieldLabelMap: Record<HintLevel, string> = {
-  tags: "Tags/Topics",
-
+  guideWord: "Guide word",
   examples: "Example",
   synonyms: "Synonyms",
   antonyms: "Antonyms",
 };
 
 const INITIAL_HINT_LIST: HintList = [
-  { field: "tags", value: "" },
+  { field: "guideWord", value: "" },
   { field: "examples", value: "" },
   { field: "synonyms", value: "" },
   { field: "antonyms", value: "" },
@@ -41,28 +55,35 @@ const FrontFace = ({
   setIsFlipped,
   onPerformanceUpdate,
   studySessionId,
+  isRepeated,
 }: {
   word: WordWithMeanings;
   setIsFlipped: (value: boolean) => void;
   onPerformanceUpdate: (performance: ReviewPerformance) => void;
   studySessionId?: string;
+  isRepeated?: boolean;
 }) => {
   const [showHint, setShowHint] = React.useState(false);
   const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
   const [hintList, setHintList] = useState<HintList>(INITIAL_HINT_LIST);
-  const { scrollNext } = useCarousel();
+  const { scrollNext, canScrollNext } = useCarousel();
   const [isReviewed, setIsReviewed] = useState(false);
   const session = useSession();
 
   const availableHints = useMemo(() => {
     const availableHints: Hint = {};
-    if (word.tags) availableHints.tags = word.tags;
-    if (word.meanings[0]?.examples)
-      availableHints.examples = word.meanings[0]?.examples;
-    if (word.meanings[0]?.synonyms)
-      availableHints.synonyms = word.meanings[0]?.synonyms;
-    if (word.meanings[0]?.antonyms)
-      availableHints.antonyms = word.meanings[0]?.antonyms;
+    const primaryMeaning = word.meanings[0];
+    if (primaryMeaning?.guideWord && primaryMeaning.guideWord.length > 0)
+      availableHints.guideWord = primaryMeaning?.guideWord;
+    if (primaryMeaning?.examples && primaryMeaning.examples.length > 0)
+      availableHints.examples = primaryMeaning?.examples.slice(
+        0,
+        MAXIMUM_EXAMPLES_IN_HINTS,
+      );
+    if (primaryMeaning?.synonyms && primaryMeaning.synonyms.length > 0)
+      availableHints.synonyms = primaryMeaning?.synonyms;
+    if (primaryMeaning?.antonyms && primaryMeaning.antonyms.length > 0)
+      availableHints.antonyms = primaryMeaning?.antonyms;
     return availableHints;
   }, [word]);
 
@@ -163,7 +184,7 @@ const FrontFace = ({
 
   const handleClickMarkAsFamiliar = () => {
     switch (hintLevel) {
-      case "tags":
+      case "guideWord":
         wordReviewMutate(ReviewPerformance.Good);
         onPerformanceUpdate("Good");
         break;
@@ -186,41 +207,83 @@ const FrontFace = ({
     else scrollNext();
   };
 
+  const handleClickNeedMorePractice = () => {
+    wordReviewMutate(ReviewPerformance.Medium);
+    onPerformanceUpdate("Medium");
+    setIsReviewed(true);
+    setIsFlipped(true);
+  };
+
   const currentHint = useMemo(() => {
     if (!hintLevel) return null;
     return hintList.find((hint) => hint.field === hintLevel);
   }, [hintLevel, hintList]);
 
+  const distinctPartsOfSpeech = useMemo(
+    () => getDistinctPartsOfSpeech(word),
+    [word],
+  );
+  const distinctCefrLevels = useMemo(() => getDistinctCefrLevels(word), [word]);
+  const distinctPronunciations = useMemo(
+    () => getDistinctPronunciations(word),
+    [word],
+  );
+
   return (
     <div className="flex flex-col px-4 sm:px-8 py-4 bg-primary rounded-2xl h-full">
       <div className="grow flex flex-col justify-center items-center">
-        <Badge className="bg-primary-2 text-white">
-          {word.meanings[0]?.cefrLevel}
-        </Badge>
+        <div className="flex gap-2">
+          {distinctCefrLevels.length > 0 &&
+            distinctCefrLevels.map((level) => (
+              <Badge key={level} className="bg-primary-2 text-white">
+                {level}
+              </Badge>
+            ))}
+        </div>
         <div className="text-[40px] font-bold mt-2 text-white text-center">
           {word.word}
         </div>
+        {distinctPartsOfSpeech.length > 0 && (
+          <PartsOfSpeech
+            uniquePos={distinctPartsOfSpeech}
+            wordType={word.type as string}
+          />
+        )}
+        {distinctPronunciations.length > 0 && (
+          <div className="text-sm text-white/80 mt-1 text-center">
+            {distinctPronunciations.join(", ")}
+          </div>
+        )}
       </div>
-      {!isReviewed && (
+      {!isReviewed && !isRepeated && (
         <>
-          <div className="flex justify-between gap-2 ">
-            {Object.keys(availableHints).length > 0 && !showHint && (
-              <Button
-                className="border border-white bg-transparent flex-1"
-                onClick={handleClickShowHint}
-              >
-                <Lightbulb width={14} height={14} className="text-primary-2" />
-                Need a hint?
-              </Button>
-            )}
+          {Object.keys(availableHints).length > 0 && !showHint && (
             <Button
-              className="border border-white bg-transparent flex-1"
+              className="text-white"
+              onClick={handleClickShowHint}
+              variant={"link"}
+            >
+              <Lightbulb width={16} height={16} className="text-primary-2" />
+              Need a hint?
+            </Button>
+          )}
+          <div className="flex justify-between gap-2 ">
+            <Button
+              className="border border-white bg-transparent hover:bg-white/10 flex-1"
+              onClick={handleClickNeedMorePractice}
+              disabled={isUpdatingWordReview}
+            >
+              <Clock3 width={16} height={16} className="text-yellow-500" />
+              Needs more practice
+            </Button>
+            <Button
+              className="border border-white bg-transparent hover:bg-white/10 flex-1"
               onClick={handleClickMarkAsFamiliar}
               disabled={isUpdatingWordReview}
             >
               <CircleCheckBig
-                width={14}
-                height={14}
+                width={16}
+                height={16}
                 className="text-green-500"
               />
               Mark as familiar
@@ -234,7 +297,7 @@ const FrontFace = ({
               </div>
               <div key={currentHint.field} className="text-white mt-2">
                 {FieldLabelMap[currentHint.field]}:{" "}
-                {currentHint.field === "tags" ||
+                {currentHint.field === "guideWord" ||
                   currentHint.field === "synonyms" ||
                   (currentHint.field === "antonyms" && (
                     <span className="text-primary-2 text-sm">
@@ -244,7 +307,7 @@ const FrontFace = ({
                 {currentHint.field === "examples" && (
                   <ul className="text-primary-2 text-sm list-disc list-inside">
                     {(currentHint.value as string[]).map((example, index) => (
-                      <li key={index}>{example}</li>
+                      <li key={index}>{normalizeText(example)}</li>
                     ))}
                   </ul>
                 )}
@@ -278,6 +341,34 @@ const FrontFace = ({
             I forgot this word.
           </Button>
         </>
+      )}
+      {isRepeated && (
+        <div className="flex justify-between gap-2 ">
+          <Button
+            className="border border-white bg-transparent hover:bg-white/10 flex-1"
+            onClick={() => setIsFlipped(true)}
+          >
+            <FlipHorizontal2
+              width={16}
+              height={16}
+              className="text-yellow-500"
+            />
+            Flip
+          </Button>
+          {canScrollNext && (
+            <Button
+              onClick={() => scrollNext()}
+              className="border border-white bg-transparent hover:bg-white/10 flex-1"
+            >
+              Next Word{" "}
+              <ChevronsRight
+                width={16}
+                height={16}
+                className="text-primary-2"
+              />
+            </Button>
+          )}
+        </div>
       )}
     </div>
   );

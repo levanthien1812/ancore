@@ -9,7 +9,9 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
 
   // Check for Cambridge Dictionary specific classes
   const wordElement =
-    doc.querySelector(".hw.dhw") || doc.querySelector(".hw.dsense_hw");
+    doc.querySelector(".hw.dhw") ||
+    doc.querySelector(".hw.dsense_hw") ||
+    doc.querySelector(".headword.dhw");
   if (!wordElement && !silent) {
     if (!silent) {
       toast.error(
@@ -73,6 +75,13 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
+  const usages = Array.from(
+    doc.querySelectorAll(".usage.dusage"),
+  )
+    .map((el) => el.textContent?.trim())
+    .filter((t): t is string => !!t)
+    .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
+
   return {
     word: wordText,
     pos,
@@ -83,5 +92,6 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     synonyms: synonyms.join(", "),
     antonyms: antonyms.join(", "),
     guideWord: guideWord || null,
+    usages: usages.join(", "),
   };
 };

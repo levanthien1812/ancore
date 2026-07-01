@@ -10,28 +10,26 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { Play } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getWordsToReview } from "@/lib/actions/word.actions";
+import { startStudySession } from "@/lib/actions/review.actions";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
+import { useLayout } from "../layout/layout-context";
+import { INITIAL_USER_SETTINGS } from "@/lib/constants/initial-values";
+import { MAXIMUM_WORDS_IN_REVIEW, MINIMUM_WORDS_IN_REVIEW } from "@/lib/constants/constant";
+import { toast } from "sonner";
 
 const ReviewIntro = ({ count }: { count: number }) => {
   const [started, setStarted] = useState(false);
-  const [reviewLimit, setReviewLimit] = useState(10);
+  const { settings } = useLayout();
+  const [reviewLimit, setReviewLimit] = useState(
+    settings?.wordsPerReview ?? INITIAL_USER_SETTINGS.wordsPerReview,
+  );
   const [inputValue, setInputValue] = useState(10);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [forThisTimeOnly, setForThisTimeOnly] = useState(true);
-
-  useEffect(() => {
-    const storedLimit = localStorage.getItem("reviewLimit");
-    if (storedLimit) {
-      const val = Number(storedLimit);
-      if (!isNaN(val) && val > 0) {
-        setReviewLimit(val);
-        setInputValue(val);
-      }
-    }
-  }, []);
+  const [studySessionId, setStudySessionId] = useState<string | null>(null);
+  const [isStarting, setIsStarting] = useState(false);
 
   const {
     data: words,
@@ -43,21 +41,39 @@ const ReviewIntro = ({ count }: { count: number }) => {
       const responseData = await getWordsToReview(reviewLimit);
       return responseData;
     },
-    enabled: false,
+    enabled: true,
   });
 
-  const handleStartReview = () => {
-    refetch();
-    setStarted(true);
+  useEffect(() => {
+    if (!settings || !settings.wordsPerReview) return;
+    setReviewLimit(settings?.wordsPerReview);
+  }, [settings]);
+
+  const handleStartReview = async () => {
+    setIsStarting(true);
+    try {
+      const id = await startStudySession();
+      if (typeof id === "string") {
+        setStudySessionId(id);
+      }
+      await refetch();
+      setStarted(true);
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const handleSaveLimit = () => {
-    if (inputValue < 1) return;
+    if (inputValue < MINIMUM_WORDS_IN_REVIEW) return toast.warning(`Minimum number of words to review is ${MINIMUM_WORDS_IN_REVIEW}`)
+    if (inputValue > MAXIMUM_WORDS_IN_REVIEW) return toast.warning(`Maximum number of words to review is ${MAXIMUM_WORDS_IN_REVIEW}`)
     setReviewLimit(inputValue);
-    if (!forThisTimeOnly) {
-      localStorage.setItem("reviewLimit", inputValue.toString());
-    }
     setIsPopoverOpen(false);
+  };
+
+  const handleReviewMore = () => {
+    setStarted(false);
+    setStudySessionId(null);
+    refetch();
   };
 
   if (count === 0) {
@@ -77,7 +93,11 @@ const ReviewIntro = ({ count }: { count: number }) => {
   if (started && words && words.length > 0) {
     return (
       <div className="h-full">
-        <ReviewCarousel words={words} />
+        <ReviewCarousel
+          words={words}
+          onReviewMore={handleReviewMore}
+          studySessionId={studySessionId}
+        />
       </div>
     );
   }
@@ -130,11 +150,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
               onChange={(e) => setInputValue(Number(e.target.value))}
             />
             <div className="flex gap-2 mt-4">
-              <Checkbox
-                id="forThisTimeOnly"
-                checked={forThisTimeOnly}
-                onCheckedChange={(value) => setForThisTimeOnly(!!value)}
-              />
+              <Checkbox id="forThisTimeOnly" checked={true} disabled />
               <Label htmlFor="forThisTimeOnly" className="text-right">
                 For this session only
               </Label>
@@ -154,9 +170,13 @@ const ReviewIntro = ({ count }: { count: number }) => {
           </PopoverContent>
         </Popover>
       </div>
-      <Button onClick={handleStartReview} size="lg" isLoading={isLoading}>
+      <Button
+        onClick={handleStartReview}
+        size="lg"
+        isLoading={isLoading || isStarting}
+      >
         <Play width={16} />
-        {isLoading ? "Loading..." : "Start Review"}
+        {isLoading || isStarting ? "Loading..." : "Start Review"}
       </Button>
     </div>
   );

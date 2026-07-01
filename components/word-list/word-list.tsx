@@ -11,22 +11,75 @@ import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 const WordList = ({
   words,
   totalCount,
+  hasNextPage = false,
+  onFetchNextPage,
+  isFetchingNextPage = false,
 }: {
   words: WordWithMeanings[];
   totalCount: number;
+  hasNextPage?: boolean;
+  onFetchNextPage?: () => void;
+  isFetchingNextPage?: boolean;
 }) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+  const [globalFilter, setGlobalFilter] = React.useState("");
+  const [debouncedGlobalFilter, setDebouncedGlobalFilter] = React.useState("");
+
   const word = selectedIndex !== null ? words[selectedIndex] : undefined;
-  const { mode, setMode } = useLayout();
+  const { mode, setMode, settings } = useLayout();
+
   const handleTitleClick = React.useCallback((index: number) => {
     setSelectedIndex(index);
   }, []);
 
   useEffect(() => {
     if (selectedIndex !== null && words[selectedIndex]) {
-      handlePlayAudio(words[selectedIndex].word);
+      handlePlayAudio(
+        words[selectedIndex].word,
+        settings?.autoPlayPronunciation,
+      );
     }
-  }, [selectedIndex, words]);
+  }, [selectedIndex, words, settings?.autoPlayPronunciation]);
+
+  // Debounce search input - wait 300ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedGlobalFilter(globalFilter);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [globalFilter]);
+
+  useEffect(() => {
+    if (
+      !isFetchingNextPage &&
+      debouncedGlobalFilter.trim() &&
+      hasNextPage &&
+      onFetchNextPage
+    ) {
+      // Count how many words match the current search
+      const filteredCount = words.filter((word) => {
+        const searchLower = debouncedGlobalFilter.toLowerCase();
+        return (
+          word.word.toLowerCase().includes(searchLower) ||
+          word.meanings.some((meaning) =>
+            meaning.definition.toLowerCase().includes(searchLower),
+          )
+        );
+      }).length;
+
+      // If no results found but there are more pages, load next page
+      if (filteredCount === 0) {
+        onFetchNextPage();
+      }
+    }
+  }, [
+    debouncedGlobalFilter,
+    hasNextPage,
+    isFetchingNextPage,
+    onFetchNextPage,
+    words,
+  ]);
 
   return (
     <div>
@@ -72,10 +125,22 @@ const WordList = ({
         </div>
       </div>
       {mode === "grid" && (
-        <WordGrid words={words} onClickTitle={handleTitleClick} />
+        <WordGrid
+          words={words}
+          onClickTitle={handleTitleClick}
+          globalFilter={globalFilter}
+          onGlobalFilterChange={setGlobalFilter}
+          isLoadingAll={isFetchingNextPage}
+        />
       )}
       {mode === "list" && (
-        <WordTable words={words} onClickTitle={handleTitleClick} />
+        <WordTable
+          words={words}
+          onClickTitle={handleTitleClick}
+          globalFilter={globalFilter}
+          onGlobalFilterChange={setGlobalFilter}
+          isLoadingAll={isFetchingNextPage}
+        />
       )}
       {word && (
         <WordDialog

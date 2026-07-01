@@ -10,15 +10,17 @@ const ReviewWordCard = ({
   word,
   onPerformanceUpdate,
   studySessionId,
+  isRepeated,
 }: {
   word: WordWithMeanings;
   onPerformanceUpdate: (performance: ReviewPerformance) => void;
   studySessionId?: string;
+  isRepeated?: boolean;
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
   return (
-    <div className="group w-full cursor-pointer perspective-[1000px] h-full">
+    <div className="group w-full perspective-[1000px] h-full">
       <div
         className={cn(
           "relative h-full w-full shadow-xl transition-all duration-500 transform-3d",
@@ -32,6 +34,7 @@ const ReviewWordCard = ({
             setIsFlipped={setIsFlipped}
             onPerformanceUpdate={onPerformanceUpdate}
             studySessionId={studySessionId}
+            isRepeated={isRepeated}
           />
         </div>
 

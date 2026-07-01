@@ -1,7 +1,7 @@
 "use client";
 
 import { addNote } from "@/lib/actions/note.actions";
-import { initialActionState } from "@/lib/constants/initial-values";
+import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 import { useActionState, useEffect, startTransition } from "react";
 import { useForm } from "react-hook-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -25,7 +25,7 @@ const AddNoteForm = ({ note, onClose }: AddNoteFormProps) => {
   // Assuming `addNote` can also handle updates if an `id` is provided, similar to `saveWord`.
   const [state, formAction, isPending] = useActionState(
     addNote,
-    initialActionState,
+    INITIAL_ACTION_STATE,
   );
 
   const { register, handleSubmit, setValue, getValues, watch } = useForm<Note>({

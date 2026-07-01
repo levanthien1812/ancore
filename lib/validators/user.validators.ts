@@ -1,4 +1,19 @@
+import {
+  DayOfWeek,
+  MasteryLevel,
+  QuestionType,
+  QuizResultMode,
+  ReviewFrequency,
+  SpacedRepetitionAlgorithm,
+  UserLevel,
+} from "@prisma/client";
 import z from "zod";
+import {
+  MAXIMUM_WORDS_IN_QUIZ,
+  MAXIMUM_WORDS_IN_REVIEW,
+  MINIMUM_WORDS_IN_QUIZ,
+  MINIMUM_WORDS_IN_REVIEW,
+} from "../constants/constant";
 
 export const signInFormSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -55,4 +70,46 @@ export const onboardingFormSchema = z.object({
       message: "You can only enter up to 3 topics.",
     }),
   dailyGoal: z.number().min(5, "Goal must be at least 5 minutes."),
+});
+
+export const userSettingsSchema = z.object({
+  wordsPerReview: z
+    .number()
+    .int()
+    .min(MINIMUM_WORDS_IN_REVIEW)
+    .max(MAXIMUM_WORDS_IN_REVIEW),
+  reviewFrequency: z.nativeEnum(ReviewFrequency),
+  // time-format: 22:00
+  reviewReminderTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  reviewDays: z.array(z.nativeEnum(DayOfWeek)),
+  includeWordLevels: z.array(z.nativeEnum(MasteryLevel)),
+  prioritizeWeakWords: z.boolean(),
+  autoRepeatForgottenWords: z.boolean(),
+  questionsPerQuiz: z
+    .number()
+    .int()
+    .min(MINIMUM_WORDS_IN_QUIZ)
+    .max(MAXIMUM_WORDS_IN_QUIZ),
+  quizTypes: z.array(z.nativeEnum(QuestionType)),
+  quizWordLevels: z.array(z.nativeEnum(MasteryLevel)),
+  timeLimitPerQuestion: z.number().int().min(0).max(300), // 0 for no limit, max 5 minutes
+  showResultsMode: z.nativeEnum(QuizResultMode),
+  allowRetry: z.boolean(),
+  includeAudioQuestions: z.boolean(),
+  includeFirstLetterInHint: z.boolean(),
+  showIpaPronunciation: z.boolean(),
+  autoPlayPronunciation: z.boolean(),
+  dailyNewWordsGoal: z.number().int().min(1).max(100),
+  reviewAlgorithm: z.nativeEnum(SpacedRepetitionAlgorithm),
+  forgottenInterval: z.number().int().min(1).max(365),
+  hardInterval: z.number().int().min(1).max(365),
+  mediumInterval: z.number().int().min(1).max(365),
+  goodInterval: z.number().int().min(1).max(365),
+  easyInterval: z.number().int().min(1).max(365),
+  dailyReminderEnabled: z.boolean(),
+  notificationTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+  missedReviewReminderEnabled: z.boolean(),
+  streakReminderEnabled: z.boolean(),
+  wordOfTheDayEnabled: z.boolean(),
+  timezone: z.string().default("UTC"),
 });

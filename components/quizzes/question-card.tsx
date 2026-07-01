@@ -1,130 +1,19 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { QuizQuestionType } from "@/lib/constants/enums";
 import MultipleChoiceBody from "@/components/quizzes/multiple-choice-body";
 import FillInTheBlankBody from "@/components/quizzes/fill-in-the-blank-body";
 import MatchingBody from "@/components/quizzes/matching-body";
-import { Separator } from "../ui/separator";
 import { QuizQuestionWithWords } from "@/lib/type";
-import { CheckCircle, CircleX, Info } from "lucide-react";
-import {
-  CORRECT_ENCOURAGEMENTS,
-  INCORRECT_ENCOURAGEMENTS,
-} from "@/lib/constants/constant";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../ui/dialog";
-import { Badge } from "../ui/badge";
-import WordDetail from "../word-card/word-detail";
-import { updateQuizAnswer } from "@/lib/actions/quiz.actions";
+import { updateQuizAnswer, updateQuizAnswerRetry } from "@/lib/actions/quiz.actions";
 import { useMutation } from "@tanstack/react-query";
-
-const AnswerWrapper = ({
-  isCorrect,
-  description,
-  correctAnswer,
-  words,
-}: {
-  isCorrect: boolean;
-  description?: string;
-  correctAnswer?: React.ReactNode;
-  words: QuizQuestionWithWords["words"];
-}) => {
-  const [randomIndex, setRandomIndex] = useState(0);
-
-  useEffect(() => {
-    setRandomIndex(Math.floor(Math.random() * CORRECT_ENCOURAGEMENTS.length));
-  }, []);
-
-  const randomEncouragement = isCorrect
-    ? CORRECT_ENCOURAGEMENTS[randomIndex]
-    : INCORRECT_ENCOURAGEMENTS[randomIndex];
-
-  const [selectedWordId, setSelectedWordId] = useState<string | null>(
-    words[0].id,
-  );
-
-  const selectedWord = words.find((w) => w.id === selectedWordId);
-
-  return (
-    <div
-      className={cn(
-        "p-3 sm:p-4 rounded-md",
-        isCorrect && "border-green-300 bg-green-100",
-        !isCorrect && "border-red-300 bg-red-100",
-      )}
-    >
-      <div className="flex justify-between items-center gap-2">
-        <div className="flex items-center gap-2">
-          {isCorrect ? (
-            <CheckCircle className="text-green-600" width={32} height={32} />
-          ) : (
-            <CircleX className="text-red-600" width={32} height={32} />
-          )}
-          <div>
-            <p className={isCorrect ? "text-green-600" : "text-red-600"}>
-              {isCorrect ? "Correct" : "Incorrect"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {description || randomEncouragement}
-            </p>
-          </div>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant={"ghost"} size={"sm"} type="button">
-              <Info className="text-muted-foreground" width={20} height={20} />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 bg-primary">
-            <DialogHeader className="text-white">
-              <DialogTitle>Word Details</DialogTitle>
-            </DialogHeader>
-
-            {words.length > 1 && (
-              <div className="flex gap-1">
-                {words.map((word) => (
-                  <Badge
-                    key={word.id}
-                    variant={
-                      selectedWordId === word.id ? "secondary" : "default"
-                    }
-                    className="cursor-pointer hover:underline"
-                    onClick={() => setSelectedWordId(word.id)}
-                  >
-                    {word.word}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {selectedWord ? (
-              <WordDetail word={selectedWord} showReviewStats={false} />
-            ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Select a word to view details.
-              </p>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-      {correctAnswer && (
-        <div className="bg-white/50 p-3 sm:p-4 rounded-md mt-2">
-          <p className="mb-1 text-green-600">Correct answer:</p>
-          {correctAnswer}
-        </div>
-      )}
-    </div>
-  );
-};
+import { QuizResultMode } from "@prisma/client";
+import { useLayout } from "../layout/layout-context";
+import QuestionResult from "./question-result";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 const QuestionCard = ({
   answerId,
@@ -132,63 +21,135 @@ const QuestionCard = ({
   initialIsCorrect,
   onNext,
   currentIndex,
+  isActive,
   totalQuestions,
   isFinalizing,
+  isRetryMode = false,
 }: {
   answerId: string;
   question: QuizQuestionWithWords;
   initialIsCorrect: boolean | null;
   onNext: () => void;
   currentIndex: number;
+  isActive: boolean;
   totalQuestions: number;
   isFinalizing: boolean;
+  isRetryMode?: boolean;
 }) => {
+  const { settings } = useLayout();
+  // In retry mode, no time limit applies
+  const timeLimit = isRetryMode ? 0 : (settings?.timeLimitPerQuestion || 0);
+  const [timeLeft, setTimeLeft] = useState(timeLimit);
+
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(!!question.answer);
   const [localIsCorrect, setLocalIsCorrect] = useState<boolean | null>(
     initialIsCorrect,
   );
   const isLastQuestion = currentIndex === totalQuestions - 1;
+  const [correctAnswer, setCorrectAnswer] = useState<typeof question.answer>(
+    question.answer,
+  );
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const { mutate: updateQuizAnswerMutation, isPending: isUpdatingQuizAnswer } =
     useMutation({
-      mutationFn: (data: { userAnswer: string | null }) =>
-        updateQuizAnswer(answerId, data.userAnswer),
+      mutationFn: async (data: { userAnswer: string | null }) => {
+        if (isRetryMode) {
+          const result = await updateQuizAnswerRetry(answerId, data.userAnswer);
+          return { isCorrectAfterRetry: result?.isCorrectAfterRetry ?? false, correctAnswer: result?.correctAnswer ?? null };
+        } else {
+          const result = await updateQuizAnswer(answerId, data.userAnswer);
+          return { isCorrect: result?.isCorrect ?? false, correctAnswer: result?.correctAnswer ?? null };
+        }
+      },
+      mutationKey: isRetryMode
+        ? ["updateQuizAnswerRetry", answerId]
+        : ["updateQuizAnswer", answerId],
       onSuccess: (data) => {
         if (data) {
-          const audio = new Audio(
-            data.isCorrect
-              ? "/sounds/correct-answer-sound.mp3"
-              : "/sounds/wrong-answer-sound.mp3",
-          );
-          audio.play().catch((err) => console.error("Audio play failed:", err));
-          setLocalIsCorrect(data.isCorrect);
-          setIsAnswered(true);
+          const isCorrect: boolean = isRetryMode
+            ? !!("isCorrectAfterRetry" in data && data.isCorrectAfterRetry)
+            : !!("isCorrect" in data && data.isCorrect);
+          // In retry mode always show result; in normal mode respect setting
+          if (
+            isRetryMode ||
+            settings?.showResultsMode === QuizResultMode.AfterEachQuestion
+          ) {
+            const audio = new Audio(
+              isCorrect
+                ? "/sounds/correct-answer-sound.mp3"
+                : "/sounds/wrong-answer-sound.mp3",
+            );
+            audio.play().catch((err) => console.error("Audio play failed:", err));
+            setLocalIsCorrect(isCorrect);
+            setCorrectAnswer(data.correctAnswer);
+            setIsAnswered(true);
+          }
         }
       },
     });
 
-  const handleCheckAnswer = () => {
-    if (selectedAnswer) {
-      updateQuizAnswerMutation({ userAnswer: selectedAnswer });
+  const handleCheckAnswer = useCallback((isTimeout: boolean = false) => {
+    if (isTimeout) {
+      updateQuizAnswerMutation({ userAnswer: selectedAnswer || null });
     } else {
-      toast.warning("Please select an answer or finish your answer first.");
+      if (selectedAnswer) {
+        updateQuizAnswerMutation({ userAnswer: selectedAnswer });
+      } else {
+        toast.warning("Please select an answer or finish your answer first.");
+      }
     }
-  };
+  }, [selectedAnswer, updateQuizAnswerMutation]);
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     setSelectedAnswer(null);
-    setLocalIsCorrect(false);
-    setIsAnswered(true);
-    updateQuizAnswerMutation({ userAnswer: null });
-    onNext();
-  };
+    if (isRetryMode) {
+      // In retry mode, skip goes directly to next without showing result
+      updateQuizAnswerMutation({ userAnswer: null });
+      onNext();
+    } else {
+      updateQuizAnswerMutation({ userAnswer: null });
+      if (settings?.showResultsMode !== QuizResultMode.AfterEachQuestion) {
+        onNext();
+      }
+    }
+  }, [isRetryMode, onNext, updateQuizAnswerMutation, settings?.showResultsMode]);
+
+  useEffect(() => {
+    // If the card is not active, ensure timer is stopped and reset
+    if (!isActive) {
+      return;
+    }
+
+    if (timeLimit > 0 && !isAnswered && !isUpdatingQuizAnswer) {
+      setTimeLeft(timeLimit);
+      timerIntervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => Math.max(0, prev - 0.1));
+      }, 100);
+
+      return () => clearInterval(timerIntervalRef.current ?? undefined);
+    }
+  }, [isActive, isAnswered, isUpdatingQuizAnswer, timeLimit]);
+
+  useEffect(() => {
+    if (isActive && !isAnswered && timeLimit > 0 && timeLeft <= 0) {
+      handleCheckAnswer(true);
+    }
+  }, [isActive, isAnswered, timeLimit, timeLeft, handleCheckAnswer]);
+
+  const progressWidth = timeLimit > 0 ? (timeLeft / timeLimit) * 100 : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isUpdatingQuizAnswer) return;
     if (!isAnswered) {
       handleCheckAnswer();
+      // In retry mode, always show the result (like AfterEachQuestion);
+      // in AtTheEnd mode without retry, move immediately
+      if (!isRetryMode && settings?.showResultsMode === QuizResultMode.AtTheEnd) {
+        onNext();
+      }
     } else {
       onNext();
     }
@@ -196,20 +157,22 @@ const QuestionCard = ({
 
   const questionBody = () => {
     switch (question.type) {
-      case QuizQuestionType.MultipleChoice_DefinitionToWord:
-      case QuizQuestionType.MultipleChoice_WordToSynonym:
+      case QuizQuestionType.DefinitionToWord_Typing:
+        return (
+          <FillInTheBlankBody
+            question={question}
+            setSelectedAnswer={setSelectedAnswer}
+            correctAnswer={correctAnswer}
+          />
+        );
+      case QuizQuestionType.WordToSynonym:
+      case QuizQuestionType.FillInTheBlank:
         return (
           <MultipleChoiceBody
             question={question}
             selectedAnswer={selectedAnswer}
             setSelectedAnswer={setSelectedAnswer}
-          />
-        );
-      case QuizQuestionType.FillInTheBlank:
-        return (
-          <FillInTheBlankBody
-            question={question}
-            setSelectedAnswer={setSelectedAnswer}
+            correctAnswer={correctAnswer}
           />
         );
       case QuizQuestionType.Matching:
@@ -217,6 +180,7 @@ const QuestionCard = ({
           <MatchingBody
             question={question}
             setSelectedAnswer={setSelectedAnswer}
+            correctAnswer={correctAnswer}
           />
         );
       default:
@@ -224,63 +188,16 @@ const QuestionCard = ({
     }
   };
 
-  const questionResult = () => {
-    if (localIsCorrect) {
-      return <AnswerWrapper isCorrect={true} words={question.words} />;
-    }
-
-    switch (question.type) {
-      case QuizQuestionType.MultipleChoice_DefinitionToWord:
-      case QuizQuestionType.MultipleChoice_WordToSynonym:
-      case QuizQuestionType.FillInTheBlank:
-        return (
-          <AnswerWrapper
-            isCorrect={false}
-            words={question.words}
-            correctAnswer={<div>{question.answer}</div>}
-          />
-        );
-      case QuizQuestionType.Matching:
-        if (!question.answer) return null;
-        const correctAnswerMap = JSON.parse(question.answer) as Record<
-          string,
-          string
-        >;
-        const correctMatches = Object.entries(correctAnswerMap).map(
-          ([leftId, rightId], index) => {
-            return (
-              <div key={leftId} className="grid grid-cols-3 gap-x-4">
-                <div className="space-y-3 col-span-1 text-green-600">
-                  {leftId}
-                </div>
-                <div className="space-y-3 col-span-2">{rightId}</div>
-                {index !== Object.entries(correctAnswerMap).length - 1 && (
-                  <Separator decorative className="col-span-3 my-2" />
-                )}
-              </div>
-            );
-          },
-        );
-
-        return (
-          <AnswerWrapper
-            isCorrect={false}
-            description={"Some matches are not correct."}
-            words={question.words}
-            correctAnswer={
-              <div className="border border-green-600 rounded-md p-3 sm:p-4">
-                {correctMatches}
-              </div>
-            }
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <Card className="h-full flex flex-col">
+    <Card className="h-full flex flex-col overflow-hidden relative">
+      {timeLimit > 0 && !isAnswered && (
+        <div className="absolute top-0 left-0 h-1 w-full bg-muted z-20">
+          <div
+            className="h-full bg-primary-2 transition-all duration-100 ease-linear"
+            style={{ width: `${progressWidth}%` }}
+          />
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="h-full flex flex-col">
         <CardHeader>
           {/* Display the direction */}
@@ -291,7 +208,7 @@ const QuestionCard = ({
           {/* Display the main question content, if it exists */}
           {question.question && (
             <CardTitle className="text-lg leading-snug pt-2 text-primary">
-              {question.question}
+              {normalizeText(question.question)}
             </CardTitle>
           )}
         </CardHeader>
@@ -302,8 +219,15 @@ const QuestionCard = ({
           <div className="mt-4 space-y-2">
             {isAnswered &&
               !isUpdatingQuizAnswer &&
-              selectedAnswer &&
-              questionResult()}
+              (isRetryMode ||
+                settings?.showResultsMode ===
+                QuizResultMode.AfterEachQuestion) && (
+                <QuestionResult
+                  question={question}
+                  localIsCorrect={localIsCorrect}
+                  correctAnswer={correctAnswer}
+                />
+              )}
             {!isAnswered && (
               <Button
                 disabled={isUpdatingQuizAnswer}
@@ -315,21 +239,41 @@ const QuestionCard = ({
                 Skip
               </Button>
             )}
-            {!isAnswered && (
+            {!isAnswered &&
+              (isRetryMode ||
+                settings?.showResultsMode ===
+                QuizResultMode.AfterEachQuestion) && (
+                <Button
+                  type="submit"
+                  disabled={
+                    !selectedAnswer || isUpdatingQuizAnswer || isFinalizing
+                  }
+                  className="w-full"
+                  isLoading={isUpdatingQuizAnswer || isFinalizing}
+                >
+                  {isUpdatingQuizAnswer ? "Checking..." : "Check Answer"}
+                </Button>
+              )}
+            {(isAnswered ||
+              (!isRetryMode &&
+                settings?.showResultsMode === QuizResultMode.AtTheEnd)) && (
               <Button
                 type="submit"
-                disabled={
-                  !selectedAnswer || isUpdatingQuizAnswer || isFinalizing
-                }
                 className="w-full"
+                disabled={
+                  selectedAnswer?.length === 0 ||
+                  isUpdatingQuizAnswer ||
+                  isFinalizing
+                }
                 isLoading={isUpdatingQuizAnswer || isFinalizing}
               >
-                {isUpdatingQuizAnswer ? "Checking..." : "Check Answer"}
-              </Button>
-            )}
-            {isAnswered && (
-              <Button type="submit" className="w-full">
-                {!isLastQuestion ? "Next" : "Finish Quiz"}
+                {!isLastQuestion
+                  ? isRetryMode
+                    ? "Next Retry"
+                    : "Next"
+                  : isRetryMode
+                    ? "Finish Retry"
+                    : "Finish Quiz"}
               </Button>
             )}
           </div>

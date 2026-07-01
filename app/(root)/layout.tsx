@@ -1,12 +1,19 @@
+import { auth } from "@/auth";
 import Header from "@/components/shared/header";
 import Sidebar from "@/components/shared/sidebar";
+import { redirect } from "next/navigation";
 import { Toaster } from "sonner";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    redirect("/sign-in");
+  }
+
   return (
     <div className="flex h-screen flex-col">
       <Header />

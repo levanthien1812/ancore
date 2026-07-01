@@ -6,11 +6,13 @@ import {
   useState,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import type { Word, WordMeaning } from "@prisma/client";
+import { WordType } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import {
@@ -24,7 +26,7 @@ import {
 import {
   INITIAL_MEANING,
   INITIAL_WORD,
-  initialActionState,
+  INITIAL_ACTION_STATE,
 } from "@/lib/constants/initial-values";
 import Meaning from "./meaning";
 import WordSuggest from "./word-suggest";
@@ -32,13 +34,19 @@ import AiMeaningSuggest from "./ai-meaning-suggest";
 import {
   checkWordExists,
   fillWithAI,
+  getWordsAddedToday,
   saveWord,
 } from "@/lib/actions/word.actions";
 import { debounce } from "@/lib/utils/debounce";
-import { CEFR_LEVELS, CEFRLevel, MASTERY_LEVELS } from "@/lib/constants/enums";
+import {
+  CEFR_LEVELS,
+  CEFRLevel,
+  MASTERY_LEVELS,
+  NotificationType,
+} from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { WordOfTheDay } from "../home/word-of-the-day";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { BookOpen, Info, Layers2, Plus, Sparkles, X } from "lucide-react";
@@ -47,6 +55,8 @@ import { toast } from "sonner";
 import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
 import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 import PasteWordTips from "./paste-word-tips";
+import { useLayout } from "../layout/layout-context";
+import { createNotification } from "@/lib/actions/notification.actions";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -65,19 +75,25 @@ const AddOrEditWordForm = ({
   wordOfTheDay,
   initialWord,
 }: AddOrEditWordFormProps) => {
+  const { settings } = useLayout();
+  const processedSuccessRef = useRef(false);
+  const { refetch: refetchTodayCount } = useQuery({
+    queryKey: ["wordsAddedToday"],
+    queryFn: () => getWordsAddedToday(),
+  });
   const [enteredWord, setEnteredWord] = useState(
     word?.word || wordOfTheDay?.word || initialWord || "",
   );
   const queryClient = useQueryClient();
-  const [entryType, setEntryType] = useState<"word" | "phrase">(
-    word?.type === "Phrase" ? "phrase" : "word",
+  const [entryType, setEntryType] = useState<WordType>(
+    word?.type || WordType.Word,
   );
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
   const session = useSession();
   const [generated, setGenerated] = useState(word?.isOriginal || false);
   const [state, formAction, isLoading] = useActionState(
     saveWord,
-    initialActionState,
+    INITIAL_ACTION_STATE,
   );
 
   const defaultValues = (): WordWithMeanings => {
@@ -166,7 +182,7 @@ const AddOrEditWordForm = ({
         pronunciation: meaning.pronunciation ?? null,
         cefrLevel:
           meaning.cefrLevel &&
-          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+            CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
@@ -211,7 +227,7 @@ const AddOrEditWordForm = ({
         pronunciation: meaning.pronunciation ?? null,
         cefrLevel:
           meaning.cefrLevel &&
-          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+            CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
@@ -249,18 +265,22 @@ const AddOrEditWordForm = ({
       if (trimmedValue.length > 0) {
         debouncedCheckWord(trimmedValue);
       } else {
-        reset({ ...INITIAL_WORD, meanings: [INITIAL_MEANING] });
+        if (word) {
+          reset({ ...INITIAL_WORD, id: word.id, meanings: [INITIAL_MEANING] });
+        } else {
+          reset({ ...INITIAL_WORD, meanings: [INITIAL_MEANING] });
+        }
         setGenerated(false);
         setWordExistsError(null);
       }
     },
-    [debouncedCheckWord, reset, setValue],
+    [debouncedCheckWord, reset, setValue, setEnteredWord, word],
   );
 
   const onSubmit = (data: WordWithMeanings) => {
     const formData = new FormData();
 
-    formData.append("type", entryType === "word" ? "Word" : "Phrase");
+    formData.append("type", entryType);
 
     // Manually append all fields to FormData
     Object.entries(data).forEach(([key, value]) => {
@@ -324,9 +344,14 @@ const AddOrEditWordForm = ({
       synonyms,
       antonyms,
       guideWord,
+      usages,
     } = parsedContent;
 
+    const type =
+      parsedWord.split(" ").length > 1 ? WordType.Phrase : WordType.Word;
+
     handleWordChange(parsedWord);
+    setEntryType(type);
     replace([
       {
         ...INITIAL_MEANING,
@@ -342,6 +367,7 @@ const AddOrEditWordForm = ({
         examples: examples.length > 0 ? examples : [""],
         synonyms: synonyms || null,
         antonyms: antonyms || null,
+        usageNotes: usages || null,
       },
     ]);
     toast.success("Imported details from Cambridge Dictionary");
@@ -354,7 +380,8 @@ const AddOrEditWordForm = ({
   }, [initialWord, word, wordOfTheDay, checkWord]);
 
   useEffect(() => {
-    if (state && state.success) {
+    if (state && state.success && !processedSuccessRef.current) {
+      processedSuccessRef.current = true;
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });
       queryClient.invalidateQueries({
@@ -363,6 +390,22 @@ const AddOrEditWordForm = ({
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_MASTERY_LEVEL],
       });
+      queryClient.invalidateQueries({ queryKey: ["wordsAddedToday"] });
+
+      if (!word) {
+        const goal = settings?.dailyNewWordsGoal ?? 5;
+        refetchTodayCount().then((result) => {
+          if (result.data && result.data === goal) {
+            createNotification({
+              type: NotificationType.DailyNewWordsGoal,
+              title: "Daily Goal Reached!",
+              message: `Congratulations! You've reached your daily goal of ${goal} words! 🎊`,
+              actionUrl: "/words",
+            });
+          }
+        });
+      }
+
       if (word?.id) {
         queryClient.invalidateQueries({
           queryKey: ["review-info", word.id],
@@ -371,7 +414,7 @@ const AddOrEditWordForm = ({
 
       onClose();
     }
-  }, [state, onClose, queryClient]);
+  }, [state, onClose, queryClient, word, settings, refetchTodayCount]);
 
   return (
     <form
@@ -398,17 +441,17 @@ const AddOrEditWordForm = ({
           <div className="flex gap-1">
             <Button
               type="button"
-              variant={entryType === "word" ? "default" : "outline"}
+              variant={entryType === WordType.Word ? "default" : "outline"}
               className="py-1 px-2 sm:px-4 rounded-full h-fit"
-              onClick={() => setEntryType("word")}
+              onClick={() => setEntryType(WordType.Word)}
             >
               Word
             </Button>
             <Button
               type="button"
-              variant={entryType === "phrase" ? "default" : "outline"}
+              variant={entryType === WordType.Phrase ? "default" : "outline"}
               className="py-1 px-2 sm:px-4 rounded-full h-fit"
-              onClick={() => setEntryType("phrase")}
+              onClick={() => setEntryType(WordType.Phrase)}
             >
               Phrase
             </Button>
@@ -603,7 +646,7 @@ const AddOrEditWordForm = ({
           </div>
         </div>
       </div>
-      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border bg-white/80 sticky bottom-0">
+      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 bg-blue-200 bg-diagonal-stripes">
         {word && (
           <Button
             variant={"secondary"}
@@ -615,7 +658,7 @@ const AddOrEditWordForm = ({
           </Button>
         )}
         <Button
-          variant={"ghost"}
+          variant={"secondary"}
           type="button"
           onClick={onClose}
           className="ms-auto"

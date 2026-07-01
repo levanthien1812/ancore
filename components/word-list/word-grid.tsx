@@ -15,10 +15,7 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
 } from "@tanstack/react-table";
-import {
-  DEFAULT_WORDS_PER_PAGE_GRID,
-  PAGE_SIZES,
-} from "@/lib/constants/constant";
+import { DEFAULT_WORDS_PER_PAGE_GRID } from "@/lib/constants/constant";
 import ActionsPanel from "./actions-panel";
 import Pagination from "./pagination";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,9 +24,15 @@ import { QUERY_KEY } from "@/lib/constants/queryKey";
 const WordGrid = ({
   words,
   onClickTitle,
+  globalFilter: initialGlobalFilter = "",
+  onGlobalFilterChange,
+  isLoadingAll = false,
 }: {
   words: WordWithMeanings[];
   onClickTitle: (index: number) => void;
+  globalFilter?: string;
+  onGlobalFilterChange?: (value: string) => void;
+  isLoadingAll?: boolean;
 }) => {
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -41,29 +44,19 @@ const WordGrid = ({
       {
         accessorKey: "word",
         header: "Word",
-        cell: ({ row }) => (
-          <WordCard
-            word={row.original}
-            onClickTitle={() => {
-              const originalIndex = words.findIndex(
-                (w) => w.id === row.original.id,
-              );
-              onClickTitle(originalIndex === -1 ? 0 : originalIndex);
-            }}
-            isSelectMode={isSelectMode}
-            isSelected={selectedIds.has(row.original.id)}
-            onSelect={(wordId) => {
-              const newSelectedIds = new Set(selectedIds);
-              if (newSelectedIds.has(wordId)) {
-                newSelectedIds.delete(wordId);
-              } else {
-                newSelectedIds.add(wordId);
-              }
-              setSelectedIds(newSelectedIds);
-            }}
-          />
-        ),
         enableSorting: true,
+        enableGlobalFilter: true,
+      },
+      {
+        accessorFn: (row) =>
+          row.meanings.map((meaning) => meaning.definition).join(" "),
+        id: "meanings",
+        header: "Meanings",
+        enableSorting: false,
+        cell: ({ row }) => {
+          const meanings = row.original.meanings;
+          return meanings.map((meaning) => meaning.definition).join(", ");
+        },
         enableGlobalFilter: true,
       },
       {
@@ -89,14 +82,21 @@ const WordGrid = ({
         header: "Added at",
         enableSorting: true,
       },
+      {
+        id: "partOfSpeech",
+        filterFn: (row, columnId, value) => {
+          const meanings = row.original.meanings;
+          return meanings.some((meaning) => meaning.partOfSpeech === value);
+        },
+      },
     ],
-    [onClickTitle, words, isSelectMode, selectedIds],
+    [],
   );
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "createdAt", desc: true },
   ]);
-  const [globalFilter, setGlobalFilter] = useState("");
+  const [globalFilter, setGlobalFilter] = useState(initialGlobalFilter);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
@@ -104,6 +104,16 @@ const WordGrid = ({
     pageIndex: 0,
     pageSize: DEFAULT_WORDS_PER_PAGE_GRID,
   });
+
+  // Sync globalFilter changes to parent
+  React.useEffect(() => {
+    onGlobalFilterChange?.(globalFilter);
+  }, [globalFilter, onGlobalFilterChange]);
+
+  // Sync external globalFilter prop to internal state (only when prop changes)
+  React.useEffect(() => {
+    setGlobalFilter(initialGlobalFilter);
+  }, [initialGlobalFilter]);
 
   const table = useReactTable({
     data: words,
@@ -143,6 +153,7 @@ const WordGrid = ({
         table={table}
         isSelectMode={isSelectMode}
         onToggleSelectMode={handleToggleSelectMode}
+        isLoadingAll={isLoadingAll}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {table.getRowModel().rows.map((row) => (

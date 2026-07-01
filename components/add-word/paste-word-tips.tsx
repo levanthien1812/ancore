@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
+import Link from "next/link";
 // Do not try to optimize these imports by moving them to the top level, otherwise it will break the video loading
 // Instead of importing the videos directly, we will load them dynamically when the component is mounted to avoid increasing the initial bundle size
 // import copyWordCambridge from "@/public/videos/copy-word-cambridge.mp4";
@@ -61,7 +62,14 @@ const PasteWordTips = () => {
           <div>
             <h4 className="font-medium">1. Copy a Word</h4>
             <p className="text-sm text-muted-foreground">
-              Select and copy a word from a webpage or document.
+              Select and copy a word from{" "}
+              <Link
+                href="https://dictionary.cambridge.org/"
+                target="_blank"
+                className="underline text-primary"
+              >
+                Cambridge dictionary
+              </Link>
             </p>
             <video
               src={"/videos/copy-word-cambridge.mp4"}

@@ -9,26 +9,26 @@ import { StudySessionWithWordReviews } from "@/lib/type";
 
 const ReviewSummary = ({
   studySession,
+  onReviewMore,
 }: {
   studySession: StudySessionWithWordReviews;
+  onReviewMore: () => void;
 }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full">
-      <Card className="w-ful h-full">
+      <Card className="w-full h-full">
         <CardHeader>
           <CardTitle className="text-center">Session Complete!</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-2">
           <div className="flex justify-center items-center">
-            <Image src={Congrats} alt="congrats" width={240} />
+            <Image src={Congrats} alt="congrats" width={180} />
           </div>
           <ReviewSummaryDetail studySession={studySession} />
           <div className="flex gap-4 justify-center pt-4">
-            <Button asChild>
-              <Link href="/review">Review More</Link>
-            </Button>
+            <Button onClick={onReviewMore}>Review more</Button>
             <Button variant="outline" asChild>
-              <Link href="/dashboard">Go to Dashboard</Link>
+              <Link href="/">Go to Dashboard</Link>
             </Button>
           </div>
         </CardContent>

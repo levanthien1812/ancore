@@ -1,6 +1,12 @@
 "use server";
 import { prisma } from "@/db/prisma";
-import { MasteryLevel, WordReviewInfo } from "../constants/enums";
+import {
+  MasteryLevel,
+  WordReviewInfo,
+  ReviewFrequency,
+  DayOfWeek,
+  SpacedRepetitionAlgorithm,
+} from "../constants/enums";
 import { dateFilter } from "../utils/date-filter"; // Keep this for getStudySessions
 import { getPeriodDateRange, ReviewPeriod } from "../utils/date-helpers";
 import {
@@ -10,27 +16,29 @@ import {
   format,
   differenceInCalendarDays,
 } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import { revalidatePath } from "next/cache";
-import { authenticationAction } from "./_helpers";
+import { authenticationAction, settingsAction } from "./_helpers";
 import { ReviewPerformance } from "@prisma/client";
+import { remindReviewSessionsTemplate } from "../email-templates/remind-review-sessions";
+import { parseTimeToMinutes } from "../utils/time-convert";
+import { resend } from "../resend";
+import { clampTo100 } from "../utils/contrains";
+import {
+  DEFAULT_REVIEW_INTERVALS,
+  REVIEW_PERFORMANCE_SCORE,
+} from "../constants/constant";
 
 export const updateWordReview = async (
   wordId: string,
   performance: ReviewPerformance,
   studySessionId?: string,
 ) =>
-  authenticationAction(async (userId) => {
+  settingsAction(async (userId, settings) => {
     const word = await prisma.word.findUnique({ where: { id: wordId } });
     if (!word) {
       throw new Error("Word not found for this review session.");
     }
-
-    // Find the most recent completed review session to determine the current interval for the algorithm.
-    // This is distinct from the session being marked as completed *now*.
-    const lastCompletedReview = await prisma.wordReview.findFirst({
-      where: { wordId, userId, completedAt: { not: null } },
-      orderBy: { completedAt: "desc" },
-    });
 
     const now = new Date();
     // Find the specific review session that is currently being completed (i.e., the pending one that was due)
@@ -45,50 +53,41 @@ export const updateWordReview = async (
       select: { id: true, intervalDays: true }, // Only need id and intervalDays from this one
     });
 
-    // If there's no previous completed review, use the initial interval (1 day, as set in word.actions.ts)
-    // Otherwise, use the intervalDays from the last completed review.
-    const currentInterval = lastCompletedReview
-      ? lastCompletedReview.intervalDays
-      : 1;
-
     // --- Spaced Repetition Algorithm (Simplified) ---
-    let newInterval: number;
+    const isCustom =
+      settings.reviewAlgorithm === SpacedRepetitionAlgorithm.Custom;
 
-    switch (performance) {
-      case ReviewPerformance.Forgot:
-        newInterval = 1; // Reset interval to 1 day
-        break;
-      case ReviewPerformance.Hard:
-        newInterval = Math.max(1, Math.floor(currentInterval * 1.2));
-        break;
-      case ReviewPerformance.Medium:
-        newInterval = Math.max(1, Math.floor(currentInterval * 2));
-        break;
-      case ReviewPerformance.Good:
-        newInterval = Math.floor(currentInterval * 3);
-        break;
-      case ReviewPerformance.Easy:
-        newInterval = Math.floor(currentInterval * 4);
-        break;
-      default:
-        newInterval = currentInterval;
-    }
-    // --- End of Algorithm ---
+    const settingsIntervalMap = {
+      [ReviewPerformance.Forgot]: settings.forgottenInterval,
+      [ReviewPerformance.Hard]: settings.hardInterval,
+      [ReviewPerformance.Medium]: settings.mediumInterval,
+      [ReviewPerformance.Good]: settings.goodInterval,
+      [ReviewPerformance.Easy]: settings.easyInterval,
+    };
+
+    const newInterval = Math.max(
+      1,
+      isCustom
+        ? settingsIntervalMap[performance]
+        : DEFAULT_REVIEW_INTERVALS[performance],
+    );
+
     const newScheduledAt = new Date(now.getTime());
     newScheduledAt.setDate(newScheduledAt.getDate() + newInterval);
 
     const isPositiveResult =
       performance === ReviewPerformance.Good ||
       performance === ReviewPerformance.Easy;
-    const isNegativeResult =
-      performance === ReviewPerformance.Forgot ||
-      performance === ReviewPerformance.Hard;
 
     // --- Mastery Level Update Algorithm ---
     let newMasteryLevel = word.masteryLevel;
     switch (word.masteryLevel) {
       case MasteryLevel.New:
-        newMasteryLevel = MasteryLevel.Learning;
+        if (isPositiveResult) {
+          newMasteryLevel = MasteryLevel.Familiar;
+        } else {
+          newMasteryLevel = MasteryLevel.Learning;
+        }
         break;
       case MasteryLevel.Learning:
         if (isPositiveResult) {
@@ -96,18 +95,22 @@ export const updateWordReview = async (
         }
         break;
       case MasteryLevel.Familiar:
-        if (performance === ReviewPerformance.Forgot) {
+        if (!isPositiveResult) {
           newMasteryLevel = MasteryLevel.Learning; // Demote
-        } else if (isPositiveResult) {
+        } else {
           newMasteryLevel = MasteryLevel.Mastered;
         }
         break;
       case MasteryLevel.Mastered:
-        if (isNegativeResult) {
+        if (!isPositiveResult) {
           newMasteryLevel = MasteryLevel.Familiar; // Demote if user struggles
         }
         break;
     }
+
+    const newProficiencyScore = clampTo100(
+      word.proficiencyScore + REVIEW_PERFORMANCE_SCORE[performance],
+    );
 
     // --- Database Update ---
     const transactionOperations = [];
@@ -141,7 +144,12 @@ export const updateWordReview = async (
       }),
       prisma.word.update({
         where: { id: wordId },
-        data: { masteryLevel: newMasteryLevel, updatedAt: now },
+        data: {
+          masteryLevel: newMasteryLevel,
+          proficiencyScore: newProficiencyScore,
+          lastReviewedAt: now,
+          updatedAt: now,
+        },
       }),
     );
     await prisma.$transaction(transactionOperations);
@@ -159,18 +167,18 @@ export const startStudySession = async () =>
     return log.id;
   });
 
-export const logWordReview = async (
-  logId: string,
+export const updateReviewSession = async (
+  studySessionId: string,
   summary: {
     durationSeconds: number;
   },
 ) =>
   authenticationAction(async (userId) => {
-    const log = await prisma.studySession.update({
-      where: { id: logId, userId },
+    const session = await prisma.studySession.update({
+      where: { id: studySessionId, userId },
       data: {
-        completedAt: new Date(),
         ...summary,
+        completedAt: new Date(),
       },
       include: {
         reviews: {
@@ -186,7 +194,7 @@ export const logWordReview = async (
     });
 
     revalidatePath("/review");
-    return log;
+    return session;
   });
 
 export const getStudySessions = async (date: Date) =>
@@ -253,22 +261,13 @@ export const getReviewInfo = async (wordId: string) => {
       nextReviewAt: null,
       nextReviewIn: null,
       overdueIn: null,
-      lastReviewAt: null,
+      lastReviewAt: word.lastReviewedAt,
       reviewedTimes: 0,
     };
-
-    // 1. Get reviewed times and last review date from completed sessions
-    const completedReviews = await prisma.wordReview.findFirst({
-      where: { wordId, userId, completedAt: { not: null } },
-      orderBy: { completedAt: "desc" }, // Most recent completed review first
-    });
 
     info.reviewedTimes = await prisma.wordReview.count({
       where: { wordId, userId, completedAt: { not: null } },
     });
-
-    info.lastReviewAt = completedReviews?.completedAt || null;
-
     // 2. Get next review date from the earliest uncompleted session
     const nextScheduledReview = await prisma.wordReview.findFirst({
       where: { wordId, userId, completedAt: null }, // Look for uncompleted
@@ -642,3 +641,151 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       performanceCounts: currentMetrics.performanceCounts,
     };
   });
+
+/**
+ * System-level action to send daily review reminders based on user settings.
+ * This checks frequency, active review days, and pending word counts.
+ */
+export const sendEmailRemindReviewSessions = async () => {
+  const usersToRemind = await prisma.user.findMany({
+    where: {
+      settings: {
+        dailyReminderEnabled: true,
+      },
+    },
+    include: {
+      settings: true,
+    },
+  });
+
+  const now = new Date();
+
+  const emailResults = [];
+
+  for (const user of usersToRemind) {
+    const settings = user.settings;
+    if (!settings || !settings.reviewReminderTime) continue;
+
+    // Convert current time to user's timezone
+    const userTimezone = settings.timezone || "UTC";
+    const nowInUserTz = formatInTimeZone(now, userTimezone, "HH:mm");
+    const [hours, minutes] = nowInUserTz.split(":").map(Number);
+    const nowMinutes = hours * 60 + minutes;
+
+    const userMinutes = parseTimeToMinutes(settings.reviewReminderTime);
+    const diff = nowMinutes - userMinutes;
+
+    // Helpful for production debugging - show timezone context
+    console.log(
+      `Checking reminder for ${user.email} (${userTimezone}): LocalMinutes=${nowMinutes}, ReminderTime=${userMinutes}, Diff=${diff}`,
+    );
+
+    if (
+      diff < 0 ||
+      diff >=
+        (process.env.REVIEW_REMINDER_INTERVAL_MINUTES
+          ? parseInt(process.env.REVIEW_REMINDER_INTERVAL_MINUTES)
+          : 10)
+    )
+      continue;
+
+    // Check if they already have a completed study session today in their timezone
+    const startOfTodayIso = formatInTimeZone(
+      now,
+      userTimezone,
+      "yyyy-MM-dd'T'00:00:00XXX",
+    );
+    const startOfToday = new Date(startOfTodayIso);
+
+    const hasStudiedToday = await prisma.studySession.findFirst({
+      where: {
+        userId: user.id,
+        completedAt: {
+          gte: startOfToday,
+        },
+      },
+    });
+
+    if (hasStudiedToday) {
+      console.log(
+        `User ${user.email} already studied today. Skipping reminder.`,
+      );
+      continue;
+    }
+
+    // Now check the day in the user's timezone
+    const todayNameInUserTz = formatInTimeZone(
+      now,
+      userTimezone,
+      "EEEE",
+    ) as DayOfWeek;
+    const daysSinceEpochInUserTz = Math.floor(
+      new Date(formatInTimeZone(now, userTimezone, "yyyy-MM-dd")).getTime() /
+        (1000 * 60 * 60 * 24),
+    );
+
+    let isScheduledDay = false;
+
+    // 1. Identify if today matches the user's frequency preference
+    if (settings.reviewFrequency === ReviewFrequency.Daily) {
+      isScheduledDay = true;
+    } else if (settings.reviewFrequency === ReviewFrequency.Custom) {
+      isScheduledDay = settings.reviewDays.includes(todayNameInUserTz);
+    } else if (settings.reviewFrequency === ReviewFrequency.Every2Days) {
+      isScheduledDay = daysSinceEpochInUserTz % 2 === 0;
+    }
+
+    if (isScheduledDay) {
+      // 2. Only remind if they actually have words due for review
+      const dueCount = await prisma.wordReview.count({
+        where: {
+          userId: user.id,
+          scheduledAt: { lte: now },
+          completedAt: null,
+          word: {
+            masteryLevel: { in: settings.includeWordLevels },
+          },
+        },
+      });
+
+      if (!process.env.RESEND_FROM_EMAIL) {
+        console.error(
+          "CRITICAL: RESEND_FROM_EMAIL is not defined in production environment variables.",
+        );
+        continue;
+      }
+
+      if (dueCount > 0) {
+        try {
+          const { data, error } = await resend.emails.send({
+            from: `Ancore <${process.env.RESEND_FROM_EMAIL}>`, // Replace with your verified domain in production
+            to: user.email,
+            subject: `Time to review: ${dueCount} words are due!`,
+            html: remindReviewSessionsTemplate({
+              dueCount,
+              userName: user.name || "Learner",
+            }),
+          });
+
+          if (error) {
+            // This will show you exactly why Resend is rejecting the request in your logs
+            console.error(`Resend API error for ${user.email}:`, error);
+          } else if (data) {
+            emailResults.push({
+              userId: user.id,
+              status: "sent",
+              messageId: data.id,
+            });
+          }
+        } catch (err) {
+          console.error(
+            `Network error sending reminder to ${user.email}:`,
+            err,
+          );
+        }
+      }
+    }
+  }
+
+  return { success: true, remindersSent: emailResults.length };
+};

@@ -8,12 +8,13 @@ import { CEFRLevel } from "@/lib/constants/enums";
 import { getWordOfTheDay } from "@/lib/actions/word.actions";
 import {
   enableWordOfTheDay,
-  getWordOfTheDayPreference,
   stopWordOfTheDay,
 } from "@/lib/actions/user.actions";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { useLayout } from "../layout/layout-context";
+import { useQueryClient } from "@tanstack/react-query";
 export interface WordOfTheDay {
   word: string;
   pronunciation: string;
@@ -27,32 +28,24 @@ export interface WordOfTheDay {
 
 const WordOfTheDay = () => {
   const { status } = useSession();
+  const { settings, isLoadingSettings } = useLayout();
+  const queryClient = useQueryClient();
   const [wordOfTheDay, setWordOfTheDay] = useState<WordOfTheDay | null>(null);
-  const [isStopped, setIsStopped] = useState(false);
   const [isLoadingWord, setIsLoadingWord] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const isEnabled = settings?.wordOfTheDayEnabled ?? true;
+
   const loadWordOfTheDay = useCallback(async () => {
-    if (status !== "authenticated") {
+    if (status !== "authenticated" || !isEnabled) {
       setWordOfTheDay(null);
-      setIsStopped(false);
       setIsLoadingWord(false);
       return;
     }
 
     setNotification(null);
     setIsLoadingWord(true);
-
-    const preference = await getWordOfTheDayPreference();
-    if (preference.stopped) {
-      setIsStopped(true);
-      setWordOfTheDay(null);
-      setIsLoadingWord(false);
-      return;
-    }
-
-    setIsStopped(false);
 
     const cachedWordOfTheDay = localStorage.getItem("wordOfTheDay");
     if (cachedWordOfTheDay) {
@@ -83,7 +76,7 @@ const WordOfTheDay = () => {
     } finally {
       setIsLoadingWord(false);
     }
-  }, [status]);
+  }, [status, isEnabled]);
 
   useEffect(() => {
     loadWordOfTheDay();
@@ -93,25 +86,25 @@ const WordOfTheDay = () => {
     setNotification(null);
     const result = await stopWordOfTheDay();
     if (result.success) {
+      queryClient.invalidateQueries({ queryKey: ["user-settings"] });
       localStorage.removeItem("wordOfTheDay");
-      setIsStopped(true);
       setWordOfTheDay(null);
     }
     setNotification(result.message);
-  }, []);
+  }, [queryClient]);
 
   const handleEnable = useCallback(async () => {
     setNotification(null);
     const result = await enableWordOfTheDay();
     if (result.success) {
-      setIsStopped(false);
-      await loadWordOfTheDay();
+      queryClient.invalidateQueries({ queryKey: ["user-settings"] });
+      // loadWordOfTheDay will be triggered by useEffect when settings query updates
     }
     setNotification(result.message);
-  }, [loadWordOfTheDay]);
+  }, [queryClient]);
 
   // 1. Handle Session Loading
-  if (status === "loading") {
+  if (status === "loading" || isLoadingSettings) {
     return <WordOfTheDaySkeleton />;
   }
 
@@ -121,7 +114,7 @@ const WordOfTheDay = () => {
   }
 
   // 3. Handle Stopped Mode
-  if (isStopped) {
+  if (!isEnabled) {
     return (
       <div className="py-6 px-4 rounded-2xl bg-purple-50 h-full border border-purple-300">
         <div className="flex gap-2 justify-between">

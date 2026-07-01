@@ -41,57 +41,49 @@ export const saveTalkSession = async (
   sessionId?: string,
 ) =>
   authenticationAction(async (userId) => {
-    try {
-      if (sessionId) {
-        await prisma.talkSession.update({
-          where: { id: sessionId, userId },
-          data: {
-            messages: {
-              deleteMany: {}, // Replace existing messages with the updated conversation state
-              create: messages.map((m) => ({
-                role: m.role,
-                content: m.content,
-                refinement: m.refinement,
-                explanation: m.explanation,
-                evaluation: m.evaluation,
-                speakingSuggestions: m.speakingSuggestions,
-              })),
-            },
+    if (sessionId) {
+      await prisma.talkSession.update({
+        where: { id: sessionId, userId },
+        data: {
+          messages: {
+            deleteMany: {}, // Replace existing messages with the updated conversation state
+            create: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+              refinement: m.refinement,
+              explanation: m.explanation,
+              evaluation: m.evaluation,
+              speakingSuggestions: m.speakingSuggestions,
+            })),
           },
-        });
-      } else {
-        await prisma.talkSession.create({
-          data: {
-            userId,
-            title: `Talk Session - ${new Date().toLocaleString()}`,
-            messages: {
-              create: messages.map((m) => ({
-                role: m.role,
-                content: m.content,
-                refinement: m.refinement,
-                explanation: m.explanation,
-                evaluation: m.evaluation,
-                speakingSuggestions: m.speakingSuggestions,
-              })),
-            },
+        },
+      });
+    } else {
+      await prisma.talkSession.create({
+        data: {
+          userId,
+          title: `Talk Session - ${new Date().toLocaleString()}`,
+          messages: {
+            create: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+              refinement: m.refinement,
+              explanation: m.explanation,
+              evaluation: m.evaluation,
+              speakingSuggestions: m.speakingSuggestions,
+            })),
           },
-        });
-      }
-
-      return { success: true };
-    } catch (error) {
-      console.error("Error saving conversation:", error);
-      return {
-        success: false,
-        message: "Failed to save conversation.",
-      };
+        },
+      });
     }
+
+    return { success: true };
   });
 
 export const getChatResponse = async (
   messages: { role: "user" | "assistant"; content: string }[],
-) => {
-  try {
+) =>
+  authenticationAction(async (userId) => {
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -109,29 +101,17 @@ export const getChatResponse = async (
     if (!content) throw new Error("No response from AI");
 
     return { success: true, data: JSON.parse(content) };
-  } catch (error) {
-    console.error("Error getting AI response:", error);
-    return {
-      success: false,
-      message: "Failed to get AI response.",
-    };
-  }
-};
+  }, null);
 
 export const getTalkSessions = async () =>
   authenticationAction(async (userId) => {
-    try {
-      return await prisma.talkSession.findMany({
-        where: { userId },
-        include: {
-          messages: {
-            orderBy: { createdAt: "asc" },
-          },
+    return await prisma.talkSession.findMany({
+      where: { userId },
+      include: {
+        messages: {
+          orderBy: { createdAt: "asc" },
         },
-        orderBy: { createdAt: "desc" },
-      });
-    } catch (error) {
-      console.error("Error fetching talk sessions:", error);
-      return [];
-    }
+      },
+      orderBy: { createdAt: "desc" },
+    });
   }, []);

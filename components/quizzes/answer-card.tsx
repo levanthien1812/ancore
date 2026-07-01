@@ -1,8 +1,9 @@
 "use client";
-import { CheckCircle, XCircle, HelpCircle } from "lucide-react";
+import { CheckCircle, XCircle, HelpCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { QuizQuestionType, QuizQuestionTypeLabel } from "@/lib/constants/enums";
 import { QuizAnswerWithQuestion } from "@/lib/type";
+import { normalizeText } from "@/lib/utils/normalize-text";
 
 const AnswerCard = ({
   answer,
@@ -15,8 +16,8 @@ const AnswerCard = ({
 }) => {
   const displayAnswer = (questionType: QuizQuestionType, answer: string) => {
     switch (questionType) {
-      case QuizQuestionType.MultipleChoice_DefinitionToWord:
-      case QuizQuestionType.MultipleChoice_WordToSynonym:
+      case QuizQuestionType.DefinitionToWord_Typing:
+      case QuizQuestionType.WordToSynonym:
       case QuizQuestionType.FillInTheBlank:
         return <span>{answer}</span>;
       case QuizQuestionType.Matching:
@@ -28,8 +29,8 @@ const AnswerCard = ({
                 key={leftId}
                 className="grid grid-cols-3 gap-x-4 p-2 not-last:border-b"
               >
-                <div>{leftId}</div>
-                <div className="col-span-2">{rightId}</div>
+                <div>{normalizeText(leftId)}</div>
+                <div className="col-span-2">{normalizeText(rightId)}</div>
               </div>
             );
           },
@@ -83,7 +84,20 @@ const AnswerCard = ({
               {QuizQuestionTypeLabel[answer.quizQuestion.type]}
             </div>
 
-            <div className="ms-auto">
+            <div className="ms-auto flex items-center gap-1">
+              {answer.retried && (
+                <span
+                  className={cn(
+                    "flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0 rounded-full border",
+                    answer.isCorrectAfterRetry
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-red-50 border-red-200 text-red-600",
+                  )}
+                >
+                  <RotateCcw width={14} className="me-1"/>
+                  {answer.isCorrectAfterRetry ? "✓" : "✗"}
+                </span>
+              )}
               {answer.isCorrect && (
                 <CheckCircle width={18} className="text-green-500 ml-2" />
               )}{" "}
@@ -107,7 +121,7 @@ const AnswerCard = ({
                   {answer.quizQuestion.direction}
                 </p>
                 <p className="text-lg text-primary font-bold">
-                  {answer.quizQuestion.question}
+                  {normalizeText(answer.quizQuestion.question)}
                 </p>
               </div>
               {answer.userAnswer && (
@@ -130,6 +144,31 @@ const AnswerCard = ({
                       answer.quizQuestion.answer,
                     )}
                   </div>
+                </div>
+              )}
+              {/* Retry result */}
+              {answer.retried && (
+                <div
+                  className={cn(
+                    "flex items-center gap-2 rounded-md px-2 py-1.5 text-xs border mt-1",
+                    answer.isCorrectAfterRetry
+                      ? "bg-green-50 border-green-200 text-green-700"
+                      : "bg-red-50 border-red-200 text-red-700",
+                  )}
+                >
+                  <RotateCcw width={16} className="shrink-0" />
+                  <span className="font-semibold">Retry:</span>
+                  {answer.isCorrectAfterRetry ? (
+                    <span>Correct on retry ✓</span>
+                  ) : answer.userAnswerRetry ? (
+                    <span>
+                      Answered&nbsp;
+                      <span className="font-medium">{answer.userAnswerRetry}</span>
+                      &nbsp;— still incorrect
+                    </span>
+                  ) : (
+                    <span>Skipped on retry</span>
+                  )}
                 </div>
               )}
             </div>
