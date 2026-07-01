@@ -20,9 +20,9 @@ const ReviewSummary = ({
         <CardHeader>
           <CardTitle className="text-center">Session Complete!</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-2">
           <div className="flex justify-center items-center">
-            <Image src={Congrats} alt="congrats" width={240} />
+            <Image src={Congrats} alt="congrats" width={180} />
           </div>
           <ReviewSummaryDetail studySession={studySession} />
           <div className="flex gap-4 justify-center pt-4">

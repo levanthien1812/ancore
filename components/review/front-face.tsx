@@ -5,10 +5,11 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { Button } from "../ui/button";
 import {
   ChevronsRight,
-  CircleCheckBig, Clock3,
+  CircleCheckBig,
+  Clock3,
   FlipHorizontal2,
   Lightbulb,
-  Sun
+  Sun,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
@@ -25,9 +26,9 @@ import {
 } from "@/lib/utils/get-distinct-values";
 import { MAXIMUM_EXAMPLES_IN_HINTS } from "@/lib/constants/constant";
 
-type Hint = Partial<Pick<
-  WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">>
-;
+type Hint = Partial<
+  Pick<WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">
+>;
 type HintLevel = keyof Hint;
 type HintList = {
   field: HintLevel;
@@ -71,13 +72,14 @@ const FrontFace = ({
 
   const availableHints = useMemo(() => {
     const availableHints: Hint = {};
-    const primaryMeaning = word.meanings[0]
-    if (primaryMeaning?.guideWord && primaryMeaning.guideWord.length > 0) availableHints.guideWord = primaryMeaning?.guideWord;
+    const primaryMeaning = word.meanings[0];
+    if (primaryMeaning?.guideWord && primaryMeaning.guideWord.length > 0)
+      availableHints.guideWord = primaryMeaning?.guideWord;
     if (primaryMeaning?.examples && primaryMeaning.examples.length > 0)
       availableHints.examples = primaryMeaning?.examples.slice(
         0,
         MAXIMUM_EXAMPLES_IN_HINTS,
-      );  
+      );
     if (primaryMeaning?.synonyms && primaryMeaning.synonyms.length > 0)
       availableHints.synonyms = primaryMeaning?.synonyms;
     if (primaryMeaning?.antonyms && primaryMeaning.antonyms.length > 0)
