@@ -124,10 +124,10 @@ export const DEFAULT_REVIEW_INTERVALS: Record<ReviewPerformance, number> = {
 };
 
 export const REVIEW_MASTERY_WEIGHTS: Record<MasteryLevel, number> = {
-  [MasteryLevel.New]: 5,
-  [MasteryLevel.Learning]: 4,
-  [MasteryLevel.Familiar]: 3,
-  [MasteryLevel.Mastered]: 2,
+  [MasteryLevel.New]: 4,
+  [MasteryLevel.Learning]: 3,
+  [MasteryLevel.Familiar]: 2,
+  [MasteryLevel.Mastered]: 1,
 };
 
 export const MINIMUM_WORDS_IN_QUIZ = 3;

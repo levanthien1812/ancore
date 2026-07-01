@@ -12,13 +12,13 @@ export function buildReviewHintsPrompt(word: string, user: User): string {
 
     Respond ONLY with a valid JSON object that strictly matches this structure:
     {
-      "tags": "",
+      "guideWord": "",
       "synonyms": "",
       "exampleSentence": ""
     }
 
     Rules for each field:
-    - "tags": Provide comma-separated topics or related words.
+    - "guideWord": Provide comma-separated topics or related words.
     - "synonyms": Provide a comma-separated string of synonyms.
     - "exampleSentence": Provide an example sentence using the word, but replace the word itself with '_____' (five underscores).
     - Keep the language and complexity of the hints appropriate for the user's learning level.
