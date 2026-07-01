@@ -84,86 +84,62 @@ const NoteCard = ({ note }: NoteCardProps) => {
             <CardTitle className="text-lg">
               {note.title || "Untitled"}
             </CardTitle>
-            <Popover>
-              <PopoverTrigger asChild>
-                <IconDisplay
-                  icon={Ellipsis}
-                  iconColor="text-primary"
-                  asButton
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </PopoverTrigger>
-              <PopoverContent className="w-fit p-1">
-                <div className={`flex gap-1`}>
+            <div className={`flex gap-1`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  highlightMutation.mutate(note.id);
+                }}
+                className={note.highlighted ? "text-yellow-500" : ""}
+                title="Toggle highlight"
+              >
+                <Star className="h-4 w-4" />
+              </Button>
+              <AddNote
+                note={note}
+                triggerButton={
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                }
+              />
+              <ConfirmActionDialog
+                showDialog={showDeleteDialog}
+                setShowDialog={setShowDeleteDialog}
+                handleDelete={handleDelete}
+                message={`Are you sure you want to delete "${note.title || "this note"}"? This action cannot be undone.`}
+                title="Delete Note"
+                triggerButton={
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setShowDetailModal(true);
+                      setShowDeleteDialog(true);
                     }}
-                    title="View detail"
                   >
-                    <Eye className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      highlightMutation.mutate(note.id);
-                    }}
-                    className={note.highlighted ? "text-yellow-500" : ""}
-                    title="Toggle highlight"
-                  >
-                    <Star className="h-4 w-4" />
-                  </Button>
-                  <AddNote
-                    note={note}
-                    triggerButton={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    }
-                  />
-                  <ConfirmActionDialog
-                    showDialog={showDeleteDialog}
-                    setShowDialog={setShowDeleteDialog}
-                    handleDelete={handleDelete}
-                    message={`Are you sure you want to delete "${note.title || "this note"}"? This action cannot be undone.`}
-                    title="Delete Note"
-                    triggerButton={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDeleteDialog(true);
-                        }}
-                        className="text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    }
-                    actionText="Delete"
-                    isLoading={deleteMutation.isPending}
-                  />
-                </div>
-              </PopoverContent>
-            </Popover>
+                }
+                actionText="Delete"
+                isLoading={deleteMutation.isPending}
+              />
+            </div>
           </div>
         </CardHeader>
         <CardContent>
           <div
-            className="text-sm text-muted-foreground mb-2 prose prose-sm max-w-none line-clamp-3"
+            className="text-sm text-muted-foreground prose prose-sm max-w-none line-clamp-3"
             dangerouslySetInnerHTML={{ __html: note.content || "" }}
           />
           {note.tags && (
-            <div className="flex flex-wrap gap-1 mt-2">
+            <div className="flex flex-wrap gap-1">
               {note.tags.split(",").map((tag, index) => (
                 <Badge key={index} variant="secondary" className="text-xs">
                   {tag.trim()}
