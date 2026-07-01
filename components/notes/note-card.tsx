@@ -13,6 +13,13 @@ import AddNote from "@/components/add-note/add-note";
 import ConfirmActionDialog from "@/components/shared/confirm-action-dialog";
 import NoteDetailModal from "./note-detail-modal";
 import type { Note } from "@prisma/client";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import { Ellipsis } from "lucide-react";
+import IconDisplay from "@/components/shared/icon-display";
 
 interface NoteCardProps {
   note: Note;
@@ -21,7 +28,6 @@ interface NoteCardProps {
 const NoteCard = ({ note }: NoteCardProps) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const queryClient = useQueryClient();
 
   const getTextContent = (html: string) => {
@@ -68,31 +74,17 @@ const NoteCard = ({ note }: NoteCardProps) => {
   return (
     <>
       <Card
-        className={`hover:shadow-md transition-shadow ${
+        className={`hover:shadow-md transition-shadow cursor-pointer ${
           note.highlighted ? "border-yellow-400 bg-yellow-50" : ""
         }`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        onClick={() => setShowDetailModal(true)}
       >
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">
               {note.title || "Untitled"}
             </CardTitle>
-            <div
-              className={`flex gap-1 transition-opacity ${isHovered ? "opacity-100" : "opacity-0"}`}
-            >
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDetailModal(true);
-                }}
-                title="View detail"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
+            <div className={`flex gap-1`}>
               <Button
                 variant="ghost"
                 size="sm"
@@ -143,11 +135,11 @@ const NoteCard = ({ note }: NoteCardProps) => {
         </CardHeader>
         <CardContent>
           <div
-            className="text-sm text-muted-foreground mb-2 prose prose-sm max-w-none line-clamp-3"
+            className="text-sm text-muted-foreground prose prose-sm max-w-none line-clamp-3"
             dangerouslySetInnerHTML={{ __html: note.content || "" }}
           />
           {note.tags && (
-            <div className="flex flex-wrap gap-1 mt-2">
+            <div className="flex flex-wrap gap-1">
               {note.tags.split(",").map((tag, index) => (
                 <Badge key={index} variant="secondary" className="text-xs">
                   {tag.trim()}

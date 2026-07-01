@@ -66,7 +66,7 @@ const AddNoteForm = ({ note, onClose }: AddNoteFormProps) => {
     <form onSubmit={handleSubmit(onSubmit)}>
       {/* Hidden input for the note ID if editing */}
       {note?.id && <input type="hidden" {...register("id")} value={note.id} />}
-      <div className="grid gap-4 py-4 max-h-[70vh] md:max-h-[600px] custom-scrollbar-y overflow-y-auto">
+      <div className="grid gap-4 py-4 max-h-[70vh] md:max-h-[600px] no-scrollbar overflow-y-auto">
         <div className="grid gap-2">
           <Label htmlFor="title">Title</Label>
           <Input
