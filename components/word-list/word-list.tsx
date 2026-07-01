@@ -45,7 +45,7 @@ const WordList = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedGlobalFilter(globalFilter);
-    }, 400);
+    }, 800);
 
     return () => clearTimeout(timer);
   }, [globalFilter]);

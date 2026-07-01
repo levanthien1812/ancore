@@ -13,19 +13,15 @@ import { Settings2, UserIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { User } from "next-auth";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import Settings from "../../settings/settings";
+import { useState } from "react";
 
-const UserButton = ({ user }: { user?: User }) => {
+const UserPanel = ({ user }: { user?: User }) => {
   const { data: session } = useSession();
   const currentUser = user || session?.user;
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   if (!currentUser) {
     return (
@@ -70,18 +66,17 @@ const UserButton = ({ user }: { user?: User }) => {
             </DropdownMenuGroup>
           </DropdownMenuLabel>
           <Separator />
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant={"secondary"} className="w-full">
-                <Settings2 />
-                Settings
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="md:min-w-[800px]">
-              <DialogTitle>Settings</DialogTitle>
-              <Settings />
-            </DialogContent>
-          </Dialog>
+          <DropdownMenuItem>
+            <Button
+              variant={"secondary"}
+              className="w-full"
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <Settings2 />
+              Settings
+            </Button>
+          </DropdownMenuItem>
+
           <Separator />
           <DropdownMenuItem
             className="mt-2"
@@ -97,8 +92,17 @@ const UserButton = ({ user }: { user?: User }) => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {isSettingsOpen && (
+        <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+          <DialogContent className="md:min-w-[800px]">
+            <DialogTitle>Settings</DialogTitle>
+            <Settings />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
 
-export default UserButton;
+export default UserPanel;

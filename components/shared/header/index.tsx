@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import Logo from "@/public/images/logo-ancore-cut.png";
-import UserButton from "./user-button";
+import UserPanel from "./user-panel"
 import AddOrEditWord from "../../add-word/add-word";
 import { auth } from "@/auth";
 import NotificationButton from "./notification-button";
@@ -28,7 +28,7 @@ const Header = async () => {
         <div className="flex gap-1 sm:gap-2 items-center">
           <NotificationButton />
           <AddOrEditWord />
-          <UserButton user={session?.user} />
+          < UserPanel user={session?.user} />
         </div>
       </div>
     </header>

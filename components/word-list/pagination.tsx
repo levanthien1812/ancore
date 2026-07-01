@@ -10,6 +10,12 @@ import {
   SelectValue,
 } from "../ui/select";
 import { PAGE_SIZES } from "@/lib/constants/constant";
+import {
+  ChevronFirst,
+  ChevronLast,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 const Pagination = <TData,>({
   table,
@@ -21,9 +27,16 @@ const Pagination = <TData,>({
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
       <div>
+        {/* filtered word count */}
         <span className="text-sm">
           Page {pagination.pageIndex + 1} of {table.getPageCount()}
-        </span>
+        </span>{" "}
+        {table.getFilteredRowModel().rows.length !==
+          table.getCoreRowModel().rows.length && (
+          <span className="text-sm">
+            ({table.getFilteredRowModel().rows.length} results)
+          </span>
+        )}
       </div>
 
       <div className="flex gap-2 w-full md:w-auto justify-between md:justify-end">
@@ -51,9 +64,19 @@ const Pagination = <TData,>({
           <Button
             variant="outline"
             size="sm"
+            onClick={() => table.firstPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            <ChevronFirst width={14} />
+            First
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
+            <ChevronLeft width={14} />
             Previous
           </Button>
           <Button
@@ -63,6 +86,16 @@ const Pagination = <TData,>({
             disabled={!table.getCanNextPage()}
           >
             Next
+            <ChevronRight width={14} />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.lastPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Last
+            <ChevronLast width={14} />
           </Button>
         </div>
       </div>

@@ -1,6 +1,10 @@
 "use client";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import { MASTERY_LEVELS } from "@/lib/constants/enums";
+import {
+  MASTERY_LEVELS,
+  PARTS_OF_SPEECH,
+  PARTS_OF_SPEECH_PHRASES,
+} from "@/lib/constants/enums";
 import { Button } from "../ui/button";
 import {
   ArrowDownAZ,
@@ -28,7 +32,7 @@ import {
 } from "../ui/select";
 import { Checkbox } from "../ui/checkbox";
 import { Table } from "@tanstack/react-table";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useLayout } from "../layout/layout-context";
 
 type Props = {
@@ -48,25 +52,10 @@ const WordFilter = ({
   const { mode } = useLayout();
 
   const handleResetFilter = () => {
-    table.getColumn("masteryLevel")?.setFilterValue("");
-    table.getColumn("type")?.setFilterValue("");
-    const highlightedColumn = table.getColumn("highlighted");
-    if (highlightedColumn) {
-      highlightedColumn.setFilterValue(undefined);
-    }
+    table.resetColumnFilters();
   };
 
-  const masteryLevelFilter = table.getColumn("masteryLevel")?.getFilterValue();
-  const typeFilter = table.getColumn("type")?.getFilterValue();
-  const highlightedFilter = table.getColumn("highlighted")?.getFilterValue();
-
-  const areFiltersSet = useMemo(() => {
-    return (
-      !!masteryLevelFilter ||
-      !!typeFilter ||
-      highlightedFilter !== undefined
-    );
-  }, [masteryLevelFilter, typeFilter, highlightedFilter]);
+  const areFiltersSet = table.getState().columnFilters.length > 0;
 
   const handleToggleFilters = () => {
     setShowFilters((prev) => !prev);
@@ -184,7 +173,29 @@ const WordFilter = ({
         </div>
       </div>
       {showFilters && (
-        <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1 bg-blue-300 bg-diagonal-stripes">
+        <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1 bg-blue-200 bg-diagonal-stripes">
+          <Select
+            onValueChange={(value) =>
+              table.getColumn("partOfSpeech")?.setFilterValue(value)
+            }
+            value={
+              (table.getColumn("partOfSpeech")?.getFilterValue() as string) ||
+              ""
+            }
+          >
+            <SelectTrigger className="w-full md:w-[180px] bg-white">
+              <SelectValue placeholder="Select Part of Speech" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {[...PARTS_OF_SPEECH, ...PARTS_OF_SPEECH_PHRASES].map((pos) => (
+                  <SelectItem key={pos} value={pos}>
+                    {pos}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
           <Select
             onValueChange={(value) =>
               table.getColumn("masteryLevel")?.setFilterValue(value)

@@ -82,6 +82,13 @@ const WordGrid = ({
         header: "Added at",
         enableSorting: true,
       },
+      {
+        id: "partOfSpeech",
+        filterFn: (row, columnId, value) => {
+          const meanings = row.original.meanings;
+          return meanings.some((meaning) => meaning.partOfSpeech === value);
+        },
+      },
     ],
     [],
   );
