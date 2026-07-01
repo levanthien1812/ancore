@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { useLayout } from "../layout/layout-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { startTransition, useActionState, useEffect } from "react";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 const Settings = () => {
   const { settings } = useLayout();
@@ -173,7 +174,10 @@ const Settings = () => {
             </AccordionItem>
           </Accordion>
 
-          <div className="flex justify-end gap-2 mt-2 p-2 w-full rounded-md border bg-white/80 bottom-0">
+          <div className="flex justify-end gap-2 mt-2 p-2 w-full rounded-md border bg-diagonal-stripes bg-blue-200">
+            <DialogClose asChild>
+              <Button variant={"secondary"}>Cancel</Button>
+            </DialogClose>
             <Button type="submit" isLoading={isPending}>
               {isPending ? "Saving..." : "Save changes"}
             </Button>

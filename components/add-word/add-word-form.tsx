@@ -646,7 +646,7 @@ const AddOrEditWordForm = ({
           </div>
         </div>
       </div>
-      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 bg-blue-300/80 bg-diagonal-stripes">
+      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 bg-blue-200 bg-diagonal-stripes">
         {word && (
           <Button
             variant={"secondary"}
@@ -658,7 +658,7 @@ const AddOrEditWordForm = ({
           </Button>
         )}
         <Button
-          variant={"ghost"}
+          variant={"secondary"}
           type="button"
           onClick={onClose}
           className="ms-auto"
