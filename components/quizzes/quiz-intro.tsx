@@ -102,7 +102,7 @@ const QuizIntro = ({
 
   if (wordsToQuizCount === 0) {
     return (
-      <div className="flex flex-col justify-center items-center gap-4 h-full border rounded-lg p-4 text-center">
+      <div className="flex flex-col justify-center items-center gap-4 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-4 text-center">
         <p className="text-2xl font-semibold">No words to quiz!</p>
         <p className="text-muted-foreground">
           Add some new words or start learning existing ones to generate a quiz.
@@ -115,7 +115,7 @@ const QuizIntro = ({
   }
 
   return (
-    <div className="flex flex-col justify-center items-center gap-4 h-full border rounded-lg p-4 text-center">
+    <div className="flex flex-col justify-center items-center gap-4 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-4 text-center">
       <h1 className="text-2xl font-bold">Ready for a Quiz?</h1>
       <Image
         src={quizIllustration}

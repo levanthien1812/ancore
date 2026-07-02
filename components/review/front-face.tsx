@@ -76,10 +76,9 @@ const FrontFace = ({
     if (primaryMeaning?.guideWord && primaryMeaning.guideWord.length > 0)
       availableHints.guideWord = primaryMeaning?.guideWord;
     if (primaryMeaning?.examples && primaryMeaning.examples.length > 0)
-      availableHints.examples = primaryMeaning?.examples.slice(
-        0,
-        MAXIMUM_EXAMPLES_IN_HINTS,
-      );
+      availableHints.examples = primaryMeaning?.examples
+        .filter((x) => x.trim().length > 0)
+        .slice(0, MAXIMUM_EXAMPLES_IN_HINTS);
     if (primaryMeaning?.synonyms && primaryMeaning.synonyms.length > 0)
       availableHints.synonyms = primaryMeaning?.synonyms;
     if (primaryMeaning?.antonyms && primaryMeaning.antonyms.length > 0)
@@ -296,14 +295,14 @@ const FrontFace = ({
                 <span className="underline">Hint</span>
               </div>
               <div key={currentHint.field} className="text-white mt-2">
-                {FieldLabelMap[currentHint.field]}:{" "}
-                {currentHint.field === "guideWord" ||
+                {currentHint.label}:{" "}
+                {(currentHint.field === "guideWord" ||
                   currentHint.field === "synonyms" ||
-                  (currentHint.field === "antonyms" && (
-                    <span className="text-primary-2 text-sm">
-                      {currentHint.value}
-                    </span>
-                  ))}
+                  currentHint.field === "antonyms") && (
+                  <span className="text-primary-2 text-sm">
+                    {currentHint.value}
+                  </span>
+                )}
                 {currentHint.field === "examples" && (
                   <ul className="text-primary-2 text-sm list-disc list-inside">
                     {(currentHint.value as string[]).map((example, index) => (

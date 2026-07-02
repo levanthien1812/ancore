@@ -99,7 +99,7 @@ const WordsPage = () => {
     return (
       <div className="container mx-auto space-y-2 p-4">
         <h2 className="text-3xl">Word list</h2>
-        <div className="flex flex-col justify-center items-center gap-4 h-full border rounded-lg p-4 text-center">
+        <div className="flex flex-col justify-center items-center gap-4 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-4 text-center">
           <p className="text-muted-foreground text-2xl">No words found.</p>
           <p className="text-muted-foreground">
             Try adding some new words or adjusting your search/filter to find

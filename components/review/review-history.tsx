@@ -61,7 +61,7 @@ const ReviewHistory = () => {
   };
 
   return (
-    <div className="flex flex-col gap-3 border rounded-lg p-2 sm:p-4 h-full">
+    <div className="flex flex-col gap-3 rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-2 sm:p-4 h-full">
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button

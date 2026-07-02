@@ -18,7 +18,7 @@ const ReviewStats = () => {
   });
 
   return (
-    <div className="p-2 md:p-4 border rounded-md h-full">
+    <div className="p-2 md:p-4 rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] h-full">
       <Tabs
         value={period}
         onValueChange={(v) => setPeriod(v as ReviewPeriod)}
