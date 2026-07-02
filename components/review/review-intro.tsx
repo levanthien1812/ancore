@@ -17,7 +17,10 @@ import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
 import { useLayout } from "../layout/layout-context";
 import { INITIAL_USER_SETTINGS } from "@/lib/constants/initial-values";
-import { MAXIMUM_WORDS_IN_REVIEW, MINIMUM_WORDS_IN_REVIEW } from "@/lib/constants/constant";
+import {
+  MAXIMUM_WORDS_IN_REVIEW,
+  MINIMUM_WORDS_IN_REVIEW,
+} from "@/lib/constants/constant";
 import { toast } from "sonner";
 
 const ReviewIntro = ({ count }: { count: number }) => {
@@ -64,8 +67,14 @@ const ReviewIntro = ({ count }: { count: number }) => {
   };
 
   const handleSaveLimit = () => {
-    if (inputValue < MINIMUM_WORDS_IN_REVIEW) return toast.warning(`Minimum number of words to review is ${MINIMUM_WORDS_IN_REVIEW}`)
-    if (inputValue > MAXIMUM_WORDS_IN_REVIEW) return toast.warning(`Maximum number of words to review is ${MAXIMUM_WORDS_IN_REVIEW}`)
+    if (inputValue < MINIMUM_WORDS_IN_REVIEW)
+      return toast.warning(
+        `Minimum number of words to review is ${MINIMUM_WORDS_IN_REVIEW}`,
+      );
+    if (inputValue > MAXIMUM_WORDS_IN_REVIEW)
+      return toast.warning(
+        `Maximum number of words to review is ${MAXIMUM_WORDS_IN_REVIEW}`,
+      );
     setReviewLimit(inputValue);
     setIsPopoverOpen(false);
   };
@@ -78,7 +87,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
 
   if (count === 0) {
     return (
-      <div className="flex flex-col justify-center items-center gap-4 border rounded-lg p-4 text-center h-full">
+      <div className="flex flex-col justify-center items-center gap-4 rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-4 text-center h-full">
         <p className="text-2xl font-semibold">No words to review!</p>
         <p className="text-muted-foreground">
           Add some new words to start your review session.
@@ -103,7 +112,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center gap-4 h-full border rounded-lg p-4 text-center">
+    <div className="flex flex-col justify-center items-center gap-4 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-4 text-center">
       <h1 className="text-2xl font-bold">Ready to Review?</h1>
       <p className="text-base text-muted-foreground text-center">
         Keep your streak alive and strengthen your memory.

@@ -45,7 +45,7 @@ const AnswerCard = ({
     <div
       key={answer.id}
       className={cn(
-        "p-3 border rounded-lg",
+        "p-3 rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)]",
         answer.isCorrect && "border-green-500 bg-green-50",
         answer.isWrong && "border-red-500 bg-red-50",
         answer.isSkipped && "border-gray-300 bg-gray-50",
@@ -94,7 +94,7 @@ const AnswerCard = ({
                       : "bg-red-50 border-red-200 text-red-600",
                   )}
                 >
-                  <RotateCcw width={14} className="me-1"/>
+                  <RotateCcw width={14} className="me-1" />
                   {answer.isCorrectAfterRetry ? "✓" : "✗"}
                 </span>
               )}
@@ -163,7 +163,9 @@ const AnswerCard = ({
                   ) : answer.userAnswerRetry ? (
                     <span>
                       Answered&nbsp;
-                      <span className="font-medium">{answer.userAnswerRetry}</span>
+                      <span className="font-medium">
+                        {answer.userAnswerRetry}
+                      </span>
                       &nbsp;— still incorrect
                     </span>
                   ) : (

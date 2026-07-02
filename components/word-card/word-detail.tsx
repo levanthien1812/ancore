@@ -144,9 +144,7 @@ const WordDetail = ({
     },
     {
       text: "Added At",
-      value: word.createdAt
-        ? format(word.createdAt, "dd/MM/yyyy")
-        : "--",
+      value: word.createdAt ? format(word.createdAt, "dd/MM/yyyy") : "--",
       icon: <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
       display: true,
     },
@@ -262,7 +260,7 @@ const WordDetail = ({
       {/* Skeleton */}
 
       {showReviewStats && (
-        <ScrollContainer className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around" >
+        <ScrollContainer className="mt-2 p-2 md:p-3 rounded-lg bg-blue-950 flex gap-2 justify-around">
           {reviewStatsItems.map((item, index) => (
             <div
               className={`${item.display ? "flex" : "hidden"} gap-2 md:gap-3 items-center min-w-[31%]`}

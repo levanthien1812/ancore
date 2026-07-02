@@ -86,7 +86,7 @@ const RecentQuizzes = () => {
   };
 
   return (
-    <div className="flex flex-col gap-2 border rounded-lg p-2 sm:p-4 h-full">
+    <div className="flex flex-col gap-2 rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-2 sm:p-4 h-full">
       <div className="flex justify-between items-center gap-1">
         <div className="flex gap-1 overflow-x-auto no-scrollbar">
           {statusCounts

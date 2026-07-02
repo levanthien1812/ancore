@@ -62,7 +62,7 @@ const TalkHistory = ({
 
   if (!sessions || sessions.length === 0) {
     return (
-      <div className="text-center py-10 text-muted-foreground border rounded-lg border-dashed">
+      <div className="text-center py-10 text-muted-foreground rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] border-dashed">
         No talk history found. Start a conversation to see it here!
       </div>
     );
