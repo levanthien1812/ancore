@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -18,10 +18,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SpacedRepetitionAlgorithm } from "@prisma/client";
+import { DEFAULT_REVIEW_INTERVALS } from "@/lib/constants/constant";
 
 const SpacedRepetition = () => {
-  const { register, control, watch } = useFormContext();
+  const { register, control, watch, setValue } = useFormContext();
   const reviewAlgorithm = watch("reviewAlgorithm");
+
+  useEffect(() => {
+    if (reviewAlgorithm === SpacedRepetitionAlgorithm.Default) {
+      setValue("forgottenInterval", DEFAULT_REVIEW_INTERVALS.Forgot);
+      setValue("hardInterval", DEFAULT_REVIEW_INTERVALS.Hard);
+      setValue("mediumInterval", DEFAULT_REVIEW_INTERVALS.Medium);
+      setValue("goodInterval", DEFAULT_REVIEW_INTERVALS.Good);
+      setValue("easyInterval", DEFAULT_REVIEW_INTERVALS.Easy);
+    }
+  }, [reviewAlgorithm, setValue]);
 
   return (
     <Card>
