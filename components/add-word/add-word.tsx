@@ -8,9 +8,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../ui/dialog";
-import { Button } from "../ui/button";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { PlusIcon } from "lucide-react";
+import { MotionButton } from "../shared/motion-button";
 
 type AddOrEditWordProps = {
   word?: WordWithMeanings;
@@ -35,13 +35,13 @@ const AddOrEditWord = ({
   const setIsOpen = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
 
   const defaultTriggerBtn = (
-    <Button
+    <MotionButton
       className="bg-primary-2 px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
       onClick={(e) => e.stopPropagation()}
     >
       <PlusIcon width={18} height={18} className="" />
       <span className="hidden sm:block">{word ? "Edit word" : "Add word"}</span>
-    </Button>
+    </MotionButton>
   );
 
   return (

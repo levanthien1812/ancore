@@ -328,9 +328,9 @@ export const getWordsCountByPeriod: (
       masteryLevel: MasteryLevel;
       count: bigint;
     }[] = await prisma.$queryRaw`
-    SELECT DATE_TRUNC(${period}, "createdAt") as period_start, "masteryLevel", COUNT(*) as count
+    SELECT DATE_TRUNC(${period}, "updatedAt") as period_start, "masteryLevel", COUNT(*) as count
     FROM "Word"
-    WHERE "userId" = ${userId} AND "createdAt" >= ${startDate}
+    WHERE "userId" = ${userId} AND "updatedAt" >= ${startDate}
     GROUP BY period_start, "masteryLevel"
     ORDER BY period_start ASC
   `;

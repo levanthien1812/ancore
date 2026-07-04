@@ -57,6 +57,7 @@ import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 import PasteWordTips from "./paste-word-tips";
 import { useLayout } from "../layout/layout-context";
 import { createNotification } from "@/lib/actions/notification.actions";
+import { MotionButton } from "../shared/motion-button";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -182,7 +183,7 @@ const AddOrEditWordForm = ({
         pronunciation: meaning.pronunciation ?? null,
         cefrLevel:
           meaning.cefrLevel &&
-            CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
@@ -227,7 +228,7 @@ const AddOrEditWordForm = ({
         pronunciation: meaning.pronunciation ?? null,
         cefrLevel:
           meaning.cefrLevel &&
-            CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
+          CEFR_LEVELS.includes(meaning.cefrLevel as CEFRLevel)
             ? (meaning.cefrLevel as CEFRLevel)
             : null,
         partOfSpeech: meaning.partOfSpeech ?? null,
@@ -469,12 +470,12 @@ const AddOrEditWordForm = ({
                   onPaste={handlePasteWord}
                 />
                 <Button
-                  variant={"outline"}
                   type="button"
+                  variant={"magic"}
                   onClick={handleClickFillWithAi}
                   disabled={enteredWord.trim().length === 0 || isFillingWithAi}
                 >
-                  <Sparkles width={14} height={14} className="text-blue-600" />
+                  ✨
                   {isFillingWithAi
                     ? "Generating..."
                     : generated
@@ -665,13 +666,13 @@ const AddOrEditWordForm = ({
         >
           Cancel
         </Button>
-        <Button
+        <MotionButton
           type="submit"
           disabled={isLoading || !!wordExistsError}
           isLoading={isLoading}
         >
           {!isLoading ? "Save changes" : "Saving changes..."}
-        </Button>
+        </MotionButton>
       </div>
     </form>
   );

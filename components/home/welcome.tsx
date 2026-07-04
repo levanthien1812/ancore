@@ -33,7 +33,7 @@ const Welcome = () => {
 
   if (status === "loading") {
     return (
-      <div className=" flex flex-col bg-white p-4 md:p-6 rounded-2xl">
+      <div className=" flex flex-col bg-white p-4 md:p-6 rounded-2xl h-full">
         <Skeleton className="h-12 w-3/4" />
         <div className="mt-2">
           <Skeleton className="h-5 w-full" />

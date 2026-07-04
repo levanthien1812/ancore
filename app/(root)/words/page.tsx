@@ -8,6 +8,7 @@ import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Button } from "@/components/ui/button";
 import { useLayout } from "@/components/layout/layout-context";
 import { DEFAULT_WORDS_PER_FETCH } from "@/lib/constants/constant";
+import { useState } from "react";
 
 const WordsPage = () => {
   const {
@@ -38,6 +39,18 @@ const WordsPage = () => {
     },
     initialPageParam: 1,
   });
+
+  const [isFetchingAll, setIsFetchingAll] = useState(false);
+
+  const handleFetchAll = async () => {
+    setIsFetchingAll(true);
+    let currentHasNextPage = hasNextPage;
+    while (currentHasNextPage) {
+      const res = await fetchNextPage();
+      currentHasNextPage = res.hasNextPage;
+    }
+    setIsFetchingAll(false);
+  };
 
   const allWords = data?.pages.flatMap((page) => page.words) || [];
   const totalCount = data?.pages[0]?.totalCount || 0;
@@ -99,7 +112,7 @@ const WordsPage = () => {
     return (
       <div className="container mx-auto space-y-2 p-4">
         <h2 className="text-3xl">Word list</h2>
-        <div className="flex flex-col justify-center items-center gap-4 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-4 text-center">
+        <div className="flex flex-col justify-center items-center gap-4 h-full border rounded-lg p-4 text-center">
           <p className="text-muted-foreground text-2xl">No words found.</p>
           <p className="text-muted-foreground">
             Try adding some new words or adjusting your search/filter to find
@@ -121,14 +134,27 @@ const WordsPage = () => {
         isFetchingNextPage={isFetchingNextPage}
       />
       {hasNextPage && (
-        <div className="mt-2">
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
           <Button
             variant={"outline"}
             onClick={() => fetchNextPage()}
             className="w-full sm:w-auto"
-            isLoading={isFetchingNextPage}
+            isLoading={isFetchingNextPage && !isFetchingAll}
+            disabled={isFetchingAll}
           >
-            {isFetchingNextPage ? "Loading..." : "Load more words"}
+            {isFetchingNextPage && !isFetchingAll
+              ? "Loading..."
+              : "Load more words"}
+          </Button>
+          {/* Fetch all words button */}
+          <Button
+            variant={"outline"}
+            onClick={handleFetchAll}
+            className="w-full sm:w-auto"
+            isLoading={isFetchingAll}
+            disabled={isFetchingNextPage && !isFetchingAll}
+          >
+            {isFetchingAll ? "Loading all..." : "Fetch all words"}
           </Button>
         </div>
       )}

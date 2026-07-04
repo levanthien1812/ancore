@@ -21,7 +21,7 @@ const WordTitle = ({ word, onClick, disabled }: WordTitleProps) => {
     >
       <div className="flex gap-1 items-center min-w-0">
         <p
-          className="flex-1 min-w-0 font-bold text-2xl leading-tight hover:underline truncate max-w-full"
+          className="flex-1 min-w-0 font-bold text-2xl leading-tight hover:underline truncate max-w-full group-hover:text-shadow-md"
           title={`${word.word} ${word.meanings[0]?.usageNotes ? `- ${word.meanings[0].usageNotes}` : ""}`}
         >
           {word.word}

@@ -114,7 +114,6 @@ const WordFilter = ({
           <Button
             variant={"secondary"}
             onClick={() => onToggleSelectMode?.(!isSelectMode)}
-            className=""
           >
             {isSelectMode ? (
               <MousePointer2Off width={16} />
