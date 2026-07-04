@@ -52,11 +52,9 @@ const QuizSummary = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const { level, image } = getEvaluation();
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-center">Quiz Complete!</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 h-full">
+    <div className="py-4 px-8 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] no-scrollbar overflow-y-auto">
+      <p className="text-center text-xl">Quiz Complete!</p>
+      <div className="space-y-4 mt-2">
         <div className="flex flex-col justify-center items-center gap-2">
           <Image src={image} alt={level} width={160} />
           <p className="text-2xl font-bold text-primary">{level}</p>
@@ -73,8 +71,8 @@ const QuizSummary = ({ quiz }: { quiz: QuizWithAnswers }) => {
             </Button>
           </Link>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

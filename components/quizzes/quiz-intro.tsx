@@ -23,6 +23,7 @@ import {
 
 import { deleteQuiz } from "@/lib/actions/quiz.actions";
 import { format } from "date-fns";
+import { MotionButton } from "../shared/motion-button";
 
 const QuizIntro = ({
   wordsToQuizCount,
@@ -129,18 +130,19 @@ const QuizIntro = ({
         </p>
       </div>
       <div className="w-full space-y-2">
-        <Button
+        <MotionButton
           onClick={handleStartQuiz}
           size="lg"
           isLoading={isPending}
-          className="w-full relative overflow-hidden"
+          className="relative overflow-hidden"
+          variant={"magic"}
         >
           {isPending
             ? `Preparing quiz (${Math.floor(progress)}%)...`
             : "Start Quiz"}
-        </Button>
+        </MotionButton>
         {isPending && (
-          <div className="w-full bg-muted h-1.5 rounded-full overflow-hidden">
+          <div className="bg-muted h-1.5 rounded-full overflow-hidden">
             <div
               className="bg-primary h-full transition-all duration-500 ease-out"
               style={{ width: `${progress}%` }}

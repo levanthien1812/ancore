@@ -38,7 +38,7 @@ const QuizSummaryDetail = ({ quiz }: { quiz: QuizWithAnswers }) => {
   };
 
   return (
-    <div className="space-y-2 flex-1">
+    <div className="space-y-4 flex-1">
       <div className="flex gap-2 items-center">
         <div>
           <Image src={Medal} alt="Medal" width={64} height={64} />
@@ -65,62 +65,73 @@ const QuizSummaryDetail = ({ quiz }: { quiz: QuizWithAnswers }) => {
         </Button>
       </div>
 
-      <div className="flex gap-2 bg-gray-50 rounded-md p-3 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200 [&>*:not(:last-child)]:pr-2 [&>*:not(:last-child)]:flex-1 no-scrollbar overflow-x-auto">
-        <div className="flex gap-2 items-center">
-          <div className="p-2 rounded-full bg-purple-100 flex items-center justify-center">
-            <Star width={14} height={14} className="text-purple-500" />
+      <div>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+          Quiz Stats
+        </p>
+
+        <div className="mt-1 bg-gray-50 rounded-md p-3 shadow-md flex gap-2 [&>*:not(:last-child)]:border-r [&>*:not(:last-child)]:border-gray-200 [&>*:not(:last-child)]:pr-2 [&>*:not(:last-child)]:flex-1 no-scrollbar overflow-x-auto">
+          <div className="flex gap-2 items-center">
+            <div className="p-2 rounded-full bg-purple-100 flex items-center justify-center">
+              <Star width={14} height={14} className="text-purple-500" />
+            </div>
+            <div>
+              <p className="text-lg font-bold leading-none">
+                {Math.round((correctCount / quiz.quizAnswers.length) * 100)}%
+              </p>
+              <p className="text-xs text-muted-foreground">Score</p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-bold leading-none">
-              {Math.round((correctCount / quiz.quizAnswers.length) * 100)}%
-            </p>
-            <p className="text-xs text-muted-foreground">Score</p>
+          <div className="flex gap-2 items-center">
+            <div className="p-2 rounded-full bg-blue-100 flex items-center justify-center">
+              <ClipboardList width={14} height={14} className="text-blue-500" />
+            </div>
+            <div>
+              <p className="text-lg font-bold leading-none">
+                {quiz.totalQuestions}
+              </p>
+              <p className="text-xs text-muted-foreground">Questions</p>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2 items-center">
-          <div className="p-2 rounded-full bg-blue-100 flex items-center justify-center">
-            <ClipboardList width={14} height={14} className="text-blue-500" />
+          <div className="flex gap-2 items-center">
+            <div className="p-2 rounded-full bg-green-100 flex items-center justify-center">
+              <CheckCircle width={14} height={14} className="text-green-500" />
+            </div>
+            <div>
+              <p className="text-lg font-bold leading-none">
+                {quiz.correctAnswers}
+              </p>
+              <p className="text-xs text-muted-foreground">Correct</p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-bold leading-none">
-              {quiz.totalQuestions}
-            </p>
-            <p className="text-xs text-muted-foreground">Questions</p>
-          </div>
-        </div>
-        <div className="flex gap-2 items-center">
-          <div className="p-2 rounded-full bg-green-100 flex items-center justify-center">
-            <CheckCircle width={14} height={14} className="text-green-500" />
-          </div>
-          <div>
-            <p className="text-lg font-bold leading-none">
-              {quiz.correctAnswers}
-            </p>
-            <p className="text-xs text-muted-foreground">Correct</p>
-          </div>
-        </div>
-        <div className="flex gap-2 items-center">
-          <div className="p-2 rounded-full bg-red-100 flex items-center justify-center">
-            <CircleX width={14} height={14} className="text-red-500" />
-          </div>
-          <div>
-            <p className="text-lg font-bold leading-none">
-              {quiz.wrongAnswers}
-            </p>
-            <p className="text-xs text-muted-foreground">Incorrect</p>
+          <div className="flex gap-2 items-center">
+            <div className="p-2 rounded-full bg-red-100 flex items-center justify-center">
+              <CircleX width={14} height={14} className="text-red-500" />
+            </div>
+            <div>
+              <p className="text-lg font-bold leading-none">
+                {quiz.wrongAnswers}
+              </p>
+              <p className="text-xs text-muted-foreground">Incorrect</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="space-y-2">
-        {quiz.quizAnswers.map((a, index) => (
-          <AnswerCard
-            key={a.id}
-            answer={a}
-            index={index}
-            showDetails={showDetails}
-          />
-        ))}
+      <div>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+          Question Details
+        </p>
+        <div className="space-y-2 mt-1">
+          {quiz.quizAnswers.map((a, index) => (
+            <AnswerCard
+              key={a.id}
+              answer={a}
+              index={index}
+              showDetails={showDetails}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
