@@ -39,8 +39,8 @@ const UserPanel = ({ user }: { user?: User }) => {
   return (
     <div className="flex gap-2 items-center">
       <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Button asChild>
+        <DropdownMenuTrigger asChild>
+          <Button>
             <div className="flex items-center gap-1">
               <UserIcon width={18} />
               <span className="hidden sm:block">{firstName}</span>

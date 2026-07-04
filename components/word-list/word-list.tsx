@@ -7,6 +7,8 @@ import { LayoutGrid, Rows4 } from "lucide-react";
 import WordGrid from "./word-grid";
 import { useLayout } from "../layout/layout-context";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { StarBurstWrapper } from "../shared/star-burst-wrapper";
+import { MotionButton } from "../shared/motion-button";
 
 const WordList = ({
   words,
@@ -103,6 +105,7 @@ const WordList = ({
           <button
             className="cursor-pointer p-1 rounded hover:bg-gray-200 group"
             onClick={() => setMode("list")}
+            title="Table view"
           >
             <Rows4
               width={18}
@@ -114,6 +117,7 @@ const WordList = ({
           <button
             className="cursor-pointer p-1 rounded hover:bg-gray-200 group"
             onClick={() => setMode("grid")}
+            title="Grid view"
           >
             <LayoutGrid
               width={18}

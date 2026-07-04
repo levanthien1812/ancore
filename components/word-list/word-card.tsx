@@ -38,8 +38,6 @@ const WordCard = ({
     },
   );
 
-  
-
   return (
     <div
       className={`p-3 sm:p-4 rounded-lg shadow-sm shadow-primary bg-primary group relative transition-colors duration-200 md:hover:shadow-md md:hover:bg-primary-2 md:hover:shadow-primary-2 ${
