@@ -22,6 +22,7 @@ import {
   MINIMUM_WORDS_IN_REVIEW,
 } from "@/lib/constants/constant";
 import { toast } from "sonner";
+import { MotionButton } from "../shared/motion-button";
 
 const ReviewIntro = ({ count }: { count: number }) => {
   const [started, setStarted] = useState(false);
@@ -179,14 +180,15 @@ const ReviewIntro = ({ count }: { count: number }) => {
           </PopoverContent>
         </Popover>
       </div>
-      <Button
+      <MotionButton
         onClick={handleStartReview}
         size="lg"
+        variant={"magic"}
         isLoading={isLoading || isStarting}
       >
         <Play width={16} />
         {isLoading || isStarting ? "Loading..." : "Start Review"}
-      </Button>
+      </MotionButton>
     </div>
   );
 };

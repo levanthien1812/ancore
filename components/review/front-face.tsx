@@ -24,7 +24,12 @@ import {
   getDistinctPartsOfSpeech,
   getDistinctPronunciations,
 } from "@/lib/utils/get-distinct-values";
-import { MAXIMUM_EXAMPLES_IN_HINTS } from "@/lib/constants/constant";
+import {
+  MAXIMUM_EXAMPLES_IN_HINTS,
+  STAR_BURST_DELAY,
+} from "@/lib/constants/constant";
+import { MotionButton } from "../shared/motion-button";
+import { StarBurstWrapper } from "../shared/star-burst-wrapper";
 
 type Hint = Partial<
   Pick<WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">
@@ -162,11 +167,13 @@ const FrontFace = ({
   };
 
   const handleForgotWord = () => {
+    setIsReviewed(true);
+    const audio = new Audio("/sounds/wrong-answer-sound.mp3");
+    audio.play().catch((err) => console.error("Audio play failed:", err));
     setShowHint(false);
     setHintLevel(null);
     wordReviewMutate(ReviewPerformance.Forgot);
     onPerformanceUpdate("Forgot");
-    setIsReviewed(true);
     setIsFlipped(true);
   };
 
@@ -182,6 +189,9 @@ const FrontFace = ({
   }, [hintList, hintLevel, availableHints]);
 
   const handleClickMarkAsFamiliar = () => {
+    const audio = new Audio("/sounds/correct-answer-sound.mp3");
+    audio.play().catch((err) => console.error("Audio play failed:", err));
+
     switch (hintLevel) {
       case "guideWord":
         wordReviewMutate(ReviewPerformance.Good);
@@ -201,14 +211,20 @@ const FrontFace = ({
         onPerformanceUpdate("Easy");
         break;
     }
-    setIsReviewed(true);
     if (hintLevel) setIsFlipped(true);
-    else scrollNext();
+    else {
+      setTimeout(() => {
+        setIsReviewed(true);
+        scrollNext();
+      }, STAR_BURST_DELAY * 1000);
+    }
   };
 
   const handleClickNeedMorePractice = () => {
     wordReviewMutate(ReviewPerformance.Medium);
     onPerformanceUpdate("Medium");
+    const audio = new Audio("/sounds/correct-answer-sound.mp3");
+    audio.play().catch((err) => console.error("Audio play failed:", err));
     setIsReviewed(true);
     setIsFlipped(true);
   };
@@ -267,26 +283,28 @@ const FrontFace = ({
             </Button>
           )}
           <div className="flex justify-between gap-2 ">
-            <Button
+            <MotionButton
               className="border border-white bg-transparent hover:bg-white/10 flex-1"
               onClick={handleClickNeedMorePractice}
               disabled={isUpdatingWordReview}
             >
               <Clock3 width={16} height={16} className="text-yellow-500" />
               Needs more practice
-            </Button>
-            <Button
-              className="border border-white bg-transparent hover:bg-white/10 flex-1"
-              onClick={handleClickMarkAsFamiliar}
-              disabled={isUpdatingWordReview}
-            >
-              <CircleCheckBig
-                width={16}
-                height={16}
-                className="text-green-500"
-              />
-              Mark as familiar
-            </Button>
+            </MotionButton>
+            <StarBurstWrapper className="flex-1">
+              <MotionButton
+                className="border border-white bg-transparent hover:bg-white/10 w-full"
+                onClick={handleClickMarkAsFamiliar}
+                disabled={isUpdatingWordReview}
+              >
+                <CircleCheckBig
+                  width={16}
+                  height={16}
+                  className="text-green-500"
+                />
+                Mark as familiar
+              </MotionButton>
+            </StarBurstWrapper>
           </div>
           {showHint && currentHint && (
             <div className="border-2 rounded-xl bg-transparent p-4 mt-2">

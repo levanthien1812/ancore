@@ -75,7 +75,7 @@ const WordList = ({
             <Popover key={`${wordObj.id}-${index}`}>
               <PopoverTrigger asChild>
                 <button
-                  className={`border text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-pointer transition`}
+                  className={`border border-b-3 border-r-2 text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-pointer transition`}
                   onClick={(e) => {
                     handlePlayAudio(wordObj.word);
                   }}
