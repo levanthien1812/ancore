@@ -6,7 +6,8 @@ const MButton = motion.create(Button);
 // 1. Define your preset props explicitly
 const DEFAULT_ANIMATION = {
   whileHover: { scale: 1.05 },
-  whileTap: { scale: 0.95, y: 4 },
+  whileTap: { scale: 0.95, y: 3 },
+  transition: { duration: 0.4, ease: "easeInOut" },
 } as const;
 
 // 2. Spread defaults first, then incoming props so they can be overridden

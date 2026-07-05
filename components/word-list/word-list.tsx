@@ -7,8 +7,6 @@ import { LayoutGrid, Rows4 } from "lucide-react";
 import WordGrid from "./word-grid";
 import { useLayout } from "../layout/layout-context";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
-import { StarBurstWrapper } from "../shared/star-burst-wrapper";
-import { MotionButton } from "../shared/motion-button";
 
 const WordList = ({
   words,

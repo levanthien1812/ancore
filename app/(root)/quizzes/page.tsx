@@ -28,7 +28,7 @@ const QuizzesPage = async ({ searchParams }: QuizzesPageProps) => {
   }
 
   return (
-    <div className="sm:min-w-[520px] sm:max-w-[33%] mx-auto h-full py-2 px-2 sm:px-4">
+    <div className="sm:min-w-[600px] sm:max-w-[33%] mx-auto h-full py-2 px-2 sm:px-4">
       <Suspense fallback={<div className="text-center py-8">Loading...</div>}>
         <QuizzesTabsWrapper
           words={words}
