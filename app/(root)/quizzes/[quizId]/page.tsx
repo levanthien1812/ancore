@@ -26,7 +26,7 @@ const QuizSessionPage = async (props: Props) => {
   }
 
   return (
-    <div className={`sm:min-w-[520px] sm:max-w-[33%] mx-auto py-2 px-2 h-full`}>
+    <div className={`sm:min-w-[600px] sm:max-w-[33%] mx-auto py-2 px-2 h-full`}>
       {quiz.completedAt ? (
         <QuizSummary quiz={quiz} />
       ) : quiz.unreachedQuestions ? (

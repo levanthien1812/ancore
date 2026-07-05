@@ -1,9 +1,9 @@
 "use client";
 
-import { Input } from "../ui/input";
 import { useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { QuizQuestion } from "@prisma/client";
+import { motion } from "framer-motion";
 
 const FillInTheBlankBody = ({
   setSelectedAnswer,
@@ -15,12 +15,23 @@ const FillInTheBlankBody = ({
   correctAnswer: string | null;
 }) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const firstGapIndex = useMemo(
+    () => question.gapHint?.indexOf("_"),
+    [question.gapHint],
+  );
+  const [currentIndex, setCurrentIndex] = useState<number>(firstGapIndex!);
 
   const [userInput, setUserInput] = useState<string[]>(() =>
     question.gapHint
       ? question.gapHint.split("").map((char) => (char === "_" ? "" : char))
       : [],
   );
+
+  // useEffect(() => {
+  //   if (inputRefs.current[firstGapIndex!]) {
+  //     inputRefs.current[firstGapIndex!]?.focus();
+  //   }
+  // }, [firstGapIndex]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -37,7 +48,7 @@ const FillInTheBlankBody = ({
         question.gapHint![i] !== "_" ? question.gapHint![i] : char,
       )
       .join("");
-      
+
     setSelectedAnswer(finalAnswer);
 
     // Move focus to the next empty input
@@ -45,6 +56,7 @@ const FillInTheBlankBody = ({
       const nextGapIndex = question.gapHint.indexOf("_", index + 1);
       if (nextGapIndex !== -1) {
         inputRefs.current[nextGapIndex]?.focus();
+        setCurrentIndex(nextGapIndex);
       }
     }
   };
@@ -63,6 +75,7 @@ const FillInTheBlankBody = ({
       const prevGapIndex = question.gapHint.lastIndexOf("_", index - 1);
       if (prevGapIndex !== -1) {
         inputRefs.current[prevGapIndex]?.focus();
+        setCurrentIndex(prevGapIndex);
       }
     }
   };
@@ -85,6 +98,7 @@ const FillInTheBlankBody = ({
       const prevGapIndex = question.gapHint!.lastIndexOf("_", index - 1);
       if (prevGapIndex !== -1) {
         inputRefs.current[prevGapIndex]?.focus();
+        setCurrentIndex(prevGapIndex);
       }
     }
   };
@@ -101,7 +115,7 @@ const FillInTheBlankBody = ({
       {question.gapHint.split("").map((char, index) => {
         const isHint = char !== "_";
         return (
-          <Input
+          <motion.input
             key={index}
             ref={(el) => {
               inputRefs.current[index] = el;
@@ -112,14 +126,31 @@ const FillInTheBlankBody = ({
             onChange={(e) => handleInputChange(e, index)}
             onBeforeInput={(e) => handleBeforeInput(e, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
+            onClick={() => setCurrentIndex(index)}
             disabled={isHint || !!correctAnswer}
+            animate={
+              correctAnswer
+                ? isCorrect
+                  ? { y: [0, -15, 0] }
+                  : { x: [0, -5, 5, -5, 5, 0] }
+                : {}
+            }
+            transition={
+              correctAnswer
+                ? isCorrect
+                  ? { duration: 0.4, delay: index * 0.05, ease: "easeInOut" }
+                  : { duration: 0.4, ease: "easeInOut" }
+                : {}
+            }
             className={cn(
-              "w-12 h-14 text-base md:text-2xl text-center font-bold px-1",
+              "w-12 h-14 text-base md:text-2xl text-center font-bold px-1 outline-none rounded-md border border-b-3 border-r-2 transition-colors duration-300",
               {
                 "bg-muted border-dashed text-muted-foreground":
                   isHint && !correctAnswer,
-                "bg-green-100 border-green-600": correctAnswer && isCorrect,
-                "bg-red-100 border-red-600": correctAnswer && !isCorrect,
+                "bg-green-100 border-green-500": correctAnswer && isCorrect,
+                "bg-red-100 border-red-500": correctAnswer && !isCorrect,
+                "border-primary-2/50 bg-primary-2/5":
+                  index === currentIndex && !correctAnswer,
               },
             )}
             aria-label={`Letter ${index + 1} of the word`}

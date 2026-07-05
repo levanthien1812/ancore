@@ -61,7 +61,11 @@ const QuizSummary = ({ quiz }: { quiz: QuizWithAnswers }) => {
         </div>
         <QuizSummaryDetail quiz={quiz} />
         <div className="flex gap-2">
-          <Button className="flex-1" onClick={handleRetry}>
+          <Button
+            className="flex-1"
+            onClick={handleRetry}
+            isLoading={isPending}
+          >
             <RotateCcw width={16} />{" "}
             {isPending ? "Processing..." : "Retry quiz"}
           </Button>

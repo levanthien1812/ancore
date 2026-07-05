@@ -45,7 +45,7 @@ const WordDialog = ({
                 variant={"outline"}
                 onClick={handlePrevious}
                 disabled={selectedIndex === 0}
-                className="flex-1"
+                className="flex-1 hover:border-primary-2"
               >
                 <ChevronLeft /> Previous
               </Button>
@@ -53,7 +53,7 @@ const WordDialog = ({
                 variant={"outline"}
                 onClick={handleNext}
                 disabled={selectedIndex === totalWord - 1}
-                className="flex-1"
+                className="flex-1 hover:border-primary-2"
               >
                 Next <ChevronRight />
               </Button>

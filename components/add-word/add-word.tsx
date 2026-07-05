@@ -11,6 +11,7 @@ import {
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { PlusIcon } from "lucide-react";
 import { MotionButton } from "../shared/motion-button";
+import { Button } from "../ui/button";
 
 type AddOrEditWordProps = {
   word?: WordWithMeanings;
@@ -35,13 +36,14 @@ const AddOrEditWord = ({
   const setIsOpen = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
 
   const defaultTriggerBtn = (
-    <MotionButton
-      className="bg-primary-2 px-4 py-1 text-primary font-bold hover:bg-primary-2/90"
+    <Button
+      className="text-primary font-bold"
       onClick={(e) => e.stopPropagation()}
+      variant={"default2"}
     >
       <PlusIcon width={18} height={18} className="" />
       <span className="hidden sm:block">{word ? "Edit word" : "Add word"}</span>
-    </MotionButton>
+    </Button>
   );
 
   return (

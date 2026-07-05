@@ -4,6 +4,93 @@ import { cn } from "@/lib/utils";
 import { QuizQuestionType, QuizQuestionTypeLabel } from "@/lib/constants/enums";
 import { QuizAnswerWithQuestion } from "@/lib/type";
 import { normalizeText } from "@/lib/utils/normalize-text";
+import { useRef } from "react";
+import { XArrowStateConnector } from "./x-arrow-list-connector";
+
+const AnswerDisplay = ({
+  questionType,
+  answer,
+  correctAnswer,
+}: {
+  questionType: QuizQuestionType;
+  answer: string;
+  correctAnswer: string | null;
+}) => {
+  const leftRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const rightRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+
+  switch (questionType) {
+    case QuizQuestionType.DefinitionToWord_Typing:
+    case QuizQuestionType.WordToSynonym:
+    case QuizQuestionType.FillInTheBlank:
+      return <span>{answer}</span>;
+    case QuizQuestionType.Matching:
+      const answerMap = JSON.parse(answer) as Record<string, string>;
+      const correctAnswerMap = correctAnswer
+        ? (JSON.parse(correctAnswer) as Record<string, string>)
+        : null;
+
+      const dataList = Object.entries(answerMap).map(([leftId, rightId]) => {
+        return {
+          id: leftId,
+          targetId: rightId,
+        };
+      });
+
+      const isCorrectMatch = (leftId: string, rightId: string) => {
+        if (!correctAnswerMap) return true;
+        return correctAnswerMap[leftId] === rightId;
+      };
+
+      return (
+        <div className="border rounded-md mt-1 p-2">
+          <div className="space-y-2 relative">
+            {Object.entries(answerMap).map(([leftId, rightId]) => (
+              <div
+                key={leftId}
+                className={cn("grid grid-cols-3 gap-x-8 items-start")}
+              >
+                <div
+                  className={cn("col-span-1 p-3 rounded-md text-white", {
+                    "border border-green-700 border-b-3 border-r-2 bg-green-500":
+                      isCorrectMatch(leftId, rightId),
+                    "border border-red-700 border-b-3 border-r-2 bg-red-500":
+                      !isCorrectMatch(leftId, rightId),
+                  })}
+                  ref={(el) => {
+                    leftRefs.current[leftId] = el;
+                  }}
+                >
+                  {normalizeText(leftId)}
+                </div>
+                <div
+                  className={cn("col-span-2 p-3 rounded-md text-white", {
+                    "border border-green-700 border-b-3 border-r-2 bg-green-500":
+                      isCorrectMatch(leftId, rightId),
+                    "border border-red-700 border-b-3 border-r-2 bg-red-500":
+                      !isCorrectMatch(leftId, rightId),
+                  })}
+                  ref={(el) => {
+                    rightRefs.current[rightId] = el;
+                  }}
+                >
+                  {normalizeText(rightId)}
+                </div>
+              </div>
+            ))}
+            <XArrowStateConnector
+              dataList={dataList}
+              leftRefs={leftRefs}
+              rightRefs={rightRefs}
+              strokeColor="oklch(52.7% 0.154 150.069)"
+            />
+          </div>
+        </div>
+      );
+    default:
+      return null;
+  }
+};
 
 const AnswerCard = ({
   answer,
@@ -14,33 +101,6 @@ const AnswerCard = ({
   index: number;
   showDetails: boolean;
 }) => {
-  const displayAnswer = (questionType: QuizQuestionType, answer: string) => {
-    switch (questionType) {
-      case QuizQuestionType.DefinitionToWord_Typing:
-      case QuizQuestionType.WordToSynonym:
-      case QuizQuestionType.FillInTheBlank:
-        return <span>{answer}</span>;
-      case QuizQuestionType.Matching:
-        const correctAnswerMap = JSON.parse(answer) as Record<string, string>;
-        const correctAnswers = Object.entries(correctAnswerMap).map(
-          ([leftId, rightId]) => {
-            return (
-              <div
-                key={leftId}
-                className="grid grid-cols-3 gap-x-4 p-2 not-last:border-b"
-              >
-                <div>{normalizeText(leftId)}</div>
-                <div className="col-span-2">{normalizeText(rightId)}</div>
-              </div>
-            );
-          },
-        );
-        return <div className="border rounded-md mt-1">{correctAnswers}</div>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <div
       key={answer.id}
@@ -128,10 +188,13 @@ const AnswerCard = ({
                 <div>
                   <span className="font-semibold">Your answer:</span>{" "}
                   <div className="text-muted-foreground">
-                    {displayAnswer(
-                      answer.quizQuestion.type as QuizQuestionType,
-                      answer.userAnswer,
-                    )}
+                    <AnswerDisplay
+                      questionType={
+                        answer.quizQuestion.type as QuizQuestionType
+                      }
+                      answer={answer.userAnswer}
+                      correctAnswer={answer.quizQuestion.answer}
+                    />
                   </div>
                 </div>
               )}
@@ -139,10 +202,13 @@ const AnswerCard = ({
                 <div>
                   <span className="font-semibold">Correct answer:</span>{" "}
                   <div className="text-muted-foreground">
-                    {displayAnswer(
-                      answer.quizQuestion.type as QuizQuestionType,
-                      answer.quizQuestion.answer,
-                    )}
+                    <AnswerDisplay
+                      questionType={
+                        answer.quizQuestion.type as QuizQuestionType
+                      }
+                      answer={answer.quizQuestion.answer}
+                      correctAnswer={null}
+                    />
                   </div>
                 </div>
               )}

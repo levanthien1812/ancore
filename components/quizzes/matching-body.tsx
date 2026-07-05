@@ -2,12 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { shuffleArray } from "@/lib/utils/shuffle-array";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { QuizQuestion } from "@prisma/client";
 import { normalizeText } from "@/lib/utils/normalize-text";
+import { XArrowStateConnector } from "./x-arrow-list-connector";
+import { motion } from "framer-motion";
 
 type MatchItem = {
   id: string;
@@ -48,6 +50,8 @@ const MatchingBody = ({
 
   const [leftItems, setLeftItems] = useState<MatchItem[]>(initialLeftItems);
   const [rightItems, setRightItems] = useState<MatchItem[]>(initialRightItems);
+  const leftRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const rightRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
   const [selectedLeft, setSelectedLeft] = useState<MatchItem | null>(null);
 
@@ -70,15 +74,16 @@ const MatchingBody = ({
     if (Object.keys(newMatches).length === initialLeftItems.length) {
       setSelectedAnswer(JSON.stringify(newMatches));
     }
+    setSelectedLeft(null);
   };
 
   const getItemClasses = (item: MatchItem, isLeft: boolean) => {
     const isSelected = isLeft && selectedLeft?.id === item.id;
 
     return cn(
-      "border p-3 rounded-md text-left cursor-pointer transition-all overflow-hidden",
+      "border border-b-3 border-r-2 hover:bg-primary-2/10 p-3 rounded-md text-left cursor-pointer transition-all overflow-hidden",
       {
-        "ring-2 ring-blue-500": isSelected,
+        "bg-primary-2 border-primary": isSelected,
       },
     );
   };
@@ -129,15 +134,13 @@ const MatchingBody = ({
     <div>
       {Object.keys(selectedMatchs).length > 0 && (
         <>
-          <div
-            className={cn("border rounded-md overflow-hidden", {
-              "border-green-600": correctAnswer && isAllMatchsCorrect,
-              "border-red-600": correctAnswer && !isAllMatchsCorrect,
-            })}
-          >
-            {Object.entries(selectedMatchs).map(([leftId, rightId], index) => (
-              <div key={leftId}>
-                <div
+          <div className="space-y-2 relative">
+            {Object.entries(selectedMatchs).map(([leftId, rightId]) => (
+              <div
+                key={leftId}
+                className={cn("grid grid-cols-3 gap-x-8 items-start")}
+              >
+                {/* <div
                   className={cn(
                     "grid grid-cols-3 gap-x-4 items-center cursor-pointer p-4",
                     {
@@ -148,19 +151,74 @@ const MatchingBody = ({
                     },
                   )}
                   onClick={() => handleClickSelectedMatch(leftId)}
+                > */}
+                <motion.div
+                  className={cn(
+                    "col-span-1 border-primary border border-b-3 border-r-2 p-3 rounded-md transition-colors duration-300",
+                    {
+                      "bg-primary-2": !correctAnswer,
+                      "bg-green-500 border border-green-700 border-b-3 border-r-2 text-white":
+                        correctAnswer && isCorrectMatch(leftId, rightId),
+                      "bg-red-500 border border-red-700 border-b-3 border-r-2 text-white":
+                        correctAnswer && !isCorrectMatch(leftId, rightId),
+                    },
+                  )}
+                  animate={
+                    !correctAnswer
+                      ? {}
+                      : isCorrectMatch(leftId, rightId)
+                        ? { y: [0, -10, 0] }
+                        : { x: [0, -5, 5, -5, 5, 0] }
+                  }
+                  transition={{
+                    duration: 0.4,
+                  }}
+                  ref={(el) => {
+                    leftRefs.current[leftId] = el;
+                  }}
                 >
-                  <div className="space-y-3 col-span-1">
-                    {normalizeText(leftId)}
-                  </div>
-                  <div className="space-y-3 col-span-2">
-                    {normalizeText(rightId)}
-                  </div>
-                </div>
-                {index !== Object.entries(selectedMatchs).length - 1 && (
-                  <Separator decorative className="col-span-3" />
-                )}
+                  {normalizeText(leftId)}
+                </motion.div>
+                <motion.div
+                  className={cn(
+                    "col-span-2 border-primary border border-b-3 border-r-2 p-3 rounded-md transition-colors duration-300",
+                    {
+                      "bg-primary-2": !correctAnswer,
+                      "bg-green-500 border border-green-700 border-b-3 border-r-2 text-white":
+                        correctAnswer && isCorrectMatch(leftId, rightId),
+                      "bg-red-500 border border-red-700 border-b-3 border-r-2 text-white":
+                        correctAnswer && !isCorrectMatch(leftId, rightId),
+                    },
+                  )}
+                  animate={
+                    !correctAnswer
+                      ? {}
+                      : isCorrectMatch(leftId, rightId)
+                        ? { y: [0, -10, 0] }
+                        : { x: [0, -5, 5, -5, 5, 0] }
+                  }
+                  transition={{
+                    duration: 0.4,
+                  }}
+                  ref={(el) => {
+                    rightRefs.current[rightId] = el;
+                  }}
+                >
+                  {normalizeText(rightId)}
+                </motion.div>
               </div>
             ))}
+            <XArrowStateConnector
+              dataList={Object.entries(selectedMatchs).map(
+                ([leftId, rightId]) => ({
+                  id: leftId,
+                  targetId: rightId,
+                }),
+              )}
+              leftRefs={leftRefs}
+              rightRefs={rightRefs}
+              strokeColor="rgb(19, 70, 134)"
+            />
           </div>
           {!correctAnswer && (
             <div className="flex justify-end">
@@ -176,7 +234,7 @@ const MatchingBody = ({
           )}
         </>
       )}
-      <div className="grid grid-cols-3 gap-4 mt-4">
+      <div className="grid grid-cols-3 gap-8 mt-4">
         <div className="space-y-3 col-span-1">
           {leftItems.map((item) => (
             <div

@@ -14,7 +14,7 @@ const ReviewPage = async ({
   const activeTab = params.tab || "start";
 
   return (
-    <div className="sm:min-w-[520px] sm:max-w-[33%] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
+    <div className="sm:min-w-[600px] sm:max-w-[33%] mx-auto py-2 px-2 sm:px-4 flex flex-col h-full">
       <Suspense fallback={<div className="text-center py-8">Loading...</div>}>
         <ReviewTabsWrapper count={wordsToReviewCount} activeTab={activeTab} />
       </Suspense>
