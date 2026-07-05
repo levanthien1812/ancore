@@ -2,9 +2,8 @@
 
 import { cn } from "@/lib/utils";
 import { shuffleArray } from "@/lib/utils/shuffle-array";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Separator } from "../ui/separator";
 import { Button } from "../ui/button";
 import { QuizQuestion } from "@prisma/client";
 import { normalizeText } from "@/lib/utils/normalize-text";
@@ -28,6 +27,11 @@ const MatchingBody = ({
   const [selectedMatchs, setSelectedMatchs] = useState<Record<string, string>>(
     {},
   );
+  const buttonPressAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    buttonPressAudioRef.current = new Audio("/sounds/button-press.mp3");
+  }, []);
 
   // Initialize state from props using useMemo to avoid re-shuffling on every render
   const initialLeftItems = useMemo(
@@ -56,10 +60,14 @@ const MatchingBody = ({
   const [selectedLeft, setSelectedLeft] = useState<MatchItem | null>(null);
 
   const handleLeftClick = (item: MatchItem) => {
+    buttonPressAudioRef.current!.currentTime = 0;
+    buttonPressAudioRef.current!.play();
     setSelectedLeft(item);
   };
 
   const handleRightClick = (rightItem: MatchItem) => {
+    buttonPressAudioRef.current!.currentTime = 0;
+    buttonPressAudioRef.current!.play();
     if (!selectedLeft) return toast.warning("Select a word on the left first.");
 
     const newMatches = {
@@ -123,13 +131,6 @@ const MatchingBody = ({
     return correctAnswerMap[leftId] === rightId;
   };
 
-  const isAllMatchsCorrect = () => {
-    if (!correctAnswer || !selectedMatchs) return false;
-    return Object.entries(selectedMatchs).every(([leftId, rightId]) => {
-      return isCorrectMatch(leftId, rightId);
-    });
-  };
-
   return (
     <div>
       {Object.keys(selectedMatchs).length > 0 && (
@@ -140,18 +141,6 @@ const MatchingBody = ({
                 key={leftId}
                 className={cn("grid grid-cols-3 gap-x-8 items-start")}
               >
-                {/* <div
-                  className={cn(
-                    "grid grid-cols-3 gap-x-4 items-center cursor-pointer p-4",
-                    {
-                      "bg-green-100":
-                        correctAnswer && isCorrectMatch(leftId, rightId),
-                      "bg-red-100":
-                        correctAnswer && !isCorrectMatch(leftId, rightId),
-                    },
-                  )}
-                  onClick={() => handleClickSelectedMatch(leftId)}
-                > */}
                 <motion.div
                   className={cn(
                     "col-span-1 border-primary border border-b-3 border-r-2 p-3 rounded-md transition-colors duration-300",
@@ -176,6 +165,8 @@ const MatchingBody = ({
                   ref={(el) => {
                     leftRefs.current[leftId] = el;
                   }}
+                  onClick={() => handleClickSelectedMatch(leftId)}
+                  title="Click to unmatch"
                 >
                   {normalizeText(leftId)}
                 </motion.div>
@@ -203,6 +194,8 @@ const MatchingBody = ({
                   ref={(el) => {
                     rightRefs.current[rightId] = el;
                   }}
+                  onClick={() => handleClickSelectedMatch(leftId)}
+                  title="Click to match"
                 >
                   {normalizeText(rightId)}
                 </motion.div>

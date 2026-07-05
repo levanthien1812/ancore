@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { QuizQuestion } from "@prisma/client";
 import { motion } from "framer-motion";
@@ -20,12 +20,18 @@ const FillInTheBlankBody = ({
     [question.gapHint],
   );
   const [currentIndex, setCurrentIndex] = useState<number>(firstGapIndex!);
+  const keySoundAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const [userInput, setUserInput] = useState<string[]>(() =>
     question.gapHint
       ? question.gapHint.split("").map((char) => (char === "_" ? "" : char))
       : [],
   );
+
+  useEffect(() => {
+    keySoundAudioRef.current = new Audio("/sounds/key-press.mp3");
+    keySoundAudioRef.current.preload = "auto";
+  }, []);
 
   // useEffect(() => {
   //   if (inputRefs.current[firstGapIndex!]) {
@@ -38,6 +44,9 @@ const FillInTheBlankBody = ({
     index: number,
   ) => {
     if (!question.gapHint) return;
+    keySoundAudioRef.current!.currentTime = 0;
+    keySoundAudioRef.current!.play();
+
     const value = e.target.value.slice(-1); // Only take the last character
     const newUserInput = [...userInput];
     newUserInput[index] = value;
@@ -133,14 +142,18 @@ const FillInTheBlankBody = ({
                 ? isCorrect
                   ? { y: [0, -15, 0] }
                   : { x: [0, -5, 5, -5, 5, 0] }
-                : {}
+                : index === currentIndex
+                  ? { scale: [1, 1.15, 1] }
+                  : { scale: 1 }
             }
             transition={
               correctAnswer
                 ? isCorrect
                   ? { duration: 0.4, delay: index * 0.05, ease: "easeInOut" }
                   : { duration: 0.4, ease: "easeInOut" }
-                : {}
+                : index === currentIndex
+                  ? { duration: 0.3, ease: "easeInOut" }
+                  : { duration: 0.15, ease: "easeOut" }
             }
             className={cn(
               "w-12 h-14 text-base md:text-2xl text-center font-bold px-1 outline-none rounded-md border border-b-3 border-r-2 transition-colors duration-300",

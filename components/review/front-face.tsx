@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "../ui/badge";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { Button } from "../ui/button";
@@ -68,19 +68,31 @@ const FrontFace = ({
   studySessionId?: string;
   isRepeated?: boolean;
 }) => {
-  const [showHint, setShowHint] = React.useState(false);
-  const [hintLevel, setHintLevel] = React.useState<HintLevel | null>(null);
+  const [showHint, setShowHint] = useState(false);
+  const [hintLevel, setHintLevel] = useState<HintLevel | null>(null);
   const [hintList, setHintList] = useState<HintList>(INITIAL_HINT_LIST);
   const { scrollNext, canScrollNext } = useCarousel();
   const [isReviewed, setIsReviewed] = useState(false);
   const session = useSession();
+  const wrongAudioRef = useRef<HTMLAudioElement | null>(null);
+  const correctAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    wrongAudioRef.current = new Audio("/sounds/wrong-answer-sound.mp3");
+    correctAudioRef.current = new Audio("/sounds/level-up.mp3");
+    wrongAudioRef.current.preload = "auto";
+    correctAudioRef.current.preload = "auto";
+  }, []);
 
   const availableHints = useMemo(() => {
     const availableHints: Hint = {};
     const primaryMeaning = word.meanings[0];
     if (primaryMeaning?.guideWord && primaryMeaning.guideWord.length > 0)
       availableHints.guideWord = primaryMeaning?.guideWord;
-    if (primaryMeaning?.examples && primaryMeaning.examples.length > 0)
+    if (
+      primaryMeaning?.examples &&
+      primaryMeaning.examples.filter((x) => x.trim().length > 0).length > 0
+    )
       availableHints.examples = primaryMeaning?.examples
         .filter((x) => x.trim().length > 0)
         .slice(0, MAXIMUM_EXAMPLES_IN_HINTS);
@@ -168,8 +180,10 @@ const FrontFace = ({
 
   const handleForgotWord = () => {
     setIsReviewed(true);
-    const audio = new Audio("/sounds/wrong-answer-sound.mp3");
-    audio.play().catch((err) => console.error("Audio play failed:", err));
+    wrongAudioRef.current!.currentTime = 0;
+    wrongAudioRef
+      .current!.play()
+      .catch((err) => console.error("Audio play failed:", err));
     setShowHint(false);
     setHintLevel(null);
     wordReviewMutate(ReviewPerformance.Forgot);
@@ -189,8 +203,10 @@ const FrontFace = ({
   }, [hintList, hintLevel, availableHints]);
 
   const handleClickMarkAsFamiliar = () => {
-    const audio = new Audio("/sounds/correct-answer-sound.mp3");
-    audio.play().catch((err) => console.error("Audio play failed:", err));
+    correctAudioRef.current!.currentTime = 0;
+    correctAudioRef
+      .current!.play()
+      .catch((err) => console.error("Audio play failed:", err));
 
     switch (hintLevel) {
       case "guideWord":
@@ -223,8 +239,10 @@ const FrontFace = ({
   const handleClickNeedMorePractice = () => {
     wordReviewMutate(ReviewPerformance.Medium);
     onPerformanceUpdate("Medium");
-    const audio = new Audio("/sounds/correct-answer-sound.mp3");
-    audio.play().catch((err) => console.error("Audio play failed:", err));
+    correctAudioRef.current!.currentTime = 0;
+    correctAudioRef
+      .current!.play()
+      .catch((err) => console.error("Audio play failed:", err));
     setIsReviewed(true);
     setIsFlipped(true);
   };
