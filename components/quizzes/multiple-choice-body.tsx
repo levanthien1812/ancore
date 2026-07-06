@@ -1,6 +1,6 @@
 import { shuffleArray } from "@/lib/utils/shuffle-array";
 import { cn } from "@/lib/utils";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { QuizQuestion } from "@prisma/client";
 import { MotionButton } from "../shared/motion-button";
 
@@ -18,6 +18,11 @@ const MultipleChoiceBody = ({
   const [shuffledOptions] = useState<string[]>(() => {
     return shuffleArray([...question.options]);
   });
+  const buttonPressAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    buttonPressAudioRef.current = new Audio("/sounds/button-press.mp3");
+  }, []);
 
   const isCorrectOption = useCallback(
     (option: string) => {
@@ -33,6 +38,12 @@ const MultipleChoiceBody = ({
     [selectedAnswer],
   );
 
+  const handleClick = (option: string) => {
+    buttonPressAudioRef.current!.currentTime = 0;
+    buttonPressAudioRef.current!.play();
+    setSelectedAnswer(option);
+  };
+
   return (
     <div className="grid grid-cols-1 gap-3">
       {shuffledOptions.map((option) => {
@@ -47,7 +58,7 @@ const MultipleChoiceBody = ({
             key={option}
             type="button"
             variant={isSelected(option) ? "default2" : "outline"}
-            onClick={() => setSelectedAnswer(option)}
+            onClick={() => handleClick(option)}
             animate={
               isCorrect
                 ? { y: [0, -10, 0] }

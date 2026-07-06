@@ -62,6 +62,8 @@ const ReviewIntro = ({ count }: { count: number }) => {
       }
       await refetch();
       setStarted(true);
+      const audio = new Audio("/sounds/magic-spell.mp3");
+      audio.play().catch((err) => console.error("Audio play failed:", err));
     } finally {
       setIsStarting(false);
     }
