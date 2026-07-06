@@ -45,14 +45,11 @@ const QuestionCard = ({
   const [timeLeft, setTimeLeft] = useState(timeLimit);
 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [isAnswered, setIsAnswered] = useState(!!question.answer);
+  const [isAnswered, setIsAnswered] = useState(false);
   const [localIsCorrect, setLocalIsCorrect] = useState<boolean | null>(
     initialIsCorrect,
   );
   const isLastQuestion = currentIndex === totalQuestions - 1;
-  const [correctAnswer, setCorrectAnswer] = useState<typeof question.answer>(
-    question.answer,
-  );
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioCorrectRef = useRef<HTMLAudioElement | null>(null);
   const audioWrongRef = useRef<HTMLAudioElement | null>(null);
@@ -64,78 +61,95 @@ const QuestionCard = ({
     audioWrongRef.current.preload = "auto";
   }, []);
 
-  const { mutate: updateQuizAnswerMutation, isPending: isUpdatingQuizAnswer } =
-    useMutation({
-      mutationFn: async (data: { userAnswer: string | null }) => {
-        if (isRetryMode) {
-          const result = await updateQuizAnswerRetry(answerId, data.userAnswer);
-          return {
-            isCorrectAfterRetry: result?.isCorrectAfterRetry ?? false,
-            correctAnswer: result?.correctAnswer ?? null,
-          };
-        } else {
-          const result = await updateQuizAnswer(answerId, data.userAnswer);
-          return {
-            isCorrect: result?.isCorrect ?? false,
-            correctAnswer: result?.correctAnswer ?? null,
-          };
+  const computeIsCorrect = useCallback(
+    (answer: string | null): boolean => {
+      if (!answer || !question.answer) return false;
+      if (question.type === "Matching") {
+        try {
+          const userObj = JSON.parse(answer);
+          const correctObj = JSON.parse(question.answer);
+          const correctKeys = Object.keys(correctObj);
+          return (
+            correctKeys.length === Object.keys(userObj).length &&
+            correctKeys.every((key) => userObj[key] === correctObj[key])
+          );
+        } catch {
+          return false;
         }
-      },
-      mutationKey: isRetryMode
-        ? ["updateQuizAnswerRetry", answerId]
-        : ["updateQuizAnswer", answerId],
-      onSuccess: (data) => {
-        if (data) {
-          const isCorrect: boolean = isRetryMode
-            ? !!("isCorrectAfterRetry" in data && data.isCorrectAfterRetry)
-            : !!("isCorrect" in data && data.isCorrect);
-          // In retry mode always show result; in normal mode respect setting
-          if (
-            isRetryMode ||
-            settings?.showResultsMode === QuizResultMode.AfterEachQuestion
-          ) {
-            if (isCorrect) {
-              audioCorrectRef.current!.currentTime = 0;
-              audioCorrectRef
-                .current!.play()
-                .catch((err) => console.error("Audio play failed:", err));
-            } else {
-              audioWrongRef.current!.currentTime = 0;
-              audioWrongRef
-                .current!.play()
-                .catch((err) => console.error("Audio play failed:", err));
-            }
-            setLocalIsCorrect(isCorrect);
-            setCorrectAnswer(data.correctAnswer);
-            setIsAnswered(true);
-          }
-        }
-      },
-    });
+      }
+      return (
+        answer.trim().toLowerCase() === question.answer.trim().toLowerCase()
+      );
+    },
+    [question.answer, question.type],
+  );
+
+  const { mutate: updateQuizAnswerMutation } = useMutation({
+    mutationFn: async (data: {
+      userAnswer: string | null;
+      isCorrect: boolean;
+    }) => {
+      if (isRetryMode) {
+        await updateQuizAnswerRetry(answerId, data.userAnswer, data.isCorrect);
+      } else {
+        await updateQuizAnswer(answerId, data.userAnswer, data.isCorrect);
+      }
+    },
+    mutationKey: isRetryMode
+      ? ["updateQuizAnswerRetry", answerId]
+      : ["updateQuizAnswer", answerId],
+  });
 
   const handleCheckAnswer = useCallback(
     (isTimeout: boolean = false) => {
-      if (isTimeout) {
-        updateQuizAnswerMutation({ userAnswer: selectedAnswer || null });
-      } else {
-        if (selectedAnswer) {
-          updateQuizAnswerMutation({ userAnswer: selectedAnswer });
-        } else {
-          toast.warning("Please select an answer or finish your answer first.");
-        }
+      const answer = isTimeout ? selectedAnswer || null : selectedAnswer;
+      if (!isTimeout && !selectedAnswer) {
+        toast.warning("Please select an answer or finish your answer first.");
+        return;
       }
+
+      const isCorrect = computeIsCorrect(answer);
+
+      // Update UI immediately — no need to wait for the server
+      if (
+        isRetryMode ||
+        settings?.showResultsMode === QuizResultMode.AfterEachQuestion
+      ) {
+        if (isCorrect) {
+          audioCorrectRef.current!.currentTime = 0;
+          audioCorrectRef
+            .current!.play()
+            .catch((err) => console.error("Audio play failed:", err));
+        } else {
+          audioWrongRef.current!.currentTime = 0;
+          audioWrongRef
+            .current!.play()
+            .catch((err) => console.error("Audio play failed:", err));
+        }
+        setLocalIsCorrect(isCorrect);
+        setIsAnswered(true);
+      }
+
+      // Fire-and-forget: persist to DB in the background
+      updateQuizAnswerMutation({ userAnswer: answer, isCorrect });
     },
-    [selectedAnswer, updateQuizAnswerMutation],
+    [
+      selectedAnswer,
+      computeIsCorrect,
+      isRetryMode,
+      settings?.showResultsMode,
+      updateQuizAnswerMutation,
+    ],
   );
 
   const handleSkip = useCallback(() => {
     setSelectedAnswer(null);
     if (isRetryMode) {
       // In retry mode, skip goes directly to next without showing result
-      updateQuizAnswerMutation({ userAnswer: null });
+      updateQuizAnswerMutation({ userAnswer: null, isCorrect: false });
       onNext();
     } else {
-      updateQuizAnswerMutation({ userAnswer: null });
+      updateQuizAnswerMutation({ userAnswer: null, isCorrect: false });
       if (settings?.showResultsMode !== QuizResultMode.AfterEachQuestion) {
         onNext();
       }
@@ -153,7 +167,7 @@ const QuestionCard = ({
       return;
     }
 
-    if (timeLimit > 0 && !isAnswered && !isUpdatingQuizAnswer) {
+    if (timeLimit > 0 && !isAnswered) {
       setTimeLeft(timeLimit);
       timerIntervalRef.current = setInterval(() => {
         setTimeLeft((prev) => Math.max(0, prev - 0.1));
@@ -161,7 +175,7 @@ const QuestionCard = ({
 
       return () => clearInterval(timerIntervalRef.current ?? undefined);
     }
-  }, [isActive, isAnswered, isUpdatingQuizAnswer, timeLimit]);
+  }, [isActive, isAnswered, timeLimit]);
 
   useEffect(() => {
     if (isActive && !isAnswered && timeLimit > 0 && timeLeft <= 0) {
@@ -173,7 +187,6 @@ const QuestionCard = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isUpdatingQuizAnswer) return;
     if (!isAnswered) {
       handleCheckAnswer();
       // In retry mode, always show the result (like AfterEachQuestion);
@@ -196,7 +209,8 @@ const QuestionCard = ({
           <FillInTheBlankBody
             question={question}
             setSelectedAnswer={setSelectedAnswer}
-            correctAnswer={correctAnswer}
+            correctAnswer={question.answer}
+            isAnswered={isAnswered}
           />
         );
       case QuizQuestionType.WordToSynonym:
@@ -206,7 +220,8 @@ const QuestionCard = ({
             question={question}
             selectedAnswer={selectedAnswer}
             setSelectedAnswer={setSelectedAnswer}
-            correctAnswer={correctAnswer}
+            correctAnswer={question.answer}
+            isAnswered={isAnswered}
           />
         );
       case QuizQuestionType.Matching:
@@ -214,7 +229,8 @@ const QuestionCard = ({
           <MatchingBody
             question={question}
             setSelectedAnswer={setSelectedAnswer}
-            correctAnswer={correctAnswer}
+            correctAnswer={question.answer}
+            isAnswered={isAnswered}
           />
         );
       default:
@@ -252,19 +268,17 @@ const QuestionCard = ({
           </div>
           <div className="mt-4 space-y-2">
             {isAnswered &&
-              !isUpdatingQuizAnswer &&
               (isRetryMode ||
                 settings?.showResultsMode ===
                   QuizResultMode.AfterEachQuestion) && (
                 <QuestionResult
                   question={question}
                   localIsCorrect={localIsCorrect}
-                  correctAnswer={correctAnswer}
+                  correctAnswer={question.answer}
                 />
               )}
             {!isAnswered && (
               <Button
-                disabled={isUpdatingQuizAnswer}
                 type="button"
                 variant={"outline"}
                 onClick={handleSkip}
@@ -280,14 +294,12 @@ const QuestionCard = ({
                   QuizResultMode.AfterEachQuestion) && (
                 <Button
                   type="submit"
-                  disabled={
-                    !selectedAnswer || isUpdatingQuizAnswer || isFinalizing
-                  }
+                  disabled={!selectedAnswer || isFinalizing}
                   className="w-full"
                   size={"lg"}
-                  isLoading={isUpdatingQuizAnswer || isFinalizing}
+                  isLoading={isFinalizing}
                 >
-                  {isUpdatingQuizAnswer ? "Checking..." : "Check Answer"}
+                  Check Answer
                 </Button>
               )}
             {(isAnswered ||
@@ -297,12 +309,8 @@ const QuestionCard = ({
                 type="submit"
                 className="w-full"
                 size={"lg"}
-                disabled={
-                  selectedAnswer?.length === 0 ||
-                  isUpdatingQuizAnswer ||
-                  isFinalizing
-                }
-                isLoading={isUpdatingQuizAnswer || isFinalizing}
+                disabled={selectedAnswer?.length === 0 || isFinalizing}
+                isLoading={isFinalizing}
               >
                 {!isLastQuestion
                   ? isRetryMode

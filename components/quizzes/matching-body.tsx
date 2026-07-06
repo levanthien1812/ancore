@@ -19,10 +19,12 @@ const MatchingBody = ({
   question,
   setSelectedAnswer,
   correctAnswer,
+  isAnswered,
 }: {
   question: QuizQuestion;
   setSelectedAnswer: (answer: string) => void;
   correctAnswer: string | null;
+  isAnswered: boolean;
 }) => {
   const [selectedMatchs, setSelectedMatchs] = useState<Record<string, string>>(
     {},
@@ -122,7 +124,7 @@ const MatchingBody = ({
   };
 
   const isCorrectMatch = (leftId: string, rightId: string) => {
-    if (!correctAnswer || !selectedMatchs) return false;
+    if (!isAnswered || !correctAnswer || !selectedMatchs) return false;
     const correctAnswerMap = JSON.parse(correctAnswer) as Record<
       string,
       string
@@ -145,15 +147,15 @@ const MatchingBody = ({
                   className={cn(
                     "col-span-1 border-primary border border-b-3 border-r-2 p-3 rounded-md transition-colors duration-300",
                     {
-                      "bg-primary-2": !correctAnswer,
+                      "bg-primary-2": !isAnswered,
                       "bg-green-500 border border-green-700 border-b-3 border-r-2 text-white":
-                        correctAnswer && isCorrectMatch(leftId, rightId),
+                        isAnswered && isCorrectMatch(leftId, rightId),
                       "bg-red-500 border border-red-700 border-b-3 border-r-2 text-white":
-                        correctAnswer && !isCorrectMatch(leftId, rightId),
+                        isAnswered && !isCorrectMatch(leftId, rightId),
                     },
                   )}
                   animate={
-                    !correctAnswer
+                    !isAnswered
                       ? {}
                       : isCorrectMatch(leftId, rightId)
                         ? { y: [0, -10, 0] }
@@ -174,15 +176,15 @@ const MatchingBody = ({
                   className={cn(
                     "col-span-2 border-primary border border-b-3 border-r-2 p-3 rounded-md transition-colors duration-300",
                     {
-                      "bg-primary-2": !correctAnswer,
+                      "bg-primary-2": !isAnswered,
                       "bg-green-500 border border-green-700 border-b-3 border-r-2 text-white":
-                        correctAnswer && isCorrectMatch(leftId, rightId),
+                        isAnswered && isCorrectMatch(leftId, rightId),
                       "bg-red-500 border border-red-700 border-b-3 border-r-2 text-white":
-                        correctAnswer && !isCorrectMatch(leftId, rightId),
+                        isAnswered && !isCorrectMatch(leftId, rightId),
                     },
                   )}
                   animate={
-                    !correctAnswer
+                    !isAnswered
                       ? {}
                       : isCorrectMatch(leftId, rightId)
                         ? { y: [0, -10, 0] }
@@ -213,7 +215,7 @@ const MatchingBody = ({
               strokeColor="rgb(19, 70, 134)"
             />
           </div>
-          {!correctAnswer && (
+          {!isAnswered && (
             <div className="flex justify-end">
               <Button
                 type="button"

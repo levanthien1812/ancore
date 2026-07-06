@@ -142,7 +142,7 @@ const ReviewCarousel = ({
         setStudySession(studySession);
       }
 
-      const audio = new Audio("/sounds/applause-sound.mp3");
+      const audio = new Audio("/sounds/victory-fanfare.mp3");
       audio.play().catch((err) => console.error("Audio play failed:", err));
 
       setSessionFinished(true);

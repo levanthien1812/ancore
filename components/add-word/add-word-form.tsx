@@ -49,7 +49,7 @@ import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
-import { BookOpen, Info, Layers2, Plus, Sparkles, X } from "lucide-react";
+import { BookOpen, Info, Layers2, Plus, X } from "lucide-react";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
@@ -302,6 +302,9 @@ const AddOrEditWordForm = ({
     startTransition(() => {
       formAction(formData);
     });
+
+    const audio = new Audio("/sounds/get-coin.m4a");
+    audio.play();
   };
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {

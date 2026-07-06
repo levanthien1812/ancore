@@ -58,6 +58,8 @@ const QuizIntro = ({
   }, [isPending]);
 
   const handleStartQuiz = () => {
+    const audio = new Audio("/sounds/loading.mp3");
+    audio.play().catch((err) => console.error("Audio play failed:", err));
     startTransition(async () => {
       const result = await createQuizSession(wordsToQuizCount, specificWords);
       if (result.success && result.quizId) {
@@ -67,6 +69,7 @@ const QuizIntro = ({
         // TODO: Implement user-friendly error handling, e.g., a toast notification
         console.error(result.message || "Failed to start quiz session.");
       }
+      audio.pause();
     });
   };
 
