@@ -55,6 +55,9 @@ const ReviewIntro = ({ count }: { count: number }) => {
 
   const handleStartReview = async () => {
     setIsStarting(true);
+    const audio = new Audio("/sounds/magic-spell.mp3");
+    audio.play().catch((err) => console.error("Audio play failed:", err));
+
     try {
       const id = await startStudySession();
       if (typeof id === "string") {
@@ -62,8 +65,6 @@ const ReviewIntro = ({ count }: { count: number }) => {
       }
       await refetch();
       setStarted(true);
-      const audio = new Audio("/sounds/magic-spell.mp3");
-      audio.play().catch((err) => console.error("Audio play failed:", err));
     } finally {
       setIsStarting(false);
     }

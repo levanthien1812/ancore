@@ -4,7 +4,7 @@ import { quizQuestionSchema } from "../validators";
 import { shuffleArray } from "../utils/shuffle-array";
 import { WordWithMeanings } from "@/components/add-word/add-word-form";
 import { MasteryLevel, QuestionType, QuizStatus } from "@prisma/client";
-import { QuizAnswerWithQuestion, QuizWithAnswers } from "../type";
+import { QuizWithAnswers } from "../type";
 import { authenticationAction, settingsAction } from "./_helpers";
 import { revalidatePath } from "next/cache";
 import {
@@ -508,53 +508,20 @@ export const cleanupAbandonedQuizzes = async () =>
     };
   });
 
+// isCorrect is computed client-side (answer is already attached to the question object)
 export const updateQuizAnswer = async (
   answerId: string,
   userAnswer: string | null,
+  isCorrect: boolean,
 ) =>
   authenticationAction(async (userId) => {
-    const quizAnswer = await prisma.quizAnswer.findFirst({
-      where: { id: answerId, quiz: { userId } },
-      include: {
-        quizQuestion: {
-          include: { words: { include: { meanings: true } } },
-        },
-      },
-    });
-
-    if (!quizAnswer || !quizAnswer.quizQuestion) {
-      throw new Error("Quiz answer or question not found.");
-    }
-
-    let isCorrect = false;
-    let isSkipped = false;
-
-    if (userAnswer === null || !quizAnswer.quizQuestion.answer) {
-      isSkipped = true;
-    } else {
-      if (quizAnswer.quizQuestion.type === QuestionType.Matching) {
-        try {
-          const userObj = JSON.parse(userAnswer);
-          const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
-          const correctKeys = Object.keys(correctObj);
-          isCorrect =
-            correctKeys.length === Object.keys(userObj).length &&
-            correctKeys.every((key) => userObj[key] === correctObj[key]);
-        } catch (e) {
-          isCorrect = false;
-        }
-      } else {
-        isCorrect =
-          userAnswer.trim().toLowerCase() ===
-          quizAnswer.quizQuestion.answer.trim().toLowerCase();
-      }
-    }
+    const isSkipped = userAnswer === null;
 
     const answer = await prisma.quizAnswer.update({
-      where: { id: answerId },
+      where: { id: answerId, quiz: { userId } },
       data: {
         userAnswer,
-        isCorrect,
+        isCorrect: isSkipped ? false : isCorrect,
         isWrong: isSkipped ? false : !isCorrect,
         isSkipped,
         isUnreached: false,
@@ -571,7 +538,7 @@ export const updateQuizAnswer = async (
         let newMasteryLevel = word.masteryLevel;
         let newProficiencyScore = word.proficiencyScore;
 
-        if (isCorrect) {
+        if (isCorrect && !isSkipped) {
           // Promote the word
           if (word.masteryLevel === MasteryLevel.New) {
             newMasteryLevel = MasteryLevel.Learning;
@@ -584,7 +551,7 @@ export const updateQuizAnswer = async (
           newProficiencyScore = clampTo100(
             word.proficiencyScore + QUIZ_CORRECT_SCORE,
           );
-        } else {
+        } else if (!isSkipped) {
           // Demote the word
           if (word.masteryLevel === MasteryLevel.Mastered) {
             newMasteryLevel = MasteryLevel.Familiar;
@@ -613,7 +580,6 @@ export const updateQuizAnswer = async (
         }
       }
     }
-    return { isCorrect, correctAnswer: quizAnswer.quizQuestion.answer };
   });
 
 export const logQuizResult = async (quizId: string, durationSeconds: number) =>
@@ -708,8 +674,6 @@ export const getQuiz = async (quizId: string) =>
     });
 
     if (quiz?.quizAnswers) {
-      const isCompleted = quiz.status !== QuizStatus.InProgress;
-
       const shuffled = shuffleArray(quiz.quizAnswers);
       // Move completed questions (answered or skipped) to the start of the array
       const sortedAnswers = [
@@ -717,16 +681,7 @@ export const getQuiz = async (quizId: string) =>
         ...shuffled.filter((a) => a.isUnreached),
       ];
 
-      quiz.quizAnswers = sortedAnswers.map((ans) => {
-        if (!isCompleted) {
-          // Strip the answer field if the quiz is not completed
-          return {
-            ...ans,
-            quizQuestion: { ...ans.quizQuestion, answer: null },
-          };
-        }
-        return ans;
-      }) as QuizAnswerWithQuestion[];
+      quiz.quizAnswers = sortedAnswers;
     }
 
     return quiz;
@@ -818,56 +773,21 @@ export const getLatestIncompleteQuiz = async () =>
     };
   });
 
+// isCorrectAfterRetry is computed client-side (answer is already attached to the question object)
 export const updateQuizAnswerRetry = async (
   answerId: string,
   userAnswerRetry: string | null,
+  isCorrectAfterRetry: boolean,
 ) =>
   authenticationAction(async (userId) => {
-    const quizAnswer = await prisma.quizAnswer.findFirst({
-      where: { id: answerId, quiz: { userId } },
-      include: {
-        quizQuestion: true,
-      },
-    });
-
-    if (!quizAnswer || !quizAnswer.quizQuestion) {
-      throw new Error("Quiz answer or question not found.");
-    }
-
-    let isCorrectAfterRetry = false;
-
-    if (userAnswerRetry !== null && quizAnswer.quizQuestion.answer) {
-      if (quizAnswer.quizQuestion.type === "Matching") {
-        try {
-          const userObj = JSON.parse(userAnswerRetry);
-          const correctObj = JSON.parse(quizAnswer.quizQuestion.answer);
-          const correctKeys = Object.keys(correctObj);
-          isCorrectAfterRetry =
-            correctKeys.length === Object.keys(userObj).length &&
-            correctKeys.every((key) => userObj[key] === correctObj[key]);
-        } catch {
-          isCorrectAfterRetry = false;
-        }
-      } else {
-        isCorrectAfterRetry =
-          userAnswerRetry.trim().toLowerCase() ===
-          quizAnswer.quizQuestion.answer.trim().toLowerCase();
-      }
-    }
-
     await prisma.quizAnswer.update({
-      where: { id: answerId },
+      where: { id: answerId, quiz: { userId } },
       data: {
         retried: true,
         userAnswerRetry,
         isCorrectAfterRetry,
       },
     });
-
-    return {
-      isCorrectAfterRetry,
-      correctAnswer: quizAnswer.quizQuestion.answer,
-    };
   });
 
 export const deleteQuiz = async (quizId: string) =>

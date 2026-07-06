@@ -21,7 +21,7 @@ import {
   AlertDialog,
   AlertDialogContent,
   AlertDialogHeader,
-  AlertDialogTitle
+  AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 type RetryPhase = "idle" | "prompt" | "retrying" | "done";
@@ -93,6 +93,10 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
                 setRetryPhase("done");
               }
             } else {
+              const audio = new Audio("/sounds/victory-fanfare.mp3");
+              audio
+                .play()
+                .catch((err) => console.error("Audio play failed:", err));
               setRetryPhase("done");
             }
           }
@@ -113,9 +117,8 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
         quizQuestion: {
           ...a.quizQuestion,
           answer: null,
-        }
-      })
-      ) ?? [];
+        },
+      })) ?? [];
 
   const handleAcceptRetry = () => {
     setRetryPhase("retrying");
@@ -123,10 +126,14 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
 
   const handleDeclineRetry = () => {
     setRetryPhase("done");
+    const audio = new Audio("/sounds/victory-fanfare.mp3");
+    audio.play().catch((err) => console.error("Audio play failed:", err));
   };
 
   const handleRetryComplete = () => {
     setRetryPhase("done");
+    const audio = new Audio("/sounds/victory-fanfare.mp3");
+    audio.play().catch((err) => console.error("Audio play failed:", err));
   };
 
   // --- Render: retry round ---
@@ -157,36 +164,34 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
                 <RotateCcw className="text-primary-2" width={20} />
                 Retry Missed Questions?
               </AlertDialogTitle>
-              
             </AlertDialogHeader>
             <div className="space-y-3">
-                <div className="text-sm text-muted-foreground">
-                  You have{" "}
-                  {retryAnswers.filter((a) => a.isWrong).length > 0 && (
-                    <>
-                      <span className="text-red-500 font-semibold">
-                        {retryAnswers.filter((a) => a.isWrong).length} wrong
-                      </span>
-                    </>
-                  )}
-                  {retryAnswers.filter((a) => a.isWrong).length > 0 &&
-                    retryAnswers.filter((a) => a.isSkipped).length > 0 &&
-                    " and "}
-                  {retryAnswers.filter((a) => a.isSkipped).length > 0 && (
-                    <>
-                      <span className="text-gray-500 font-semibold">
-                        {retryAnswers.filter((a) => a.isSkipped).length}{" "}
-                        skipped
-                      </span>
-                    </>
-                  )}{" "}
-                  question{retryAnswers.length !== 1 ? "s" : ""}.
-                </div>
-                <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 rounded-md p-2">
-                  ℹ️ Retry results won&apos;t affect your original score — no
-                  time limit applies.
-                </p>
+              <div className="text-sm text-muted-foreground">
+                You have{" "}
+                {retryAnswers.filter((a) => a.isWrong).length > 0 && (
+                  <>
+                    <span className="text-red-500 font-semibold">
+                      {retryAnswers.filter((a) => a.isWrong).length} wrong
+                    </span>
+                  </>
+                )}
+                {retryAnswers.filter((a) => a.isWrong).length > 0 &&
+                  retryAnswers.filter((a) => a.isSkipped).length > 0 &&
+                  " and "}
+                {retryAnswers.filter((a) => a.isSkipped).length > 0 && (
+                  <>
+                    <span className="text-gray-500 font-semibold">
+                      {retryAnswers.filter((a) => a.isSkipped).length} skipped
+                    </span>
+                  </>
+                )}{" "}
+                question{retryAnswers.length !== 1 ? "s" : ""}.
               </div>
+              <p className="text-xs text-muted-foreground bg-amber-50 border border-amber-200 rounded-md p-2">
+                ℹ️ Retry results won&apos;t affect your original score — no time
+                limit applies.
+              </p>
+            </div>
             <div className="flex gap-2 mt-2">
               <Button
                 variant="outline"

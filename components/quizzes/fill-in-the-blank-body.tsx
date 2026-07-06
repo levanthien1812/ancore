@@ -9,10 +9,12 @@ const FillInTheBlankBody = ({
   setSelectedAnswer,
   question,
   correctAnswer,
+  isAnswered,
 }: {
   question: QuizQuestion;
   setSelectedAnswer: (answer: string) => void;
   correctAnswer: string | null;
+  isAnswered: boolean;
 }) => {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const firstGapIndex = useMemo(
@@ -113,9 +115,9 @@ const FillInTheBlankBody = ({
   };
 
   const isCorrect = useMemo(() => {
-    if (!correctAnswer) return false;
+    if (!isAnswered || !correctAnswer) return false;
     return correctAnswer.toLowerCase() === userInput.join("").toLowerCase();
-  }, [correctAnswer, userInput]);
+  }, [isAnswered, correctAnswer, userInput]);
 
   if (!question.gapHint) return null;
 
@@ -136,9 +138,9 @@ const FillInTheBlankBody = ({
             onBeforeInput={(e) => handleBeforeInput(e, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             onClick={() => setCurrentIndex(index)}
-            disabled={isHint || !!correctAnswer}
+            disabled={isHint || isAnswered}
             animate={
-              correctAnswer
+              isAnswered
                 ? isCorrect
                   ? { y: [0, -15, 0] }
                   : { x: [0, -5, 5, -5, 5, 0] }
@@ -147,7 +149,7 @@ const FillInTheBlankBody = ({
                   : { scale: 1 }
             }
             transition={
-              correctAnswer
+              isAnswered
                 ? isCorrect
                   ? { duration: 0.4, delay: index * 0.05, ease: "easeInOut" }
                   : { duration: 0.4, ease: "easeInOut" }
@@ -159,11 +161,11 @@ const FillInTheBlankBody = ({
               "w-12 h-14 text-base md:text-2xl text-center font-bold px-1 outline-none rounded-md border border-b-3 border-r-2 transition-colors duration-300",
               {
                 "bg-muted border-dashed text-muted-foreground":
-                  isHint && !correctAnswer,
-                "bg-green-100 border-green-500": correctAnswer && isCorrect,
-                "bg-red-100 border-red-500": correctAnswer && !isCorrect,
+                  isHint && !isAnswered,
+                "bg-green-100 border-green-500": isAnswered && isCorrect,
+                "bg-red-100 border-red-500": isAnswered && !isCorrect,
                 "border-primary-2/50 bg-primary-2/5":
-                  index === currentIndex && !correctAnswer,
+                  index === currentIndex && !isAnswered,
               },
             )}
             aria-label={`Letter ${index + 1} of the word`}
