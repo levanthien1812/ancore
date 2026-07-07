@@ -13,4 +13,5 @@ export const QUERY_KEY = {
   GET_BEST_DAY: "getBestDay",
   GET_REVIEW_STATISTICS: "getReviewStatistics",
   GET_MONTHLY_ACTIVITY: "getMonthlyActivity",
+  GET_NOTABLE_WORDS: "getNotableWords",
 };
