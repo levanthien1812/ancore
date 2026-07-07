@@ -23,15 +23,22 @@ import good from "@/public/images/good.png";
 import awesome from "@/public/images/awesome.png";
 import outstanding from "@/public/images/outstanding.png";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
-import { motion } from "framer-motion";
 import BorderGlowAnimation from "../shared/border-glow-animation";
+
+import Lottie from "lottie-react";
+import Fire from "@/public/lottie/fire.json";
+import MotionLightBand from "../shared/motion-light-band";
 
 const WordList = ({
   title,
   words,
+  fire,
+  highlight,
 }: {
   title: string;
   words: WordWithMeanings[];
+  fire?: boolean;
+  highlight?: boolean;
 }) => {
   if (words.length === 0) return null;
 
@@ -70,29 +77,35 @@ const WordList = ({
         <h3 className="font-semibold">
           {title} ({words.length})
         </h3>
-        <div className="flex flex-wrap gap-1 mt-1">
-          {words.map((wordObj, index) => (
-            <Popover key={`${wordObj.id}-${index}`}>
+        <div className="flex flex-wrap gap-1 mt-1 ">
+          {words.map((w, index) => (
+            <Popover key={`${w.id}-${index}`}>
               <PopoverTrigger asChild>
                 <button
-                  className={`border border-b-3 border-r-2 text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-pointer transition`}
+                  className={`relative overflow-hidden border border-b-3 border-r-2 text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-pointer transition`}
                   onClick={(e) => {
-                    handlePlayAudio(wordObj.word);
+                    handlePlayAudio(w.word);
                   }}
                 >
-                  {wordObj.word}
+                  {w.word}
+                  {highlight && <MotionLightBand />}
                 </button>
               </PopoverTrigger>
               <PopoverContent
                 className="w-screen sm:w-120 overflow-hidden bg-primary p-4"
                 side="top"
               >
-                <WordDetail word={wordObj} showReviewStats={false} />
+                <WordDetail word={w} showReviewStats={false} />
               </PopoverContent>
             </Popover>
           ))}
         </div>
       </div>
+      {fire && (
+        <div className="ms-auto self-center justify-center">
+          <Lottie animationData={Fire} loop={true} className="w-14 h-14" />
+        </div>
+      )}
     </div>
   );
 };
@@ -161,12 +174,17 @@ const ReviewSummaryDetail = ({
 
       <div className="space-y-1">
         <BorderGlowAnimation>
-          <WordList title="Forgot" words={summary.Forgot} />
+          <WordList
+            title="Forgot"
+            words={summary.Forgot}
+            fire={true}
+            highlight
+          />
         </BorderGlowAnimation>
         <BorderGlowAnimation>
-          <WordList title="Hard" words={summary.Hard} />
+          <WordList title="Hard" words={summary.Hard} highlight />
         </BorderGlowAnimation>
-        <WordList title="Medium" words={summary.Medium} />
+        <WordList title="Medium" words={summary.Medium} highlight />
         <WordList title="Good" words={summary.Good} />
         <WordList title="Easy" words={summary.Easy} />
       </div>
