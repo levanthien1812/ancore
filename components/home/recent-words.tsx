@@ -1,6 +1,6 @@
 "use client";
-import { getRecentWords } from "@/lib/actions/word.actions";
-import React, { useEffect } from "react";
+import { getNotableWords, getRecentWords } from "@/lib/actions/word.actions";
+import React, { useEffect, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -11,35 +11,54 @@ import {
 } from "../ui/table";
 import WordMasteryLevel from "../word-list/word-mastery-level";
 import { format } from "date-fns";
-import { MasteryLevel } from "@/lib/constants/enums";
+import { MasteryLevel, MasteryLevelColorCode } from "@/lib/constants/enums";
 import { Button } from "../ui/button";
 import WordDialog from "../word-card/word-dialog";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
 import { RefreshCcw } from "lucide-react";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { shorten } from "@/lib/utils/shorten";
 import { useLayout } from "../layout/layout-context";
+import { Popover, PopoverTrigger } from "../ui/popover";
+import { PopoverContent } from "@radix-ui/react-popover";
+import WordDetail from "../word-card/word-detail";
+import MotionLightBand from "../shared/motion-light-band";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const { settings } = useLayout();
 
-  const {
-    data: words,
-    isFetching,
-    refetch,
-  } = useQuery({
-    queryKey: [QUERY_KEY.GET_RECENT_WORDS],
-    queryFn: getRecentWords,
-    initialData: [],
-    refetchOnWindowFocus: false,
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: [QUERY_KEY.GET_RECENT_WORDS],
+        queryFn: getRecentWords,
+        initialData: [],
+      },
+      {
+        queryKey: [QUERY_KEY.GET_NOTABLE_WORDS],
+        queryFn: getNotableWords,
+        initialData: [],
+      },
+    ],
   });
 
-  const handleRefresh = () => {
-    refetch();
+  const [recentWordsQuery, notableWordsQuery] = results;
+
+  const words = recentWordsQuery.data;
+  const notableWords = notableWordsQuery.data;
+
+  const isFetching =
+    recentWordsQuery.isFetching || notableWordsQuery.isFetching;
+
+  const refetch = async () => {
+    await Promise.all([
+      recentWordsQuery.refetch(),
+      notableWordsQuery.refetch(),
+    ]);
   };
 
   useEffect(() => {
@@ -51,6 +70,9 @@ const RecentWords = () => {
     }
   }, [selectedIndex, words, settings?.autoPlayPronunciation]);
 
+  const handleRefresh = () => {
+    refetch();
+  };
   return (
     <div className=" flex flex-col bg-white p-4 rounded-2xl gap-2 h-full">
       <div className="">
@@ -77,7 +99,7 @@ const RecentWords = () => {
           </TableHeader>
           <TableBody>
             {isFetching ? (
-              <LoadingSkeleton />
+              <RecentWordsLoadingSkeleton />
             ) : (
               words.map((word, index) => (
                 <TableRow key={word.id} className="border-b border-primary">
@@ -124,11 +146,51 @@ const RecentWords = () => {
         setSelectedIndex={setSelectedIndex}
         totalWord={words.length}
       />
+      <div className="">
+        <span className="text-xl sm:text-2xl font-bold text-primary">
+          ⭐ Notable words!
+        </span>
+
+        {isFetching ? (
+          <NotableWordsLoadingSkeleton />
+        ) : (
+          <div className="flex flex-wrap gap-1 mt-1 ">
+            {notableWords.map((w, index) => {
+              return (
+                <Popover key={`${w.id}-${index}`}>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={`relative overflow-hidden border border-b-3 border-r-2 text-sm px-2 py-1 rounded-md cursor-pointer transition`}
+                      style={{
+                        borderColor:
+                          MasteryLevelColorCode[w.masteryLevel].primary,
+                        backgroundColor: `${MasteryLevelColorCode[w.masteryLevel].primary}20`,
+                      }}
+                      onClick={(e) => {
+                        handlePlayAudio(w.word);
+                      }}
+                    >
+                      {w.word}
+                      <MotionLightBand />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-screen sm:w-120 overflow-hidden bg-primary p-4 rounded-2xl"
+                    side="top"
+                  >
+                    <WordDetail word={w} showReviewStats={false} />
+                  </PopoverContent>
+                </Popover>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-const LoadingSkeleton = () => (
+const RecentWordsLoadingSkeleton = () => (
   <>
     {Array.from({ length: 15 }).map((_, index) => (
       <TableRow key={index} className="border-b border-primary">
@@ -145,5 +207,18 @@ const LoadingSkeleton = () => (
     ))}
   </>
 );
+
+const NotableWordsLoadingSkeleton = () => {
+  const skeletonWidths = [
+    80, 96, 72, 112, 88, 104, 64, 120, 92, 76, 108, 84, 100, 68, 96,
+  ];
+  return (
+    <div className="mt-1 flex flex-wrap gap-1">
+      {skeletonWidths.map((width, index) => (
+        <Skeleton key={index} className="h-8" style={{ width }} />
+      ))}
+    </div>
+  );
+};
 
 export default RecentWords;

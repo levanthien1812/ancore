@@ -136,3 +136,5 @@ export const MAXIMUM_WORDS_IN_QUIZ = 20;
 export const MAXIMUM_WORDS_IN_REVIEW = 20;
 
 export const STAR_BURST_DELAY = 0.8; //s
+export const NOTABLE_WORDS_MINIMUM_REVIEW_COUNT = 3;
+export const NOTABLE_WORDS_LIMIT = 20;

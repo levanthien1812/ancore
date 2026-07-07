@@ -16,6 +16,7 @@ import { generateWordOfTheDayWithAI } from "@/app/services/generate-word-of-the-
 import {
   DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL,
   DEFAULT_WORDS_PER_REVIEW,
+  NOTABLE_WORDS_LIMIT,
 } from "../constants/constant";
 import { getReviewPlan } from "../utils/distribution";
 import { shuffleArray } from "../utils/shuffle-array";
@@ -57,7 +58,7 @@ export const getRecentWords = async () =>
   authenticationAction(async (userId) => {
     return await prisma.word.findMany({
       where: { userId },
-      take: 15,
+      take: 14,
       orderBy: {
         updatedAt: "desc",
       },
@@ -65,6 +66,36 @@ export const getRecentWords = async () =>
         meanings: true,
       },
     });
+  }, []);
+
+export const getNotableWords = async () =>
+  authenticationAction(async (userId) => {
+    const words = await prisma.word.findMany({
+      where: {
+        userId,
+        masteryLevel: { notIn: [MasteryLevel.New] },
+      },
+      include: {
+        meanings: true,
+      },
+      orderBy: [
+        {
+          reviews: {
+            _count: "desc",
+          },
+        },
+        {
+          quizzes: {
+            _count: "desc",
+          },
+        },
+        { proficiencyScore: "asc" },
+        { lastReviewedAt: "asc" },
+      ],
+      take: NOTABLE_WORDS_LIMIT * 2,
+    });
+
+    return shuffleArray(words).slice(0, NOTABLE_WORDS_LIMIT);
   }, []);
 
 export const getWord = async (id: string) =>
