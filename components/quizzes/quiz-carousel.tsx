@@ -83,21 +83,19 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
           if (updatedResult) {
             setFinalQuiz(updatedResult);
             // Check if retry should be offered
-            if (settings?.allowRetry) {
-              const retryEligible = updatedResult.quizAnswers.filter(
-                (a) => a.isWrong || a.isSkipped,
-              );
-              if (retryEligible.length > 0) {
-                setRetryPhase("prompt");
-              } else {
-                setRetryPhase("done");
-              }
-            } else {
+            const retryEligible = updatedResult.quizAnswers.filter(
+              (a) => a.isWrong || a.isSkipped,
+            );
+            if (retryEligible.length === 0) {
+              setRetryPhase("done");
               const audio = new Audio("/sounds/victory-fanfare.mp3");
               audio
                 .play()
                 .catch((err) => console.error("Audio play failed:", err));
-              setRetryPhase("done");
+              return;
+            }
+            if (settings?.allowRetry) {
+              setRetryPhase("prompt");
             }
           }
         });

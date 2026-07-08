@@ -26,6 +26,7 @@ import { Popover, PopoverTrigger } from "../ui/popover";
 import { PopoverContent } from "@radix-ui/react-popover";
 import WordDetail from "../word-card/word-detail";
 import MotionLightBand from "../shared/motion-light-band";
+import { REFETCH_NOTABLE_WORDS_INTERVAL } from "@/lib/constants/constant";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
@@ -42,6 +43,7 @@ const RecentWords = () => {
         queryKey: [QUERY_KEY.GET_NOTABLE_WORDS],
         queryFn: getNotableWords,
         initialData: [],
+        refetchInterval: REFETCH_NOTABLE_WORDS_INTERVAL,
       },
     ],
   });
@@ -50,9 +52,6 @@ const RecentWords = () => {
 
   const words = recentWordsQuery.data;
   const notableWords = notableWordsQuery.data;
-
-  const isFetching =
-    recentWordsQuery.isFetching || notableWordsQuery.isFetching;
 
   const refetch = async () => {
     await Promise.all([
@@ -98,7 +97,7 @@ const RecentWords = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isFetching ? (
+            {recentWordsQuery.isFetching ? (
               <RecentWordsLoadingSkeleton />
             ) : (
               words.map((word, index) => (
@@ -151,7 +150,7 @@ const RecentWords = () => {
           ⭐ Notable words!
         </span>
 
-        {isFetching ? (
+        {notableWordsQuery.isFetching ? (
           <NotableWordsLoadingSkeleton />
         ) : (
           <div className="flex flex-wrap gap-1 mt-1 ">
