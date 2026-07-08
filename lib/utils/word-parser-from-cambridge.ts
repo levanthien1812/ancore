@@ -75,9 +75,7 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
-  const usages = Array.from(
-    doc.querySelectorAll(".usage.dusage"),
-  )
+  const usages = Array.from(doc.querySelectorAll(".usage.dusage"))
     .map((el) => el.textContent?.trim())
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
