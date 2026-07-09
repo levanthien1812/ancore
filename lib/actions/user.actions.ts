@@ -25,6 +25,7 @@ import {
 import { resetPasswordTemplate } from "../email-templates/reset-password-template";
 import { createHash } from "crypto";
 import { add } from "date-fns";
+import { INITIAL_USER_SETTINGS } from "../constants/initial-values";
 
 export const signInWithCredentials = async (
   prevState: unknown,
@@ -187,6 +188,68 @@ export const forgotPassword = async (prevState: unknown, formData: FormData) =>
     };
   });
 
+export const resendVerificationEmail = async (formData: FormData) => {
+  const email = formData.get("email") as string;
+
+  if (!email) {
+    return {
+      success: false,
+      message: "Email is required",
+    };
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email: email },
+  });
+
+  if (!existingUser) {
+    return {
+      success: false,
+      message: "User not found",
+    };
+  }
+  console.log(existingUser);
+
+  if (existingUser.emailVerified) {
+    return {
+      success: false,
+      message: "Email already verified",
+    };
+  }
+
+  const verificationToken = generateVerificationToken();
+
+  const createdEmailToken = await prisma.verifyEmailToken.create({
+    data: {
+      token: verificationToken.hash,
+      userId: existingUser.id,
+      expiresAt: add(new Date(), {
+        minutes: Number(process.env.EMAIL_TOKEN_EXPIRES_IN || 60),
+      }),
+    },
+  });
+
+  try {
+    await sendEmailVerification(existingUser, verificationToken.token);
+  } catch (error) {
+    console.error(error);
+
+    await prisma.verifyEmailToken.delete({
+      where: { id: createdEmailToken.id },
+    });
+
+    return {
+      success: false,
+      message: "Failed to send verification email. Please try again later.",
+    };
+  }
+
+  return {
+    success: true,
+    message: "Verification email sent successfully",
+  };
+};
+
 export const verifyEmail = async (prevState: unknown, formData: FormData) =>
   catchAsyncAuthAction(async () => {
     const { email, token } = verifyEmailFormSchema.parse({
@@ -229,6 +292,12 @@ export const verifyEmail = async (prevState: unknown, formData: FormData) =>
       data: {
         emailVerified: true,
       },
+    });
+
+    await createInitialSetting(existingUser.id);
+
+    await prisma.verifyEmailToken.delete({
+      where: { id: verificationToken.id },
     });
 
     return {
@@ -293,6 +362,22 @@ export const enableWordOfTheDay = async () =>
     });
     return { success: true, message: "Word of the day enabled." };
   });
+
+export const createInitialSetting = async (userId: string) => {
+  const exist = await prisma.userSettings.findUnique({
+    where: { userId: userId },
+  });
+  if (exist) {
+    return { success: false, message: "Settings already exist." };
+  }
+  await prisma.userSettings.create({
+    data: {
+      userId: userId,
+      ...INITIAL_USER_SETTINGS,
+    },
+  });
+  return { success: true, message: "Settings created." };
+};
 
 export const saveUserSettings = async (
   prevState: unknown,
