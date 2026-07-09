@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signInWithCredentials } from "@/lib/actions/user.actions";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Info } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import React, { startTransition, useActionState } from "react";
+import React, { startTransition, useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
 import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
+import { toast } from "sonner";
 
 const CredentialsSigninForm = () => {
   const [data, action] = useActionState(
@@ -18,6 +19,13 @@ const CredentialsSigninForm = () => {
 
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const success = searchParams.get("success");
+
+  useEffect(() => {
+    if (success === "signup") {
+      toast.success("Sign up successful");
+    }
+  }, [success]);
 
   const SignInButton = () => {
     const { pending } = useFormStatus();
@@ -42,7 +50,21 @@ const CredentialsSigninForm = () => {
   return (
     <form onSubmit={handleSubmit}>
       <input type="hidden" name="callbackUrl" value={callbackUrl || "/"} />
-      <div className="container space-y-6">
+      {success === "signup" && (
+        <div className="flex items-center justify-center gap-1 bg-green-50 border border-green-300 rounded-md p-2">
+          <Info width={16} height={16} className="text-green-500" />
+          <p className="text-green-500 text-sm">
+            Sign up successful! Please sign in to continue.
+          </p>
+        </div>
+      )}
+      {!data.success && data.message && data.message.length > 0 && (
+        <div className="flex items-center justify-center gap-1 bg-red-50 border border-red-300 rounded-md p-2">
+          <Info width={16} height={16} className="text-destructive" />
+          <p className="text-destructive text-sm">{data.message}</p>
+        </div>
+      )}
+      <div className="container space-y-6 mt-4">
         <div>
           <Label htmlFor="email">Email address</Label>
           <Input
@@ -76,12 +98,10 @@ const CredentialsSigninForm = () => {
             </Link>
           </p>
         </div>
+
         <div>
           <SignInButton />
         </div>
-        {!data.success && (
-          <div className="text-center text-destructive">{data.message}</div>
-        )}
         <div className="">
           <p className="text-center text-sm">
             Don&apos;t have an account yet?{" "}

@@ -18,7 +18,7 @@ model User {
   id                  String    @id @default(cuid())
   name                String?
   email               String    @unique
-  emailVerified       DateTime?
+  emailVerified       Boolean   @default(false)
   image               String?
   password            String?
   role                String    @default("user")
@@ -29,8 +29,6 @@ model User {
   dailyGoal           Int?      @default(15) // e.g., time in minutes
   onboarded           Boolean   @default(false)
   wordOfTheDayStopped Boolean   @default(false)
-  resetToken          String?
-  resetTokenExpiry    DateTime?
   createdAt           DateTime  @default(now())
 
   words         Word[]
@@ -44,6 +42,28 @@ model User {
   talks         TalkSession[]
   settings      UserSettings?
   notifications Notification[]
+  verifyEmailTokens VerifyEmailToken[]
+  resetPasswordTokens ResetPasswordToken[]
+}
+
+model VerifyEmailToken {
+  id       String   @id @default(cuid())
+  token    String   @unique
+  expiresAt DateTime
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model ResetPasswordToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
 }
 
 model Account {
