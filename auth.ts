@@ -34,6 +34,10 @@ export const config = {
           }
         }
 
+        if (!user.emailVerified) {
+          throw new Error("Please verify your email");
+        }
+
         return user;
       },
     }),

@@ -1,7 +1,6 @@
 "use server";
 
 import { signIn, signOut } from "@/auth";
-import { AuthError } from "next-auth";
 import {
   onboardingFormSchema,
   signInFormSchema,
@@ -9,20 +8,29 @@ import {
   forgotPasswordFormSchema,
   userSettingsSchema,
   resetPasswordFormSchema,
+  verifyEmailFormSchema,
 } from "../validators/user.validators";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { prisma } from "@/db/prisma";
 import { hashSync } from "bcrypt-ts-edge";
-import z from "zod";
 import { revalidatePath } from "next/cache";
-import { UserLevel, UserSettings } from "@prisma/client";
-import { authenticationAction } from "./_helpers";
+import { User, UserLevel, UserSettings } from "@prisma/client";
+import { authenticationAction, catchAsyncAuthAction } from "./_helpers";
+import { resend } from "../resend";
+import { emailVerificationTemplate } from "../email-templates/email-verification";
+import { redirect } from "next/navigation";
+import {
+  generateResetPasswordToken,
+  generateVerificationToken,
+} from "../utils/generate-token";
+import { resetPasswordTemplate } from "../email-templates/reset-password-template";
+import { createHash } from "crypto";
+import { add } from "date-fns";
 
 export const signInWithCredentials = async (
   prevState: unknown,
   formData: FormData,
-) => {
-  try {
+) =>
+  catchAsyncAuthAction(async () => {
     const user = signInFormSchema.parse({
       email: formData.get("email"),
       password: formData.get("password"),
@@ -34,32 +42,7 @@ export const signInWithCredentials = async (
       success: true,
       message: "Sign in successful",
     };
-  } catch (error) {
-    if (isRedirectError(error)) {
-      throw error;
-    }
-
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return {
-            success: false,
-            message: "Invalid credentials",
-          };
-        default:
-          return {
-            success: false,
-            message: error.cause?.err?.message,
-          };
-      }
-    }
-
-    return {
-      success: false,
-      message: "Invalid credentials",
-    };
-  }
-};
+  });
 
 export const signOutUser = async () => {
   await signOut({ redirectTo: "/sign-in" });
@@ -68,8 +51,8 @@ export const signOutUser = async () => {
 export const signUpWithCredentials = async (
   prevState: unknown,
   formData: FormData,
-) => {
-  try {
+) =>
+  catchAsyncAuthAction(async () => {
     const user = signUpFormSchema.parse({
       email: formData.get("email"),
       name: formData.get("name"),
@@ -84,7 +67,7 @@ export const signUpWithCredentials = async (
       };
     }
 
-    await prisma.user.create({
+    const createdUser = await prisma.user.create({
       data: {
         email: user.email,
         name: user.name,
@@ -92,31 +75,35 @@ export const signUpWithCredentials = async (
       },
     });
 
-    return {
-      success: true,
-      message: "Sign up successful",
-    };
-  } catch (error) {
-    if (error instanceof z.ZodError) {
+    const verificationToken = generateVerificationToken();
+
+    const createdEmailToken = await prisma.verifyEmailToken.create({
+      data: {
+        token: verificationToken.hash,
+        userId: createdUser.id,
+        expiresAt: add(new Date(), {
+          minutes: Number(process.env.EMAIL_TOKEN_EXPIRES_IN || 60),
+        }),
+      },
+    });
+
+    try {
+      await sendEmailVerification(createdUser, verificationToken.token);
+    } catch (error) {
+      console.error(error);
+
+      await prisma.verifyEmailToken.delete({
+        where: { id: createdEmailToken.id },
+      });
+
       return {
         success: false,
-        message: error.issues[0].message,
+        message: "Failed to send verification email. Please try again later.",
       };
     }
 
-    if (error instanceof Error) {
-      return {
-        success: false,
-        message: error.message,
-      };
-    }
-
-    return {
-      success: false,
-      message: "Something went wrong",
-    };
-  }
-};
+    redirect(`/verify-email?email=${createdUser.email}`);
+  });
 
 export const updateUserOnboarding = async (
   prevState: unknown,
@@ -149,88 +136,141 @@ export const updateUserOnboarding = async (
     return { success: true, message: "Welcome!", errors: {} };
   });
 
-export const forgotPassword = async (
-  prevState: unknown,
-  formData: FormData,
-) => {
-  const user = forgotPasswordFormSchema.parse({
-    email: formData.get("email"),
-  });
+export const forgotPassword = async (prevState: unknown, formData: FormData) =>
+  catchAsyncAuthAction(async () => {
+    const user = forgotPasswordFormSchema.parse({
+      email: formData.get("email"),
+    });
 
-  const existingUser = await prisma.user.findUnique({
-    where: { email: user.email },
-  });
+    const existingUser = await prisma.user.findUnique({
+      where: { email: user.email },
+    });
 
-  if (!existingUser) {
-    // Don't reveal if email exists or not for security
+    if (!existingUser) {
+      return {
+        success: false,
+        message: "User doesn't exist!",
+      };
+    }
+
+    const resetToken = generateResetPasswordToken();
+
+    const createdResetToken = await prisma.resetPasswordToken.create({
+      data: {
+        userId: existingUser.id,
+        token: resetToken.hash,
+        expiresAt: add(new Date(), {
+          minutes: Number(process.env.RESET_TOKEN_EXPIRES_IN || 5),
+        }),
+      },
+    });
+
+    try {
+      await sendResetPasswordEmail(existingUser, resetToken.token);
+    } catch (error) {
+      console.error(error);
+
+      await prisma.resetPasswordToken.delete({
+        where: { id: createdResetToken.id },
+      });
+
+      return {
+        success: false,
+        message: "Failed to send reset password email. Please try again later.",
+      };
+    }
+
     return {
       success: true,
       message:
         "If an account with that email exists, we've sent you a password reset link.",
     };
-  }
-
-  // Generate a reset token (you might want to use a more secure method)
-  const resetToken = crypto.randomUUID();
-  const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour
-
-  await prisma.user.update({
-    where: { id: existingUser.id },
-    data: {
-      resetToken,
-      resetTokenExpiry,
-    },
   });
 
-  // Here you would typically send an email with the reset link
-  // For now, we'll just return success
-  console.log(`Reset link: /reset-password?token=${resetToken}`);
+export const verifyEmail = async (prevState: unknown, formData: FormData) =>
+  catchAsyncAuthAction(async () => {
+    const { email, token } = verifyEmailFormSchema.parse({
+      email: formData.get("email"),
+      token: formData.get("token"),
+    });
 
-  return {
-    success: true,
-    message:
-      "If an account with that email exists, we've sent you a password reset link.",
-  };
-};
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email },
+    });
 
-export async function resetPassword(prevState: unknown, formData: FormData) {
-  const user = resetPasswordFormSchema.parse({
-    password: formData.get("password"),
-    confirmPassword: formData.get("confirmPassword"),
-    token: formData.get("token"),
-  });
+    if (!existingUser) {
+      return {
+        success: false,
+        message: "User not found",
+      };
+    }
+    if (existingUser.emailVerified) {
+      return {
+        success: false,
+        message: "Email already verified",
+      };
+    }
 
-  const existingUser = await prisma.user.findFirst({
-    where: {
-      resetToken: user.token,
-      resetTokenExpiry: {
-        gt: new Date(),
+    const verificationToken = await prisma.verifyEmailToken.findUnique({
+      where: {
+        token: createHash("sha256").update(token).digest("hex"),
       },
-    },
-  });
+    });
 
-  if (!existingUser) {
+    if (!verificationToken) {
+      return {
+        success: false,
+        message: "Invalid or expired verification token",
+      };
+    }
+
+    await prisma.user.update({
+      where: { id: existingUser.id },
+      data: {
+        emailVerified: true,
+      },
+    });
+
     return {
-      success: false,
-      message: "Invalid or expired reset token",
+      success: true,
+      message: "Email verified successfully",
     };
-  }
-
-  await prisma.user.update({
-    where: { id: existingUser.id },
-    data: {
-      password: hashSync(user.password),
-      resetToken: null,
-      resetTokenExpiry: null,
-    },
   });
 
-  return {
-    success: true,
-    message:
-      "Password reset successfully. You can now sign in with your new password.",
-  };
-}
+export const resetPassword = async (prevState: unknown, formData: FormData) =>
+  catchAsyncAuthAction(async () => {
+    const { password, token } = resetPasswordFormSchema.parse({
+      password: formData.get("password"),
+      confirmPassword: formData.get("confirmPassword"),
+      token: formData.get("token"),
+    });
+
+    const existingToken = await prisma.resetPasswordToken.findUnique({
+      where: {
+        token: createHash("sha256").update(token).digest("hex"),
+      },
+    });
+
+    if (!existingToken || existingToken.expiresAt < new Date()) {
+      return {
+        success: false,
+        message: "Invalid or expired reset token",
+      };
+    }
+
+    await prisma.user.update({
+      where: { id: existingToken.userId },
+      data: {
+        password: hashSync(password),
+      },
+    });
+
+    return {
+      success: true,
+      message:
+        "Password reset successfully. You can now sign in with your new password.",
+    };
+  });
 
 export const stopWordOfTheDay = async () =>
   authenticationAction(async (userId) => {
@@ -344,3 +384,57 @@ export const updateUserSettingsByField = async (
     });
     revalidatePath("/settings");
   }, null);
+
+export const sendEmailVerification = async (user: User, token: string) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `Ancore <${process.env.RESEND_FROM_EMAIL}>`,
+      to: user.email,
+      subject: `Verify your email address, ${user.name || "Learner"}!`,
+      html: emailVerificationTemplate({
+        userName: user.name || "Learner",
+        email: user.email,
+        token: token,
+      }),
+    });
+
+    if (error) {
+      console.error(`Resend API error for ${user.email}:`, error);
+      throw new Error(`Resend API error for ${user.email}`);
+    } else if (data) {
+      console.log(`Email sent to ${user.email}:`, data.id);
+    }
+  } catch (err) {
+    console.error(err);
+    throw new Error(
+      `Network error sending email verification to ${user.email}:`,
+    );
+  }
+};
+
+export const sendResetPasswordEmail = async (user: User, token: string) => {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: `Ancore <${process.env.RESEND_FROM_EMAIL}>`,
+      to: user.email,
+      subject: "Reset your password",
+      html: resetPasswordTemplate({
+        userName: user.name || "Learner",
+        email: user.email,
+        resetPasswordUrl: `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`,
+        tokenExpiresIn: Number(process.env.RESET_TOKEN_EXPIRES_IN || 5),
+      }),
+    });
+
+    if (error) {
+      console.error(`Resend API error for ${user.email}:`, error);
+      throw new Error(`Resend API error for ${user.email}`);
+    } else if (data) {
+      console.log(`Email sent to ${user.email}:`, data.id);
+    }
+  } catch (err) {
+    throw new Error(
+      `Network error sending reset password email to ${user.email}:`,
+    );
+  }
+};

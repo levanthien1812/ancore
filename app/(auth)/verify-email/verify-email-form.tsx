@@ -2,29 +2,22 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signUpWithCredentials } from "@/lib/actions/user.actions";
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import React, { startTransition, useActionState } from "react";
-import { useFormStatus } from "react-dom";
+import { verifyEmail } from "@/lib/actions/user.actions";
 import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 import { Info } from "lucide-react";
+import Link from "next/link";
+import { useActionState, startTransition } from "react";
+import { useFormStatus } from "react-dom";
 
-const CredentialsSignupForm = () => {
-  const [data, action] = useActionState(
-    signUpWithCredentials,
-    INITIAL_ACTION_STATE,
-  );
+const VerifyEmailForm = ({ email }: { email: string }) => {
+  const [data, action] = useActionState(verifyEmail, INITIAL_ACTION_STATE);
 
-  const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
-
-  const SignupButton = () => {
+  const VerifyButton = () => {
     const { pending } = useFormStatus();
 
     return (
       <Button type="submit" className="w-full" isLoading={pending}>
-        {pending ? "Signing up..." : "Sign up"}
+        {pending ? "Verifying..." : "Verify email"}
       </Button>
     );
   };
@@ -38,10 +31,20 @@ const CredentialsSignupForm = () => {
     });
   };
 
+  if (data.success) {
+    setTimeout(() => {
+      window.location.href = "/sign-in";
+    }, 1000);
+  }
+
   return (
     <form onSubmit={handleSubmit}>
-      <input type="hidden" name="callbackUrl" value={callbackUrl || "/"} />
-
+      {data.success && data.message && data.message.length > 0 && (
+        <div className="flex items-center justify-center gap-1 bg-green-50 border border-green-300 rounded-md p-2">
+          <Info width={16} height={16} className="text-green-500" />
+          <p className="text-green-500 text-sm">{data.message}</p>
+        </div>
+      )}
       {!data.success && data.message && data.message.length > 0 && (
         <div className="flex items-center justify-center gap-1 bg-red-50 border border-red-300 rounded-md p-2">
           <Info width={16} height={16} className="text-destructive" />
@@ -49,17 +52,6 @@ const CredentialsSignupForm = () => {
         </div>
       )}
       <div className="container space-y-6 mt-4">
-        <div>
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            name="name"
-            type="text"
-            required
-            autoComplete="name"
-            className="mt-1"
-          />
-        </div>
         <div>
           <Label htmlFor="email">Email address</Label>
           <Input
@@ -69,40 +61,43 @@ const CredentialsSignupForm = () => {
             required
             autoComplete="email"
             className="mt-1"
+            defaultValue={email}
           />
         </div>
         <div>
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="token">Verification token</Label>
           <Input
-            id="password"
-            name="password"
-            type="password"
+            id="token"
+            name="token"
+            type="token"
             required
-            autoComplete="password"
+            autoComplete="token"
             className="mt-1"
           />
         </div>
-        <div>
-          <Label htmlFor="confirm-password">Confirm Password</Label>
-          <Input
-            id="confirm-password"
-            name="confirm-password"
-            type="password"
-            required
-            autoComplete="confirm-password"
-            className="mt-1"
-          />
+        <div className="">
+          <p className="text-end text-sm">
+            <Button
+              variant="link"
+              type="button"
+              onClick={() => {}}
+              className="text-primary hover:underline hover:text-primary-2"
+            >
+              Resend verification email
+            </Button>
+          </p>
         </div>
+
         <div>
-          <SignupButton />
+          <VerifyButton />
         </div>
         <div className="">
           <p className="text-center text-sm">
-            Already have an account?{" "}
+            Already verified your email?{" "}
             <Link
               href={"/sign-in"}
               target="_self"
-              className="link hover:underline hover:text-primary-2"
+              className="text-primary hover:underline hover:text-primary-2"
             >
               Sign in
             </Link>
@@ -113,4 +108,4 @@ const CredentialsSignupForm = () => {
   );
 };
 
-export default CredentialsSignupForm;
+export default VerifyEmailForm;

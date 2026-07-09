@@ -2,6 +2,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/db/prisma";
 import { UserSettings } from "@prisma/client";
 import { cache } from "react";
+import z from "zod";
+import { AuthError } from "next-auth";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 /**
  * Memoizes the database query for user settings for the duration of a single request.
@@ -62,3 +65,49 @@ export async function authenticateCronJobs(request: Request) {
     });
   }
 }
+
+export const catchAsyncAuthAction = async <T>(
+  fn: () => Promise<T>,
+): Promise<T | { success: false; message: string }> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (isRedirectError(error)) {
+      throw error;
+    }
+
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return {
+            success: false,
+            message: "Invalid credentials",
+          };
+        default:
+          return {
+            success: false,
+            message: error.cause?.err?.message || "An error occurred during authentication",
+          };
+      }
+    }
+
+    if (error instanceof z.ZodError) {
+      return {
+        success: false,
+        message: error.issues[0].message,
+      };
+    }
+
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message,
+      };
+    }
+
+    return {
+      success: false,
+      message: "Something went wrong",
+    };
+  }
+};

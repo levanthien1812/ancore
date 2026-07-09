@@ -7,6 +7,7 @@ import Link from "next/link";
 import React, { startTransition, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
+import { Info } from "lucide-react";
 
 const ForgotPasswordForm = () => {
   const [data, action] = useActionState(forgotPassword, INITIAL_ACTION_STATE);
@@ -33,6 +34,12 @@ const ForgotPasswordForm = () => {
   return (
     <form onSubmit={handleSubmit}>
       <div className="container space-y-6">
+        {data.success && data.message && data.message.length > 0 && (
+          <div className="flex items-center justify-center gap-1 bg-green-50 border border-green-300 rounded-md p-2">
+            <Info width={16} height={16} className="text-green-500" />
+            <p className="text-green-500 text-sm">{data.message}</p>
+          </div>
+        )}
         <div>
           <Label htmlFor="email">Email address</Label>
           <Input
@@ -47,13 +54,6 @@ const ForgotPasswordForm = () => {
         <div>
           <ForgotPasswordButton />
         </div>
-        {data.message && (
-          <div
-            className={`text-center ${data.success ? "text-green-600" : "text-destructive"}`}
-          >
-            {data.message}
-          </div>
-        )}
         <div className="">
           <p className="text-center text-sm">
             Remember your password?{" "}

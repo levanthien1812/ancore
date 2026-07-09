@@ -5,7 +5,6 @@ import {
   QuizResultMode,
   ReviewFrequency,
   SpacedRepetitionAlgorithm,
-  UserLevel,
 } from "@prisma/client";
 import z from "zod";
 import {
@@ -40,6 +39,11 @@ export const signUpFormSchema = z
     message: "Passwords do not match",
     path: ["confirmPassword"],
   });
+
+export const verifyEmailFormSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  token: z.string().min(1, "Verification token is required"),
+});
 
 export const forgotPasswordFormSchema = z.object({
   email: z.string().email("Invalid email address"),
