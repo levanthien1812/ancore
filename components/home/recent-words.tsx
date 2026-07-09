@@ -27,6 +27,8 @@ import { PopoverContent } from "@radix-ui/react-popover";
 import WordDetail from "../word-card/word-detail";
 import MotionLightBand from "../shared/motion-light-band";
 import { REFETCH_NOTABLE_WORDS_INTERVAL } from "@/lib/constants/constant";
+import AddOrEditWord from "../add-word/add-word";
+import { Separator } from "../ui/separator";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
@@ -86,73 +88,93 @@ const RecentWords = () => {
           <RefreshCcw className="text-primary" height={16} />
         </button>
       </div>
-      <div className="border border-primary rounded-xl">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-b border-primary">
-              <TableHead className="w-[200px] px-4">Word</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Last review</TableHead>
-              <TableHead></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {recentWordsQuery.isFetching ? (
-              <RecentWordsLoadingSkeleton />
-            ) : (
-              words.map((word, index) => (
-                <TableRow key={word.id} className="border-b border-primary">
-                  <TableCell
-                    className={`font-bold text-lg sm:text-xl px-2 sm:px-4 ${
-                      index % 2 === 0 ? "text-primary-2" : "text-primary"
-                    }`}
-                  >
-                    {shorten(word.word, 20)}
-                  </TableCell>
-                  <TableCell>
-                    <WordMasteryLevel
-                      level={word.masteryLevel as MasteryLevel}
-                      wordId={word.id}
-                    />
-                  </TableCell>
-                  <TableCell className="text-xs text-gray-600">
-                    {format(word.updatedAt, "dd/MM/yyyy")}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size={"sm"}
-                      variant={"link"}
-                      className="bg-transparent py-1 h-fit"
-                      onClick={() => setSelectedIndex(index)}
-                    >
-                      Detail
-                    </Button>
-                  </TableCell>
+      {recentWordsQuery.isFetching && <RecentWordsLoadingSkeleton />}
+      {!recentWordsQuery.isFetching && recentWordsQuery.data.length === 0 && (
+        <div className="flex flex-col gap-2 items-center justify-center">
+          <p className="text-center text-lg text-muted-foreground">
+            You have no words yet. Start by adding some!
+          </p>
+          <AddOrEditWord />
+        </div>
+      )}
+      {!recentWordsQuery.isFetching && recentWordsQuery.data.length > 0 && (
+        <>
+          <div className="border border-primary rounded-xl">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-primary">
+                  <TableHead className="w-[200px] px-4">Word</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last review</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex justify-end mt-2">
-        <Link className="hover:underline text-primary" href={"/words"}>
-          👉 Go to word list
-        </Link>
-      </div>
-      <WordDialog
-        word={selectedIndex !== null ? words[selectedIndex] : null}
-        selectedIndex={selectedIndex}
-        setSelectedIndex={setSelectedIndex}
-        totalWord={words.length}
-      />
-      <div className="">
+              </TableHeader>
+              <TableBody>
+                {" "}
+                {words.map((word, index) => (
+                  <TableRow key={word.id} className="border-b border-primary">
+                    <TableCell
+                      className={`font-bold text-lg sm:text-xl px-2 sm:px-4 ${
+                        index % 2 === 0 ? "text-primary-2" : "text-primary"
+                      }`}
+                    >
+                      {shorten(word.word, 20)}
+                    </TableCell>
+                    <TableCell>
+                      <WordMasteryLevel
+                        level={word.masteryLevel as MasteryLevel}
+                        wordId={word.id}
+                      />
+                    </TableCell>
+                    <TableCell className="text-xs text-gray-600">
+                      {format(word.updatedAt, "dd/MM/yyyy")}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        size={"sm"}
+                        variant={"link"}
+                        className="bg-transparent py-1 h-fit"
+                        onClick={() => setSelectedIndex(index)}
+                      >
+                        Detail
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="flex justify-end mt-2">
+            <Link className="hover:underline text-primary" href={"/words"}>
+              👉 Go to word list
+            </Link>
+          </div>
+          <WordDialog
+            word={selectedIndex !== null ? words[selectedIndex] : null}
+            selectedIndex={selectedIndex}
+            setSelectedIndex={setSelectedIndex}
+            totalWord={words.length}
+          />
+        </>
+      )}
+
+      <Separator className="my-2" />
+
+      <div>
         <span className="text-xl sm:text-2xl font-bold text-primary">
           ⭐ Notable words!
         </span>
 
-        {notableWordsQuery.isFetching ? (
-          <NotableWordsLoadingSkeleton />
-        ) : (
+        {notableWordsQuery.isFetching && <NotableWordsLoadingSkeleton />}
+        {!notableWordsQuery.isFetching && notableWords.length === 0 && (
+          <div className="flex flex-col gap-2 items-center justify-center">
+            <p className="text-center text-lg text-muted-foreground">
+              You have no notable words yet. Start by adding some!
+            </p>
+            <AddOrEditWord />
+          </div>
+        )}
+        {!notableWordsQuery.isFetching && notableWords.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1 ">
             {notableWords.map((w, index) => {
               return (
@@ -190,21 +212,23 @@ const RecentWords = () => {
 };
 
 const RecentWordsLoadingSkeleton = () => (
-  <>
-    {Array.from({ length: 15 }).map((_, index) => (
-      <TableRow key={index} className="border-b border-primary">
-        <TableCell className="text-center">
-          <Skeleton className="h-6 w-full" />
-        </TableCell>
-        <TableCell className="text-center">
-          <Skeleton className="h-6 w-full" />
-        </TableCell>
-        <TableCell className="text-center">
-          <Skeleton className="h-6 w-full" />
-        </TableCell>
-      </TableRow>
-    ))}
-  </>
+  <Table>
+    <TableBody>
+      {Array.from({ length: 15 }).map((_, index) => (
+        <TableRow key={index} className="">
+          <TableCell className="text-center">
+            <Skeleton className="h-6 w-full" />
+          </TableCell>
+          <TableCell className="text-center">
+            <Skeleton className="h-6 w-full" />
+          </TableCell>
+          <TableCell className="text-center">
+            <Skeleton className="h-6 w-full" />
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  </Table>
 );
 
 const NotableWordsLoadingSkeleton = () => {

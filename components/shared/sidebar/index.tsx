@@ -22,6 +22,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { getWordsToReviewCount } from "@/lib/actions/word.actions";
 
 type SidebarItem = {
   title: string;
@@ -119,11 +121,14 @@ const Sidebar = () => {
   const [popoverSide, setPopoverSide] = useState<"top" | "right">("right");
   const pathname = usePathname();
 
-  // Simulate having a review session (in a real app, this would come from data)
-  const [hasWordReview, setHasWordReview] = useState(true);
-  // State to track if the notification has been dismissed by the user
   const [isReviewNotificationDismissed, setIsReviewNotificationDismissed] =
     useState(false);
+
+  const { data: wordsToReview } = useQuery({
+    queryKey: ["get-word-counts"],
+    queryFn: () => getWordsToReviewCount(),
+    initialData: 0,
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -163,7 +168,7 @@ const Sidebar = () => {
         title: "Review",
         icon: <Star width={22} />,
         path: "/review",
-        showPopover: hasWordReview && !isReviewNotificationDismissed,
+        showPopover: wordsToReview > 0 && !isReviewNotificationDismissed,
         onDismiss: handleDismissNotification,
         popoverContent: "You have a review session",
       },
@@ -183,7 +188,7 @@ const Sidebar = () => {
         path: "/talk",
       },
     ];
-  }, [hasWordReview, isReviewNotificationDismissed]);
+  }, [wordsToReview, isReviewNotificationDismissed]);
 
   return (
     <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 md:ps-0 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
