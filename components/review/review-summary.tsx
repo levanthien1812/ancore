@@ -6,6 +6,7 @@ import Congrats from "@/public/images/congrats.png";
 import Image from "next/image";
 import ReviewSummaryDetail from "./review-summary-detail";
 import { StudySessionWithWordReviews } from "@/lib/type";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 const ReviewSummary = ({
   studySession,
@@ -16,6 +17,20 @@ const ReviewSummary = ({
 }) => {
   return (
     <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex justify-between w-full">
+        <Link href="/review">
+          <Button variant="link" size="sm">
+            <ArrowLeft width={16} />
+            New session
+          </Button>
+        </Link>
+        <Link href="/review?tab=history">
+          <Button variant="link" size="sm">
+            History
+            <ArrowRight width={16} />
+          </Button>
+        </Link>
+      </div>
       <Card className="w-full h-full">
         <CardHeader>
           <CardTitle className="text-center">Session Complete!</CardTitle>

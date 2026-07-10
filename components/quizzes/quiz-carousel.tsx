@@ -112,10 +112,6 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
       .map((a) => ({
         ...a,
         userAnswer: null,
-        quizQuestion: {
-          ...a.quizQuestion,
-          answer: null,
-        },
       })) ?? [];
 
   const handleAcceptRetry = () => {
