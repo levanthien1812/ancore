@@ -1,11 +1,10 @@
 "use client";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import Link from "next/link";
 import Image from "next/image";
 import QuizSummaryDetail from "./quiz-summary-detail";
 import { QuizWithAnswers } from "@/lib/type";
-import { List, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, List, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { retryQuizSession } from "@/lib/actions/quiz.actions";
 import { useTransition } from "react";
@@ -53,7 +52,23 @@ const QuizSummary = ({ quiz }: { quiz: QuizWithAnswers }) => {
 
   return (
     <div className="py-4 px-8 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] no-scrollbar overflow-y-auto">
-      <p className="text-center text-xl">Quiz Complete!</p>
+      <div className="flex justify-between">
+        <Link href="/quizzes">
+          <Button variant="link" size="sm">
+            <ArrowLeft width={16} />
+            New quiz
+          </Button>
+        </Link>
+        <Link href="/quizzes?tab=history">
+          <Button variant="link" size="sm">
+            History
+            <ArrowRight width={16} />
+          </Button>
+        </Link>
+      </div>
+      <p className="text-center text-2xl bg-primary-2 text-white rounded-lg p-2 w-fit px-4 mx-auto">
+        Quiz Complete!
+      </p>
       <div className="space-y-4 mt-2">
         <div className="flex flex-col justify-center items-center gap-2">
           <Image src={image} alt={level} width={160} />
