@@ -10,7 +10,6 @@ import {
 } from "../ui/dialog";
 import { WordOfTheDay } from "../home/word-of-the-day";
 import { PlusIcon } from "lucide-react";
-import { MotionButton } from "../shared/motion-button";
 import { Button } from "../ui/button";
 
 type AddOrEditWordProps = {
@@ -48,7 +47,7 @@ const AddOrEditWord = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {triggerButton !== null && (
+      {triggerButton !== null && !initialWord && (
         <DialogTrigger asChild>
           {triggerButton || defaultTriggerBtn}
         </DialogTrigger>

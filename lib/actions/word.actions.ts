@@ -752,3 +752,10 @@ export const getWordsAddedToday = async () =>
 
     return count;
   });
+
+export const getCurrentUser = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+  return user;
+};

@@ -16,12 +16,13 @@ import { User } from "next-auth";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import Settings from "../../settings/settings";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 
 const UserPanel = ({ user }: { user?: User }) => {
   const { data: session } = useSession();
   const currentUser = user || session?.user;
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   if (!currentUser) {
     return (
@@ -84,8 +85,15 @@ const UserPanel = ({ user }: { user?: User }) => {
               e.preventDefault();
             }}
           >
-            <form action={signOutUser} className="w-full">
-              <Button type="submit" className="w-full">
+            <form
+              action={() => {
+                startTransition(async () => {
+                  await signOutUser();
+                });
+              }}
+              className="w-full"
+            >
+              <Button type="submit" className="w-full" isLoading={isPending}>
                 Sign out
               </Button>
             </form>
