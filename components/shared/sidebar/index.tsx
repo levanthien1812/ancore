@@ -168,7 +168,10 @@ const Sidebar = () => {
         title: "Review",
         icon: <Star width={22} />,
         path: "/review",
-        showPopover: wordsToReview > 0 && !isReviewNotificationDismissed,
+        showPopover:
+          pathname !== "/review" &&
+          wordsToReview > 0 &&
+          !isReviewNotificationDismissed,
         onDismiss: handleDismissNotification,
         popoverContent: "You have a review session",
       },
@@ -188,7 +191,7 @@ const Sidebar = () => {
         path: "/talk",
       },
     ];
-  }, [wordsToReview, isReviewNotificationDismissed]);
+  }, [wordsToReview, isReviewNotificationDismissed, pathname]);
 
   return (
     <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 md:ps-0 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">

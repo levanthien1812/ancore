@@ -1,6 +1,6 @@
 "use client";
 import { getNotableWords, getRecentWords } from "@/lib/actions/word.actions";
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -110,7 +110,6 @@ const RecentWords = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {" "}
                 {words.map((word, index) => (
                   <TableRow key={word.id} className="border-b border-primary">
                     <TableCell
@@ -187,7 +186,7 @@ const RecentWords = () => {
                           MasteryLevelColorCode[w.masteryLevel].primary,
                         backgroundColor: `${MasteryLevelColorCode[w.masteryLevel].primary}20`,
                       }}
-                      onClick={(e) => {
+                      onClick={() => {
                         handlePlayAudio(w.word);
                       }}
                     >

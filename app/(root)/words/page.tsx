@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { useLayout } from "@/components/layout/layout-context";
 import { DEFAULT_WORDS_PER_FETCH } from "@/lib/constants/constant";
 import { useState } from "react";
+import WordSuggestion from "@/components/word-list/word-suggestion";
+import AddOrEditWord from "@/components/add-word/add-word";
 
 const WordsPage = () => {
   const {
@@ -118,6 +120,8 @@ const WordsPage = () => {
             Try adding some new words or adjusting your search/filter to find
             what you&apos;re looking for.
           </p>
+          <AddOrEditWord />
+          <WordSuggestion />
         </div>
       </div>
     );
