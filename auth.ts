@@ -1,6 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import NextAuth, { NextAuthConfig } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./db/prisma";
 import AuthConfig from "./auth.config";
 import { compareSync } from "bcrypt-ts-edge";
@@ -46,7 +45,25 @@ export const config = {
     strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 dasys
   },
-  adapter: PrismaAdapter(prisma),
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.level = user.level;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id;
+        session.user.level = token.level;
+      }
+
+      return session;
+    },
+  },
 } satisfies NextAuthConfig;
 
 export const { handlers, auth, signIn, signOut } = NextAuth(config);
