@@ -9,9 +9,10 @@ import {
   userSettingsSchema,
   resetPasswordFormSchema,
   verifyEmailFormSchema,
+  userProfileSchema,
 } from "../validators/user.validators";
 import { prisma } from "@/db/prisma";
-import { hashSync } from "bcrypt-ts-edge";
+import { compare, hashSync } from "bcrypt-ts-edge";
 import { revalidatePath } from "next/cache";
 import { User, UserLevel, UserSettings } from "@prisma/client";
 import { authenticationAction, catchAsyncAuthAction } from "./_helpers";
@@ -26,6 +27,7 @@ import { resetPasswordTemplate } from "../email-templates/reset-password-templat
 import { createHash } from "crypto";
 import { add } from "date-fns";
 import { INITIAL_USER_SETTINGS } from "../constants/initial-values";
+import { UserProfile } from "../type";
 
 export const signInWithCredentials = async (
   prevState: unknown,
@@ -442,19 +444,6 @@ export const saveUserSettings = async (
     return { success: true, message: "Settings saved successfully." };
   });
 
-export const getUserSettings = async () =>
-  authenticationAction(async (userId) => {
-    const settings = await prisma.userSettings.findUnique({
-      where: { userId: userId },
-    });
-
-    if (!settings) {
-      return null;
-    }
-
-    return settings;
-  }, null);
-
 export const updateUserSettingsByField = async (
   userId: string,
   field: keyof UserSettings,
@@ -523,3 +512,106 @@ export const sendResetPasswordEmail = async (user: User, token: string) => {
     );
   }
 };
+
+export const saveProfile = async (prevState: unknown, formData: FormData) =>
+  authenticationAction(async (userId) => {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const profile = {
+      name: formData.get("name"),
+      image: formData.get("image"),
+      email: formData.get("email"),
+      level: formData.get("level"),
+      topics: formData.get("topics"),
+      nativeLanguage: formData.get("nativeLanguage"),
+      dailyGoal: parseInt(formData.get("dailyGoal") as string),
+      password: formData.get("password"),
+      newPassword: formData.get("newPassword"),
+      confirmNewPassword: formData.get("confirmNewPassword"),
+    };
+
+    const validatedFields = userProfileSchema.safeParse(profile);
+    if (!validatedFields.success) {
+      return {
+        success: false,
+        message: "Validation failed.",
+        errors: validatedFields.error.flatten().fieldErrors,
+      };
+    }
+
+    const { password, newPassword, confirmNewPassword, ...rest } =
+      validatedFields.data;
+
+    if (newPassword) {
+      if (!password) {
+        return {
+          success: false,
+          message: "Please enter current password.",
+        };
+      }
+      const isPasswordValid = await checkCurrentPassword(password);
+      if (!isPasswordValid) {
+        return {
+          success: false,
+          message: "Invalid current password.",
+        };
+      }
+
+      if (newPassword !== confirmNewPassword) {
+        return {
+          success: false,
+          message: "Passwords do not match.",
+        };
+      }
+    }
+
+    const isEmailChanged = rest.email !== user.email;
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...rest,
+        emailVerified: isEmailChanged ? false : user.emailVerified,
+        ...(newPassword ? { password: hashSync(newPassword) } : {}),
+      },
+    });
+    revalidatePath("/profile");
+    return { success: true, message: "Profile saved successfully." };
+  });
+
+export const getUser = async () =>
+  authenticationAction(async (userId) => {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        settings: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  });
+
+export const checkCurrentPassword = async (password: string) =>
+  authenticationAction(async (userId) => {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const isPasswordValid =
+      user.password && (await compare(password, user.password));
+
+    return { isPasswordValid };
+  });

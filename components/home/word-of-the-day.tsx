@@ -28,7 +28,7 @@ export interface WordOfTheDay {
 
 const WordOfTheDay = () => {
   const { status } = useSession();
-  const { settings, isLoadingSettings } = useLayout();
+  const { settings, isLoadingUser } = useLayout();
   const queryClient = useQueryClient();
   const [wordOfTheDay, setWordOfTheDay] = useState<WordOfTheDay | null>(null);
   const [isLoadingWord, setIsLoadingWord] = useState(true);
@@ -104,7 +104,7 @@ const WordOfTheDay = () => {
   }, [queryClient]);
 
   // 1. Handle Session Loading
-  if (status === "loading" || isLoadingSettings) {
+  if (status === "loading" || isLoadingUser) {
     return <WordOfTheDaySkeleton />;
   }
 

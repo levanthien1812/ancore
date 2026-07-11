@@ -5,6 +5,7 @@ import {
   QuizResultMode,
   ReviewFrequency,
   SpacedRepetitionAlgorithm,
+  UserLevel,
 } from "@prisma/client";
 import z from "zod";
 import {
@@ -117,3 +118,24 @@ export const userSettingsSchema = z.object({
   wordOfTheDayEnabled: z.boolean(),
   timezone: z.string().default("UTC"),
 });
+
+export const userProfileSchema = z
+  .object({
+    name: z.string().min(1, "Name is required"),
+    image: z.string().optional(),
+    email: z.string().email("Invalid email address"),
+    level: z.nativeEnum(UserLevel),
+    topics: z.string().min(1, "Please enter your topics.").optional(),
+    nativeLanguage: z
+      .string()
+      .min(1, "Please select your native language.")
+      .optional(),
+    dailyGoal: z.number().min(1, "Please enter your daily goal.").optional(),
+    password: z.string().optional().nullable(),
+    newPassword: z.string().optional().nullable(),
+    confirmNewPassword: z.string().optional().nullable(),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Passwords do not match",
+    path: ["confirmNewPassword"],
+  });

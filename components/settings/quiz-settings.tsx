@@ -20,13 +20,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { MasteryLevel, QuestionType, QuizResultMode } from "@prisma/client";
-import { REQUIRED_QUESTION_TYPES, REQUIRED_QUIZ_MASTERY_LEVELS } from "@/lib/constants/constant";
+import {
+  REQUIRED_QUESTION_TYPES,
+  REQUIRED_QUIZ_MASTERY_LEVELS,
+} from "@/lib/constants/constant";
 
 const QuizSettings = () => {
   const { register, control } = useFormContext();
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Quiz Settings</CardTitle>
         <CardDescription>
@@ -118,7 +121,6 @@ const QuizSettings = () => {
             ))}
           </div>
         </div>
-
 
         {/* Time Limit Per Question */}
         <div className="grid gap-1.5">
@@ -215,7 +217,8 @@ const QuizSettings = () => {
               Include First Letter in Hint
             </Label>
             <p className="text-xs text-muted-foreground">
-              For typing questions, include the first letter of the word as part of the hint.
+              For typing questions, include the first letter of the word as part
+              of the hint.
             </p>
           </div>
           <Controller

@@ -37,7 +37,7 @@ const ReviewSettings = () => {
   const stepSeconds = REMINDER_INTERVAL * 60;
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Review Settings</CardTitle>
         <CardDescription>

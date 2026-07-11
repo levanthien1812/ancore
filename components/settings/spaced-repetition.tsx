@@ -35,7 +35,7 @@ const SpacedRepetition = () => {
   }, [reviewAlgorithm, setValue]);
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Spaced Repetition Settings</CardTitle>
         <CardDescription>

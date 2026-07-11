@@ -12,7 +12,6 @@ import Link from "next/link";
 import { useActionState, startTransition, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import WordDetail from "@/components/word-card/word-detail";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
 
