@@ -1,8 +1,8 @@
 "use client";
 
 import { getNotifications } from "@/lib/actions/notification.actions";
-import { getUserSettings } from "@/lib/actions/user.actions";
-import { Notification, UserSettings } from "@prisma/client";
+import { getUser } from "@/lib/actions/user.actions";
+import { Notification, User, UserSettings } from "@prisma/client";
 import { useQuery } from "@tanstack/react-query";
 import React, { createContext, useContext, useMemo, useState } from "react";
 
@@ -13,8 +13,9 @@ type LayoutContextValue = {
   setMode: (mode: LayoutMode) => void;
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  user: User | null;
   settings: UserSettings | null;
-  isLoadingSettings: boolean;
+  isLoadingUser: boolean;
   notifications: Notification[] | null;
   setNotifications: React.Dispatch<React.SetStateAction<Notification[] | null>>;
   isLoadingNotifications: boolean;
@@ -29,12 +30,13 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
     null,
   );
 
-  const { data: userSettings, isLoading: isLoadingUserSettings } = useQuery({
-    queryKey: ["user-settings"],
+  const { data: user, isLoading: isLoadingUser } = useQuery({
+    queryKey: ["get-user"],
     queryFn: async () => {
-      const settings = await getUserSettings();
-      return settings;
+      const user = await getUser();
+      return user;
     },
+    initialData: null,
   });
 
   // get notifications
@@ -53,8 +55,9 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
       setMode,
       sidebarOpen,
       setSidebarOpen,
-      settings: userSettings || null,
-      isLoadingSettings: isLoadingUserSettings,
+      user: user,
+      settings: user?.settings || null,
+      isLoadingUser: isLoadingUser,
       notifications: notifications || null,
       setNotifications,
       isLoadingNotifications: isLoadingNotifications,
@@ -62,8 +65,8 @@ export const LayoutProvider = ({ children }: { children: React.ReactNode }) => {
     [
       mode,
       sidebarOpen,
-      userSettings,
-      isLoadingUserSettings,
+      user,
+      isLoadingUser,
       notifications,
       isLoadingNotifications,
       setNotifications,

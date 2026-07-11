@@ -15,7 +15,7 @@ const LearningPreferences = () => {
   const { register, control } = useFormContext();
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Learning Preferences</CardTitle>
         <CardDescription>

@@ -9,7 +9,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import { Settings2, UserIcon } from "lucide-react";
+import { Settings2, User as UserIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { User } from "next-auth";
@@ -17,11 +17,13 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import Settings from "../../settings/settings";
 import { useState, useTransition } from "react";
+import Profile from "@/components/profile.tsx/profile";
 
 const UserPanel = ({ user }: { user?: User }) => {
   const { data: session } = useSession();
   const currentUser = user || session?.user;
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   if (!currentUser) {
@@ -71,6 +73,16 @@ const UserPanel = ({ user }: { user?: User }) => {
             <Button
               variant={"secondary"}
               className="w-full"
+              onClick={() => setIsProfileOpen(true)}
+            >
+              <UserIcon />
+              Profile
+            </Button>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Button
+              variant={"secondary"}
+              className="w-full"
               onClick={() => setIsSettingsOpen(true)}
             >
               <Settings2 />
@@ -106,6 +118,14 @@ const UserPanel = ({ user }: { user?: User }) => {
           <DialogContent className="md:min-w-[800px]">
             <DialogTitle>Settings</DialogTitle>
             <Settings />
+          </DialogContent>
+        </Dialog>
+      )}
+      {isProfileOpen && (
+        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+          <DialogContent className="md:min-w-[800px]">
+            <DialogTitle>Profile</DialogTitle>
+            <Profile />
           </DialogContent>
         </Dialog>
       )}

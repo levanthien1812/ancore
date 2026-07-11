@@ -23,7 +23,7 @@ const Notifications = () => {
   const { control, register } = useFormContext();
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader>
         <CardTitle>Notification Settings</CardTitle>
         <CardDescription>

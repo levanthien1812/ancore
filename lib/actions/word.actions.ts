@@ -657,7 +657,6 @@ export const fillWithAI = async (
   },
 ) =>
   authenticationAction(async (userId) => {
-    console.log(additionalInfo);
     if (!additionalInfo || Object.keys(additionalInfo).length === 0) {
       const existingWord = await prisma.aIWord.findFirst({
         where: {
@@ -707,12 +706,12 @@ export const fillWithAI = async (
   });
 
 export const getWordOfTheDay = async () =>
-  authenticationAction(async (userId) => {
+  settingsAction(async (userId, settings) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
     });
 
-    if (!user || user.wordOfTheDayStopped) return null;
+    if (!user || !settings.wordOfTheDayEnabled) return null;
 
     const prompt = buildWordOfTheDayPrompt(user);
     const data = await generateWordOfTheDayWithAI(prompt);

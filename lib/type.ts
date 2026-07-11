@@ -4,11 +4,11 @@ import {
   QuizAnswer,
   QuizQuestion,
   Quiz,
-  Word,
   TalkSession,
   TalkMessage,
   StudySession,
   WordReview,
+  User,
 } from "@prisma/client";
 
 export type WordsCountByMasteryLevel = {
@@ -63,4 +63,19 @@ export type WordReviewWithWord = WordReview & {
 
 export type StudySessionWithWordReviews = StudySession & {
   reviews: WordReviewWithWord[];
+};
+
+export type UserProfile = Pick<
+  User,
+  | "name"
+  | "email"
+  | "level"
+  | "topics"
+  | "nativeLanguage"
+  | "dailyGoal"
+  | "password"
+> & {
+  image?: string | FileList | null;
+  newPassword?: string;
+  confirmNewPassword?: string;
 };
