@@ -34,9 +34,7 @@ export const INITIAL_WORD: Word = {
   masteryLevel: MasteryLevel.New,
   tags: "",
   userId: "",
-  audioUrl: "",
   highlighted: false,
-  isOriginal: false,
   proficiencyScore: 0,
   lastReviewedAt: null,
 };
