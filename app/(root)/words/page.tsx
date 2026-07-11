@@ -7,12 +7,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Button } from "@/components/ui/button";
 import { useLayout } from "@/components/layout/layout-context";
-import { DEFAULT_WORDS_PER_FETCH } from "@/lib/constants/constant";
+import {
+  DEFAULT_WORDS_PER_FETCH,
+  LIMIT_WORDS_COUNT_STOP_EXPLORING,
+} from "@/lib/constants/constant";
 import { useState } from "react";
 import WordSuggestion from "@/components/word-list/word-suggestion";
 import AddOrEditWord from "@/components/add-word/add-word";
+import { MotionButton } from "@/components/shared/motion-button";
 
 const WordsPage = () => {
+  const [isExploring, setIsExploring] = useState(false);
   const {
     data,
     fetchNextPage,
@@ -161,6 +166,18 @@ const WordsPage = () => {
             {isFetchingAll ? "Loading all..." : "Fetch all words"}
           </Button>
         </div>
+      )}
+      {totalCount <= LIMIT_WORDS_COUNT_STOP_EXPLORING && (
+        <MotionButton
+          onClick={() => setIsExploring(!isExploring)}
+          size="lg"
+          variant={"magic"}
+        >
+          {isExploring ? " ❌ Close" : "🌍 Explore words"}
+        </MotionButton>
+      )}
+      {isExploring && (
+        <WordSuggestion existingWords={allWords.map((word) => word.word)} />
       )}
     </div>
   );

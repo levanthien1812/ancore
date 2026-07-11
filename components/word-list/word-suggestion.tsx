@@ -135,7 +135,7 @@ const CollectionItem = ({
   );
 };
 
-const WordSuggestion = () => {
+const WordSuggestion = ({ existingWords }: { existingWords?: string[] }) => {
   const [selectedCollection, setSelectedCollection] =
     React.useState<CollectionItemProps | null>(null);
   const [selectedWord, setSelectedWord] = React.useState<string | null>(null);
@@ -166,6 +166,9 @@ const WordSuggestion = () => {
   return (
     <div className="mt-6">
       <p className="text-xl font-semibold">Explore word collections</p>
+      <p className="text-sm text-muted-foreground text-center">
+        Level: {user.level}
+      </p>
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 mt-4">
         {collections.map((collection) => (
           <CollectionItem
@@ -179,22 +182,25 @@ const WordSuggestion = () => {
       {selectedCollection && (
         <div className="mt-6">
           <p className="text-xl font-semibold">{selectedCollection.name}</p>
-          <p className="text-xs text-muted-foreground text-center">
+          <p className="text-sm text-muted-foreground text-center">
             Select words you want to learn
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2 mt-4">
-            {selectedCollection.collection[user?.level].map((word, idx) => (
-              <motion.button
-                key={idx}
-                className={`relative overflow-hidden bg-gray-50 hover:bg-primary hover:text-white border border-b-3 border-r-2 text-sm px-2 py-2 rounded-md cursor-pointer transition`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => handleClickWord(word)}
-              >
-                {word}
-                <MotionLightBand />
-              </motion.button>
-            ))}
+            {selectedCollection.collection[user?.level]
+              .filter((word) =>
+                existingWords ? !existingWords.includes(word) : true,
+              )
+              .map((word, idx) => (
+                <motion.button
+                  key={idx}
+                  className={`relative overflow-hidden bg-gray-50 hover:bg-primary hover:text-white border border-b-3 border-r-2 text-sm px-2 py-2 rounded-md cursor-pointer transition`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleClickWord(word)}
+                >
+                  {word}
+                </motion.button>
+              ))}
           </div>
         </div>
       )}
