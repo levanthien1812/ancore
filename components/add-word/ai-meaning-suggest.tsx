@@ -55,7 +55,7 @@ const AiMeaningSuggest = ({
     },
     onSuccess: (data) => {
       if (data && data.meanings && data.meanings.length > 0) {
-        onSuccess(data, integrationMode);
+        onSuccess(data as WordDefinitionOutput, integrationMode);
         setIsOpen(false);
       } else {
         toast.error(
