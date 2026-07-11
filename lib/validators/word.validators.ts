@@ -20,16 +20,8 @@ export const saveWordSchema = z.object({
   type: z.enum(["Word", "Phrase"]).default("Word"),
   topic: z.string().trim().optional(),
   masteryLevel: z.nativeEnum(MasteryLevel).default(MasteryLevel.New),
-  audioUrl: z
-    .string()
-    .trim()
-    .url("Please enter a valid URL.")
-    .optional()
-    .or(z.literal(""))
-    .nullable(),
   tags: z.string().optional(),
   highlighted: z.boolean().optional(),
-  isOriginal: z.boolean().optional(),
   meanings: z.preprocess(
     (value) => {
       if (typeof value === "string") {

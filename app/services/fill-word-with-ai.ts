@@ -10,8 +10,8 @@ export interface WordDefinitionOutput {
     guideWord?: string;
     synonyms?: string;
     antonyms?: string;
+    usageNotes?: string;
   }>;
-  usageNotes?: string;
 }
 
 export const fillWordWithAi = async (

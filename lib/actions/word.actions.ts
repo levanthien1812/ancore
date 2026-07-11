@@ -6,7 +6,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { MasteryLevel } from "../constants/enums";
 import { WordFitler, WordsCountByPeriod, Period } from "../type";
 import { defaultWordsCountByMasteryLevel } from "../constants/initial-values";
-import { User, Word, WordMeaning } from "@prisma/client";
+import { AIWordMeaning, User, Word, WordMeaning } from "@prisma/client";
 import { toBoolean } from "../utils/to-boolean";
 import { buildWordAutofillPrompt } from "../ai-prompts/word-autofill";
 import { fillWordWithAi } from "@/app/services/fill-word-with-ai";
@@ -20,6 +20,7 @@ import {
 } from "../constants/constant";
 import { getReviewPlan } from "../utils/distribution";
 import { shuffleArray } from "../utils/shuffle-array";
+import { defaultHead } from "next/head";
 
 export const getWordListByFilter = async (wordFilter: WordFitler) =>
   authenticationAction(
@@ -140,11 +141,9 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       word: formData.get("word")?.toString()?.toLowerCase(),
       type: formData.get("type"),
       masteryLevel: formData.get("masteryLevel"),
-      audioUrl: formData.get("audioUrl"),
       tags: formData.get("tags"),
       meanings: formData.get("meanings"),
       highlighted: toBoolean(formData.get("highlighted") as string),
-      isOriginal: toBoolean(formData.get("isOriginal") as string),
     });
 
     if (!validatedFields.success) {
@@ -155,11 +154,7 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       };
     }
 
-    const {
-      meanings: meaningData,
-      isOriginal,
-      ...wordData
-    } = validatedFields.data;
+    const { meanings: meaningData, ...wordData } = validatedFields.data;
 
     if (wordId) {
       const existingWord = await prisma.word.findFirst({
@@ -178,7 +173,6 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
           where: { id: wordId },
           data: {
             ...wordData,
-            isOriginal,
             proficiencyScore:
               DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL[wordData.masteryLevel],
           },
@@ -195,7 +189,6 @@ export const saveWord = async (prevState: unknown, formData: FormData) =>
       const word = await prisma.word.create({
         data: {
           ...wordData,
-          isOriginal,
           userId,
         },
       });
@@ -660,36 +653,19 @@ export const fillWithAI = async (
   additionalInfo?: {
     pos?: string;
     avoidMeanings?: string[];
-    relatedTo?: string; // Add new parameter
+    relatedTo?: string;
   },
 ) =>
   authenticationAction(async (userId) => {
-    // Reduce token usage by checking for an existing original (AI-generated) word record
-    if (!additionalInfo) {
-      const existingWord = await prisma.word.findFirst({
+    console.log(additionalInfo);
+    if (!additionalInfo || Object.keys(additionalInfo).length === 0) {
+      const existingWord = await prisma.aIWord.findFirst({
         where: {
           word: word.toLowerCase(),
-          isOriginal: true,
         },
         include: { meanings: true },
       });
-
-      if (existingWord) {
-        return {
-          word: existingWord.word,
-          meanings: existingWord.meanings.map((m) => ({
-            definition: m.definition,
-            pronunciation: m.pronunciation || undefined,
-            guideWord: m.guideWord || undefined,
-            cefrLevel: m.cefrLevel || undefined,
-            partOfSpeech: m.partOfSpeech || undefined,
-            examples: m.examples,
-            synonyms: m.synonyms || undefined,
-            antonyms: m.antonyms || undefined,
-          })),
-          usageNotes: existingWord.meanings[0]?.usageNotes || undefined,
-        };
-      }
+      if (existingWord) return existingWord;
     }
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -704,15 +680,29 @@ export const fillWithAI = async (
 
     const data = await fillWordWithAi(prompt);
 
-    if (data) {
+    if (data && (!additionalInfo || Object.keys(additionalInfo).length === 0)) {
       try {
         if (!data.meanings || data.meanings.length === 0) {
           return null;
         }
+
+        // Save data to AIWord
+        const aiWord = await prisma.aIWord.create({
+          data: {
+            word: data.word,
+          },
+        });
+
+        await prisma.aIWordMeaning.createMany({
+          data: data.meanings.map(
+            (meaning) => ({ ...meaning, aiWordId: aiWord.id }) as AIWordMeaning,
+          ),
+        });
       } catch (error) {
         return null;
       }
     }
+
     return data;
   });
 

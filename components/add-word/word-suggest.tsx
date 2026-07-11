@@ -43,11 +43,16 @@ const WordSuggest = memo(function WordSuggest({
       if (entryType === WordType.Phrase) {
         return;
       }
-      const response = await fetch(`/api/datamuse?w=${value}`);
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestedWordList(data);
-      } else {
+      try {
+        const response = await fetch(`/api/datamuse?w=${value}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestedWordList(data);
+        } else {
+          setSuggestedWordList([]);
+        }
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
         setSuggestedWordList([]);
       }
     },
