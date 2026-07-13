@@ -13,12 +13,12 @@ export const transcribeAudio = async (formData: FormData) => {
   const file = formData.get("file") as File;
 
   if (!file) {
-    return { success: false, message: "No audio file provided." };
+    return { success: false, message: "No audio file provided.", text: null };
   }
 
   const result = await checkAIRequestLimit();
   if (!result.success) {
-    return result;
+    return { success: false, message: result.message, text: null };
   }
 
   try {
@@ -36,6 +36,7 @@ export const transcribeAudio = async (formData: FormData) => {
     return {
       success: false,
       message: "Failed to transcribe audio.",
+      text: null,
     };
   }
 };
@@ -97,7 +98,7 @@ export const getChatResponse = async (
   authenticationAction(async (userId) => {
     const result = await checkAIRequestLimit();
     if (!result.success) {
-      return result;
+      return { success: false, message: result.message, data: null };
     }
 
     const response = await openai.chat.completions.create({
