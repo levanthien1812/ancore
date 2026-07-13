@@ -262,11 +262,13 @@ const QuestionCard = ({
             </CardTitle>
           )}
         </CardHeader>
-        <CardContent className="flex-1 flex flex-col justify-center custom-scrollbar-y">
-          <div className="flex-1 flex flex-col justify-center">
-            {questionBody()}
+        <CardContent className="flex-1 flex flex-col overflow-y-auto custom-scrollbar-y">
+          <div className="flex-1 flex flex-col">
+            <div className="my-auto">
+              {questionBody()}
+            </div>
           </div>
-          <div className="mt-4 space-y-2">
+          <div className="mt-4 space-y-2 shrink-0">
             {isAnswered &&
               (isRetryMode ||
                 settings?.showResultsMode ===

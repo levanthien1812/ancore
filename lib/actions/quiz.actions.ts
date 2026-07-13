@@ -80,10 +80,8 @@ export const createQuizSession = async (
         new RegExp(`\\b${word.word}\\b`, "gi").test(ex),
       );
 
-      // Determine valid question types for this word based on available data
       const validTypes = new Set<QuestionType>();
 
-      // Filter validTypes based on user settings.quizTypes
       const allowedQuizTypes = settings.quizTypes || [];
 
       // Ensure DefinitionToWord_Typing is always available if the word has a definition
@@ -138,7 +136,6 @@ export const createQuizSession = async (
       }
 
       if (randomType === QuestionType.DefinitionToWord_Typing) {
-        // NOW TYPING - Add hint logic for definition
         const wordLength = word.word.length;
         const generatedGapHintArray = Array(wordLength).fill("_");
 
@@ -162,11 +159,16 @@ export const createQuizSession = async (
         }
         const gapHint = generatedGapHintArray.join("");
 
+        const questionText = randomMeaning.definition.replace(
+          new RegExp(`\\b${word.word}\\b`, "gi"),
+          "_____",
+        );
+
         questionsToLink.push({
           newData: quizQuestionSchema.parse({
             wordIds: [word.id],
             direction: "Type the word that matches the definition below:",
-            question: randomMeaning.definition,
+            question: questionText,
             type: randomType,
             answer: word.word,
             options: [], // Typing questions have no options
@@ -232,14 +234,8 @@ export const createQuizSession = async (
       }
 
       if (randomType === QuestionType.FillInTheBlank) {
-        const hasDefinitionWithWord = randomMeaning.definition
-          .toLowerCase()
-          .includes(word.word.toLowerCase());
-        if (validExamples.length === 0 && !hasDefinitionWithWord) continue;
-
-        const textToUseForGapHint = hasDefinitionWithWord
-          ? shuffleArray([...validExamples, randomMeaning.definition])[0]
-          : shuffleArray([...validExamples])[0];
+        if (validExamples.length === 0) continue;
+        const textToUseForGapHint = shuffleArray(validExamples)[0];
 
         const questionText = textToUseForGapHint.replace(
           new RegExp(`\\b${word.word}\\b`, "gi"),

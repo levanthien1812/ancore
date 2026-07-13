@@ -20,7 +20,7 @@ import {
 } from "../constants/constant";
 import { getReviewPlan } from "../utils/distribution";
 import { shuffleArray } from "../utils/shuffle-array";
-import { defaultHead } from "next/head";
+import { checkAIRequestLimit, updateAIUsage } from "./ai.actions";
 
 export const getWordListByFilter = async (wordFilter: WordFitler) =>
   authenticationAction(
@@ -669,6 +669,11 @@ export const fillWithAI = async (
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
 
+    const result = await checkAIRequestLimit();
+    if (!result.success) {
+      return null;
+    }
+
     const prompt = buildWordAutofillPrompt(
       word,
       user as User,
@@ -678,6 +683,10 @@ export const fillWithAI = async (
     );
 
     const data = await fillWordWithAi(prompt);
+
+    if (data) {
+      await updateAIUsage(1);
+    }
 
     if (data && (!additionalInfo || Object.keys(additionalInfo).length === 0)) {
       try {
@@ -713,8 +722,18 @@ export const getWordOfTheDay = async () =>
 
     if (!user || !settings.wordOfTheDayEnabled) return null;
 
+    const result = await checkAIRequestLimit();
+    if (!result.success) {
+      console.warn("AI Request limit reached for Word of the Day.");
+      return null;
+    }
+
     const prompt = buildWordOfTheDayPrompt(user);
     const data = await generateWordOfTheDayWithAI(prompt);
+
+    if (data) {
+      await updateAIUsage(1);
+    }
 
     return data;
   });
