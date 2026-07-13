@@ -137,11 +137,11 @@ export const getTalkSessions = async () =>
 
 export const updateAIUsage = async (amount: number) =>
   authenticationAction(async (userId) => {
-    const aiQuota = await prisma.aiQuota.findFirst({
+    const aiQuota = await prisma.aIQuota.findFirst({
       where: { userId },
     });
     if (!aiQuota) {
-      await prisma.aiQuota.create({
+      await prisma.aIQuota.create({
         data: {
           userId,
           dailyUsed: amount,
@@ -164,7 +164,7 @@ export const updateAIUsage = async (amount: number) =>
         aiQuota.monthlyResetAt = new Date();
       }
 
-      await prisma.aiQuota.update({
+      await prisma.aIQuota.update({
         where: { userId },
         data: {
           dailyUsed: aiQuota.dailyUsed + amount,
@@ -178,7 +178,7 @@ export const updateAIUsage = async (amount: number) =>
 export const checkAIRequestLimit = async () =>
   authenticationAction(
     async (userId) => {
-      const aiQuota = await prisma.aiQuota.findUnique({
+      const aiQuota = await prisma.aIQuota.findUnique({
         where: { userId },
       });
       if (!aiQuota) {
