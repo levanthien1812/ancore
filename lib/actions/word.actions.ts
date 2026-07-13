@@ -671,7 +671,7 @@ export const fillWithAI = async (
 
     const result = await checkAIRequestLimit();
     if (!result.success) {
-      return result;
+      return null;
     }
 
     const prompt = buildWordAutofillPrompt(
