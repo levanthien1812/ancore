@@ -147,7 +147,7 @@ Practice English naturally with an AI assistant.
 Clone the repository
 
 ```bash
-git clone https://github.com/your-username/ancore.git
+git clone https://github.com/levanthien1812/ancore.git
 ```
 
 Install dependencies

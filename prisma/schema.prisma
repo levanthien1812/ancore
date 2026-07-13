@@ -42,6 +42,7 @@ model User {
   notifications Notification[]
   verifyEmailTokens VerifyEmailToken[]
   resetPasswordTokens ResetPasswordToken[]
+  aiQuota       AIQuota?
 }
 
 model VerifyEmailToken {
@@ -422,4 +423,22 @@ model Notification {
 
   @@index([userId, isRead])
   @@index([createdAt])
+}
+
+model AIQuota {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  dailyUsed     Int @default(0)
+  monthlyUsed   Int @default(0)
+
+  dailyLimit    Int @default(30)
+  monthlyLimit  Int @default(300)
+
+  dailyResetAt   DateTime
+  monthlyResetAt DateTime
+
+  createdAt DateTime @default(now())
 }

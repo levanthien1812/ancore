@@ -141,11 +141,13 @@ const MatchingBody = ({
             {Object.entries(selectedMatchs).map(([leftId, rightId]) => (
               <div
                 key={leftId}
-                className={cn("grid grid-cols-3 gap-x-8 items-start")}
+                className={cn(
+                  "grid grid-cols-3 gap-x-4 sm:gap-x-8 items-start",
+                )}
               >
                 <motion.div
                   className={cn(
-                    "col-span-1 border-primary border border-b-3 border-r-2 p-3 rounded-md transition-colors duration-300",
+                    "col-span-1 border-primary border border-b-3 border-r-2 p-2 sm:p-3 rounded-md transition-colors duration-300",
                     {
                       "bg-primary-2": !isAnswered,
                       "bg-green-500 border border-green-700 border-b-3 border-r-2 text-white":
@@ -174,7 +176,7 @@ const MatchingBody = ({
                 </motion.div>
                 <motion.div
                   className={cn(
-                    "col-span-2 border-primary border border-b-3 border-r-2 p-3 rounded-md transition-colors duration-300",
+                    "col-span-2 border-primary border border-b-3 border-r-2 p-2 sm:p-3 rounded-md transition-colors duration-300",
                     {
                       "bg-primary-2": !isAnswered,
                       "bg-green-500 border border-green-700 border-b-3 border-r-2 text-white":
@@ -229,7 +231,7 @@ const MatchingBody = ({
           )}
         </>
       )}
-      <div className="grid grid-cols-3 gap-8 mt-4">
+      <div className="grid grid-cols-3 gap-4 sm:gap-8 mt-4">
         <div className="space-y-3 col-span-1">
           {leftItems.map((item) => (
             <div

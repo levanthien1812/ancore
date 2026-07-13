@@ -51,7 +51,7 @@ const QuizSummary = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const { level, image } = getEvaluation();
 
   return (
-    <div className="py-4 px-8 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] no-scrollbar overflow-y-auto">
+    <div className="py-4 px-4 sm:px-8 h-full rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] no-scrollbar overflow-y-auto">
       <div className="flex justify-between">
         <Link href="/quizzes">
           <Button variant="link" size="sm">

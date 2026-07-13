@@ -24,6 +24,7 @@ import {
 import { deleteQuiz } from "@/lib/actions/quiz.actions";
 import { format } from "date-fns";
 import { MotionButton } from "../shared/motion-button";
+import { toast } from "sonner";
 
 const QuizIntro = ({
   wordsToQuizCount,
@@ -67,8 +68,7 @@ const QuizIntro = ({
         router.push(`/quizzes/${result.quizId}`);
         localStorage.removeItem("incompleteQuizId");
       } else {
-        // TODO: Implement user-friendly error handling, e.g., a toast notification
-        console.error(result.message || "Failed to start quiz session.");
+        toast.error(result.message || "Failed to start quiz session.");
       }
       audio.pause();
     });
