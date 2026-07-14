@@ -13,12 +13,12 @@ export const transcribeAudio = async (formData: FormData) => {
   const file = formData.get("file") as File;
 
   if (!file) {
-    return { success: false, message: "No audio file provided." };
+    return { success: false, message: "No audio file provided.", text: null };
   }
 
   const result = await checkAIRequestLimit();
   if (!result.success) {
-    return result;
+    return { success: false, message: result.message, text: null };
   }
 
   try {
@@ -36,6 +36,7 @@ export const transcribeAudio = async (formData: FormData) => {
     return {
       success: false,
       message: "Failed to transcribe audio.",
+      text: null,
     };
   }
 };
@@ -97,7 +98,7 @@ export const getChatResponse = async (
   authenticationAction(async (userId) => {
     const result = await checkAIRequestLimit();
     if (!result.success) {
-      return result;
+      return { success: false, message: result.message, data: null };
     }
 
     const response = await openai.chat.completions.create({
@@ -136,11 +137,11 @@ export const getTalkSessions = async () =>
 
 export const updateAIUsage = async (amount: number) =>
   authenticationAction(async (userId) => {
-    const aiQuota = await prisma.aiQuota.findFirst({
+    const aiQuota = await prisma.aIQuota.findFirst({
       where: { userId },
     });
     if (!aiQuota) {
-      await prisma.aiQuota.create({
+      await prisma.aIQuota.create({
         data: {
           userId,
           dailyUsed: amount,
@@ -163,7 +164,7 @@ export const updateAIUsage = async (amount: number) =>
         aiQuota.monthlyResetAt = new Date();
       }
 
-      await prisma.aiQuota.update({
+      await prisma.aIQuota.update({
         where: { userId },
         data: {
           dailyUsed: aiQuota.dailyUsed + amount,
@@ -177,7 +178,7 @@ export const updateAIUsage = async (amount: number) =>
 export const checkAIRequestLimit = async () =>
   authenticationAction(
     async (userId) => {
-      const aiQuota = await prisma.aiQuota.findUnique({
+      const aiQuota = await prisma.aIQuota.findUnique({
         where: { userId },
       });
       if (!aiQuota) {
