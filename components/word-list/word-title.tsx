@@ -1,7 +1,7 @@
 "use client";
 import { SquareArrowOutUpRightIcon } from "lucide-react";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import { useLayout } from "../layout/layout-context";
+import { useLayoutStore } from "@/lib/stores/layout-store";
 
 interface WordTitleProps {
   word: WordWithMeanings;
@@ -10,7 +10,7 @@ interface WordTitleProps {
 }
 
 const WordTitle = ({ word, onClick, disabled }: WordTitleProps) => {
-  const { mode } = useLayout();
+  const { mode } = useLayoutStore();
 
   return (
     <button

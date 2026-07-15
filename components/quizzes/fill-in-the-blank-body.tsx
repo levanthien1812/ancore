@@ -35,11 +35,36 @@ const FillInTheBlankBody = ({
     keySoundAudioRef.current.preload = "auto";
   }, []);
 
-  // useEffect(() => {
-  //   if (inputRefs.current[firstGapIndex!]) {
-  //     inputRefs.current[firstGapIndex!]?.focus();
-  //   }
-  // }, [firstGapIndex]);
+  useEffect(() => {
+    if (!question.gapHint) return;
+
+    const handleNativeBeforeInput = (e: Event, index: number) => {
+      const inputEvent = e as InputEvent;
+      const target = e.target as HTMLInputElement;
+      if (
+        inputEvent.inputType === "deleteContentBackward" &&
+        !target.value &&
+        index > 0
+      ) {
+        const prevGapIndex = question.gapHint!.lastIndexOf("_", index - 1);
+        if (prevGapIndex !== -1) {
+          e.preventDefault();
+          inputRefs.current[prevGapIndex]?.focus();
+          setCurrentIndex(prevGapIndex);
+        }
+      }
+    };
+
+    const cleanups: (() => void)[] = [];
+    inputRefs.current.forEach((el, index) => {
+      if (el) {
+        const fn = (e: Event) => handleNativeBeforeInput(e, index);
+        el.addEventListener("beforeinput", fn);
+        cleanups.push(() => el.removeEventListener("beforeinput", fn));
+      }
+    });
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [question.gapHint]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -49,7 +74,7 @@ const FillInTheBlankBody = ({
     keySoundAudioRef.current!.currentTime = 0;
     keySoundAudioRef.current!.play();
 
-    const value = e.target.value.slice(-1); // Only take the last character
+    const value = e.target.value.slice(-1).toLowerCase(); // Only take the last character
     const newUserInput = [...userInput];
     newUserInput[index] = value;
     setUserInput(newUserInput);
@@ -91,29 +116,6 @@ const FillInTheBlankBody = ({
     }
   };
 
-  /**
-   * Backspace on mobile devices often doesn't trigger KeyDown events when the input is empty.
-   * 'beforeinput' with inputType 'deleteContentBackward' is a reliable way to detect
-   * deletion intent and move focus back on modern mobile browsers.
-   */
-  const handleBeforeInput = (
-    e: React.SyntheticEvent<HTMLInputElement>,
-    index: number,
-  ) => {
-    const nativeEvent = e.nativeEvent as InputEvent;
-    if (
-      nativeEvent?.inputType === "deleteContentBackward" &&
-      !userInput[index] &&
-      index > 0
-    ) {
-      const prevGapIndex = question.gapHint!.lastIndexOf("_", index - 1);
-      if (prevGapIndex !== -1) {
-        inputRefs.current[prevGapIndex]?.focus();
-        setCurrentIndex(prevGapIndex);
-      }
-    }
-  };
-
   const isCorrect = useMemo(() => {
     if (!isAnswered || !correctAnswer) return false;
     return correctAnswer.toLowerCase() === userInput.join("").toLowerCase();
@@ -135,7 +137,6 @@ const FillInTheBlankBody = ({
             maxLength={1}
             value={isHint ? char : userInput[index]}
             onChange={(e) => handleInputChange(e, index)}
-            onBeforeInput={(e) => handleBeforeInput(e, index)}
             onKeyDown={(e) => handleKeyDown(e, index)}
             onClick={() => setCurrentIndex(index)}
             disabled={isHint || isAnswered}

@@ -70,7 +70,8 @@
     "tailwind-merge": "^3.3.1",
     "ts-node": "^10.9.2",
     "ws": "^8.18.3",
-    "zod": "^4.1.12"
+    "zod": "^4.1.12",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

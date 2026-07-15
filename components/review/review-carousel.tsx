@@ -10,12 +10,15 @@ import { WordWithMeanings } from "../add-word/add-word-form";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { updateReviewSession } from "@/lib/actions/review.actions";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import {
+  handlePlayAudio,
+  handlePlayPronunciation,
+} from "@/lib/utils/handlePlayAudio";
 import { Button } from "../ui/button";
 import ReviewSummary from "./review-summary";
 import { StudySessionWithWordReviews } from "@/lib/type";
 import { ReviewPerformance } from "@prisma/client";
-import { useLayout } from "../layout/layout-context";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 const ReviewCarousel = ({
   words,
@@ -33,7 +36,7 @@ const ReviewCarousel = ({
   const [sessionFinished, setSessionFinished] = useState(false);
   const [studySession, setStudySession] =
     useState<StudySessionWithWordReviews | null>(null);
-  const { settings } = useLayout();
+  const { data: user } = useCurrentUser();
   const [reviewQueue, setReviewQueue] = useState(words);
 
   useEffect(() => {
@@ -99,12 +102,9 @@ const ReviewCarousel = ({
   // Play pronunciation audio whenever the current word changes
   useEffect(() => {
     if (reviewQueue[current] && !sessionFinished) {
-      handlePlayAudio(
-        reviewQueue[current].word,
-        settings?.autoPlayPronunciation,
-      );
+      handlePlayPronunciation(reviewQueue[current].word);
     }
-  }, [current, reviewQueue, sessionFinished, settings?.autoPlayPronunciation]);
+  }, [current, reviewQueue, sessionFinished]);
 
   const handlePerformanceUpdate = (performance: ReviewPerformance) => {
     const currentWord = reviewQueue[current];
@@ -115,7 +115,7 @@ const ReviewCarousel = ({
     // This ensures that "extra" words are only shown once, even if forgotten again.
     const isOriginalWord = current < words.length;
     const shouldRepeat =
-      isForgotten && settings?.autoRepeatForgottenWords && isOriginalWord;
+      isForgotten && user?.settings?.autoRepeatForgottenWords && isOriginalWord;
 
     if (shouldRepeat) {
       setReviewQueue((prev) => [...prev, currentWord]);
@@ -143,7 +143,7 @@ const ReviewCarousel = ({
       }
 
       const audio = new Audio("/sounds/victory-fanfare.mp3");
-      audio.play().catch((err) => console.error("Audio play failed:", err));
+      handlePlayAudio(audio);
 
       setSessionFinished(true);
     });

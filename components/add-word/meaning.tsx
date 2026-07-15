@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "../ui/select";
 import { ChevronUp, Ellipsis, Plus, Trash, Volume2Icon } from "lucide-react";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
 import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 import { INITIAL_MEANING } from "@/lib/constants/initial-values";
@@ -321,7 +321,7 @@ const Meaning = memo(function Meaning({
                 />
                 <Button
                   type="button"
-                  onClick={() => handlePlayAudio(getValues("word"))}
+                  onClick={() => handlePlayPronunciation(getValues("word"))}
                   variant="ghost"
                   disabled={!getValues("word")}
                 >

@@ -5,13 +5,12 @@ import {
   PopoverTrigger,
 } from "@radix-ui/react-popover";
 import { Bell, BellRing } from "lucide-react";
-import React from "react";
 import IconDisplay from "../icon-display";
 import Notifications from "../notifications/notifications";
-import { useLayout } from "@/components/layout/layout-context";
+import { useNotifications } from "@/lib/hooks/use-notifications";
 
 const NotificationButton = () => {
-  const { notifications } = useLayout();
+  const { data: notifications } = useNotifications();
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length || 0;
 

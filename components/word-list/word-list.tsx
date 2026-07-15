@@ -5,8 +5,8 @@ import WordTable from "./word-table";
 import WordDialog from "../word-card/word-dialog";
 import { LayoutGrid, Rows4 } from "lucide-react";
 import WordGrid from "./word-grid";
-import { useLayout } from "../layout/layout-context";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { useLayoutStore } from "@/lib/stores/layout-store";
+import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 
 const WordList = ({
   words,
@@ -26,7 +26,7 @@ const WordList = ({
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = React.useState("");
 
   const word = selectedIndex !== null ? words[selectedIndex] : undefined;
-  const { mode, setMode, settings } = useLayout();
+  const { mode, setMode } = useLayoutStore();
 
   const handleTitleClick = React.useCallback((index: number) => {
     setSelectedIndex(index);
@@ -34,12 +34,9 @@ const WordList = ({
 
   useEffect(() => {
     if (selectedIndex !== null && words[selectedIndex]) {
-      handlePlayAudio(
-        words[selectedIndex].word,
-        settings?.autoPlayPronunciation,
-      );
+      handlePlayPronunciation(words[selectedIndex].word);
     }
-  }, [selectedIndex, words, settings?.autoPlayPronunciation]);
+  }, [selectedIndex, words]);
 
   // Debounce search input - wait 300ms after user stops typing
   useEffect(() => {

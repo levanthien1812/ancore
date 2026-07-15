@@ -13,8 +13,8 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Button } from "../ui/button";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { useLayout } from "../layout/layout-context";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 export interface WordOfTheDay {
   word: string;
   pronunciation: string;
@@ -28,14 +28,14 @@ export interface WordOfTheDay {
 
 const WordOfTheDay = () => {
   const { status } = useSession();
-  const { settings, isLoadingUser } = useLayout();
+  const { data: user, isPending: isLoadingUser } = useCurrentUser();
   const queryClient = useQueryClient();
   const [wordOfTheDay, setWordOfTheDay] = useState<WordOfTheDay | null>(null);
   const [isLoadingWord, setIsLoadingWord] = useState(true);
   const [notification, setNotification] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const isEnabled = settings?.wordOfTheDayEnabled ?? true;
+  const isEnabled = user?.settings?.wordOfTheDayEnabled ?? true;
 
   const loadWordOfTheDay = useCallback(async () => {
     if (status !== "authenticated" || !isEnabled) {

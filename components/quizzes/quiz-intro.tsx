@@ -25,6 +25,7 @@ import { deleteQuiz } from "@/lib/actions/quiz.actions";
 import { format } from "date-fns";
 import { MotionButton } from "../shared/motion-button";
 import { toast } from "sonner";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const QuizIntro = ({
   wordsToQuizCount,
@@ -61,7 +62,7 @@ const QuizIntro = ({
   const handleStartQuiz = () => {
     const audio = new Audio("/sounds/loading.mp3");
     audio.loop = true;
-    audio.play().catch((err) => console.error("Audio play failed:", err));
+    handlePlayAudio(audio);
     startTransition(async () => {
       const result = await createQuizSession(wordsToQuizCount, specificWords);
       if (result.success && result.quizId) {

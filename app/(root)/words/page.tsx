@@ -6,7 +6,6 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Button } from "@/components/ui/button";
-import { useLayout } from "@/components/layout/layout-context";
 import {
   DEFAULT_WORDS_PER_FETCH,
   LIMIT_WORDS_COUNT_STOP_EXPLORING,
@@ -15,6 +14,7 @@ import { useState } from "react";
 import WordSuggestion from "@/components/word-list/word-suggestion";
 import AddOrEditWord from "@/components/add-word/add-word";
 import { MotionButton } from "@/components/shared/motion-button";
+import { useLayoutStore } from "@/lib/stores/layout-store";
 
 const WordsPage = () => {
   const [isExploring, setIsExploring] = useState(false);
@@ -61,7 +61,7 @@ const WordsPage = () => {
 
   const allWords = data?.pages.flatMap((page) => page.words) || [];
   const totalCount = data?.pages[0]?.totalCount || 0;
-  const { mode } = useLayout();
+  const { mode } = useLayoutStore();
 
   if (isLoading) {
     return (

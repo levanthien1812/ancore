@@ -15,10 +15,10 @@ import { startTransition, useActionState, useEffect } from "react";
 import { saveProfile } from "@/lib/actions/user.actions";
 import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 import { UserProfile } from "@/lib/type";
-import { useLayout } from "../layout/layout-context";
 import { UserLevel } from "@prisma/client";
 import { DEFAULT_DAILY_WORD_GOAL } from "@/lib/constants/constant";
 import { toast } from "sonner";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 const Profile = () => {
   const [state, action, isPending] = useActionState(
@@ -26,7 +26,7 @@ const Profile = () => {
     INITIAL_ACTION_STATE,
   );
 
-  const { user } = useLayout();
+  const { data: user } = useCurrentUser();
 
   const methods = useForm({
     defaultValues: {
