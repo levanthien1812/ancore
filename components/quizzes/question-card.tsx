@@ -14,9 +14,9 @@ import {
 } from "@/lib/actions/quiz.actions";
 import { useMutation } from "@tanstack/react-query";
 import { QuizResultMode } from "@prisma/client";
-import { useLayout } from "../layout/layout-context";
 import QuestionResult from "./question-result";
 import { normalizeText } from "@/lib/utils/normalize-text";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 const QuestionCard = ({
   answerId,
@@ -39,9 +39,9 @@ const QuestionCard = ({
   isFinalizing: boolean;
   isRetryMode?: boolean;
 }) => {
-  const { settings } = useLayout();
+  const { data: user } = useCurrentUser();
   // In retry mode, no time limit applies
-  const timeLimit = isRetryMode ? 0 : settings?.timeLimitPerQuestion || 0;
+  const timeLimit = isRetryMode ? 0 : user?.settings?.timeLimitPerQuestion || 0;
   const [timeLeft, setTimeLeft] = useState(timeLimit);
 
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -113,7 +113,7 @@ const QuestionCard = ({
       // Update UI immediately — no need to wait for the server
       if (
         isRetryMode ||
-        settings?.showResultsMode === QuizResultMode.AfterEachQuestion
+        user?.settings?.showResultsMode === QuizResultMode.AfterEachQuestion
       ) {
         if (isCorrect) {
           audioCorrectRef.current!.currentTime = 0;
@@ -137,7 +137,7 @@ const QuestionCard = ({
       selectedAnswer,
       computeIsCorrect,
       isRetryMode,
-      settings?.showResultsMode,
+      user?.settings?.showResultsMode,
       updateQuizAnswerMutation,
     ],
   );
@@ -150,7 +150,9 @@ const QuestionCard = ({
       onNext();
     } else {
       updateQuizAnswerMutation({ userAnswer: null, isCorrect: false });
-      if (settings?.showResultsMode !== QuizResultMode.AfterEachQuestion) {
+      if (
+        user?.settings?.showResultsMode !== QuizResultMode.AfterEachQuestion
+      ) {
         onNext();
       }
     }
@@ -158,7 +160,7 @@ const QuestionCard = ({
     isRetryMode,
     onNext,
     updateQuizAnswerMutation,
-    settings?.showResultsMode,
+    user?.settings?.showResultsMode,
   ]);
 
   useEffect(() => {
@@ -193,7 +195,7 @@ const QuestionCard = ({
       // in AtTheEnd mode without retry, move immediately
       if (
         !isRetryMode &&
-        settings?.showResultsMode === QuizResultMode.AtTheEnd
+        user?.settings?.showResultsMode === QuizResultMode.AtTheEnd
       ) {
         onNext();
       }
@@ -264,14 +266,12 @@ const QuestionCard = ({
         </CardHeader>
         <CardContent className="flex-1 flex flex-col overflow-y-auto custom-scrollbar-y">
           <div className="flex-1 flex flex-col">
-            <div className="my-auto">
-              {questionBody()}
-            </div>
+            <div className="my-auto">{questionBody()}</div>
           </div>
           <div className="mt-4 space-y-2 shrink-0">
             {isAnswered &&
               (isRetryMode ||
-                settings?.showResultsMode ===
+                user?.settings?.showResultsMode ===
                   QuizResultMode.AfterEachQuestion) && (
                 <QuestionResult
                   question={question}
@@ -292,7 +292,7 @@ const QuestionCard = ({
             )}
             {!isAnswered &&
               (isRetryMode ||
-                settings?.showResultsMode ===
+                user?.settings?.showResultsMode ===
                   QuizResultMode.AfterEachQuestion) && (
                 <Button
                   type="submit"
@@ -306,7 +306,8 @@ const QuestionCard = ({
               )}
             {(isAnswered ||
               (!isRetryMode &&
-                settings?.showResultsMode === QuizResultMode.AtTheEnd)) && (
+                user?.settings?.showResultsMode ===
+                  QuizResultMode.AtTheEnd)) && (
               <Button
                 type="submit"
                 className="w-full"

@@ -1,9 +1,7 @@
 "use client";
 
-import { useLayout } from "@/components/layout/layout-context";
-import React from "react";
 import { cn } from "@/lib/utils";
-import { Check, Trash2, Bell, BellOff } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   markNotificationAsRead,
@@ -12,9 +10,11 @@ import {
 } from "@/lib/actions/notification.actions";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useNotifications } from "@/lib/hooks/use-notifications";
 
 const Notifications = () => {
-  const { notifications, isLoadingNotifications } = useLayout();
+  const { data: notifications, isPending: isLoadingNotifications } =
+    useNotifications();
   const queryClient = useQueryClient();
 
   const markAsReadMutation = useMutation({

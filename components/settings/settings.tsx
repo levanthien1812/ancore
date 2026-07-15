@@ -19,13 +19,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { saveUserSettings } from "@/lib/actions/user.actions";
 import { toast } from "sonner";
-import { useLayout } from "../layout/layout-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { startTransition, useActionState, useEffect } from "react";
 import { DialogClose } from "@radix-ui/react-dialog";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 const Settings = () => {
-  const { settings } = useLayout();
+  const { data: user } = useCurrentUser();
   const queryClient = useQueryClient();
   const [state, action, isPending] = useActionState(
     saveUserSettings,
@@ -33,7 +33,7 @@ const Settings = () => {
   );
 
   const methods = useForm({
-    defaultValues: settings || INITIAL_USER_SETTINGS,
+    defaultValues: user?.settings || INITIAL_USER_SETTINGS,
   });
 
   const onSubmit = async (data: typeof INITIAL_USER_SETTINGS) => {

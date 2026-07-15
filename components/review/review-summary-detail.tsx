@@ -22,7 +22,7 @@ import fair from "@/public/images/fair.png";
 import good from "@/public/images/good.png";
 import awesome from "@/public/images/awesome.png";
 import outstanding from "@/public/images/outstanding.png";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import BorderGlowAnimation from "../shared/border-glow-animation";
 
 import Lottie from "lottie-react";
@@ -84,7 +84,7 @@ const WordList = ({
                 <button
                   className={`relative overflow-hidden border border-b-3 border-r-2 text-sm px-2 py-1 ${colorMap[title]} rounded-md cursor-pointer transition`}
                   onClick={(e) => {
-                    handlePlayAudio(w.word);
+                    handlePlayPronunciation(w.word);
                   }}
                 >
                   {w.word}

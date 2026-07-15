@@ -14,7 +14,6 @@ import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { checkCurrentPassword } from "@/lib/actions/user.actions";
-import { useLayout } from "../layout/layout-context";
 import {
   Dialog,
   DialogContent,
@@ -23,10 +22,11 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 import Image from "next/image";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 const Account = () => {
   const { register, watch } = useFormContext();
-  const { user } = useLayout();
+  const { data: user } = useCurrentUser();
   const [isChangingPassword, setIsChangingPassword] = React.useState(false);
   const [isCorrectPassword, setIsCorrectPassword] = React.useState(false);
   const [isChecked, setIsChecked] = React.useState(false);

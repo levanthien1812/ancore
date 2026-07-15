@@ -13,13 +13,13 @@ import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
 import { useQueryClient } from "@tanstack/react-query";
 import ConfirmActionDialog from "../shared/confirm-action-dialog";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
-import { useLayout } from "../layout/layout-context";
+import { useLayoutStore } from "@/lib/stores/layout-store";
 
 const WordActions = ({ word }: { word: WordWithMeanings }) => {
   const [isEditing, setIsEditing] = React.useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
   const queryClient = useQueryClient();
-  const { mode } = useLayout();
+  const { mode } = useLayoutStore();
 
   const [state, formAction, isLoading] = useActionState(
     deleteWords,

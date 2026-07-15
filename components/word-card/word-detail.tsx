@@ -25,7 +25,7 @@ import { Popover, PopoverContent } from "../ui/popover";
 import { PopoverTrigger } from "@radix-ui/react-popover";
 import AddOrEditWord from "../add-word/add-word";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import IconDisplay from "../shared/icon-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { deleteWords, updateWord } from "@/lib/actions/word.actions";
@@ -170,7 +170,7 @@ const WordDetail = ({
           <IconDisplay
             icon={Volume2Icon}
             asButton
-            onClick={() => handlePlayAudio(word.word)}
+            onClick={() => handlePlayPronunciation(word.word)}
             additionalClasses="hidden md:block"
           />
           <div className="hidden md:block">
@@ -205,7 +205,7 @@ const WordDetail = ({
               <div className="border-t block md:hidden">
                 <Button
                   variant={"link"}
-                  onClick={() => handlePlayAudio(word.word)}
+                  onClick={() => handlePlayPronunciation(word.word)}
                 >
                   Play audio
                 </Button>

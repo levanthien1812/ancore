@@ -55,9 +55,10 @@ import { toast } from "sonner";
 import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
 import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 import PasteWordTips from "./paste-word-tips";
-import { useLayout } from "../layout/layout-context";
 import { createNotification } from "@/lib/actions/notification.actions";
 import { MotionButton } from "../shared/motion-button";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 export type WordWithMeanings = Word & {
   meanings: WordMeaning[];
@@ -76,7 +77,7 @@ const AddOrEditWordForm = ({
   wordOfTheDay,
   initialWord,
 }: AddOrEditWordFormProps) => {
-  const { settings } = useLayout();
+  const { data: user } = useCurrentUser();
   const processedSuccessRef = useRef(false);
   const { refetch: refetchTodayCount } = useQuery({
     queryKey: ["wordsAddedToday"],
@@ -298,7 +299,7 @@ const AddOrEditWordForm = ({
     });
 
     const audio = new Audio("/sounds/get-coin.m4a");
-    audio.play();
+    handlePlayAudio(audio);
   };
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -391,7 +392,7 @@ const AddOrEditWordForm = ({
       queryClient.invalidateQueries({ queryKey: ["wordsAddedToday"] });
 
       if (!word) {
-        const goal = settings?.dailyNewWordsGoal ?? 5;
+        const goal = user?.settings?.dailyNewWordsGoal ?? 5;
         refetchTodayCount().then((result) => {
           if (result.data && result.data === goal) {
             createNotification({
@@ -412,7 +413,7 @@ const AddOrEditWordForm = ({
 
       onClose();
     }
-  }, [state, onClose, queryClient, word, settings, refetchTodayCount]);
+  }, [state, onClose, queryClient, word, user, refetchTodayCount]);
 
   return (
     <form

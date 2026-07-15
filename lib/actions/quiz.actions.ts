@@ -17,6 +17,7 @@ import {
 } from "../constants/constant";
 import { getRandomElements } from "../utils/randomize";
 import { clampTo100 } from "../utils/contrains";
+import { INITIAL_USER_SETTINGS } from "../constants/initial-values";
 
 export const createQuizSession = async (
   wordCount?: number,
@@ -368,7 +369,10 @@ export const getWordsToQuiz = async ({
 }) =>
   settingsAction(async (userId, settings) => {
     let words: WordWithMeanings[];
-    const finalWordCount = wordCount ?? settings.questionsPerQuiz ?? 10;
+    const finalWordCount =
+      wordCount ??
+      settings.questionsPerQuiz ??
+      INITIAL_USER_SETTINGS.questionsPerQuiz;
 
     if (wordList && wordList.length > 0) {
       // Get specific words by name

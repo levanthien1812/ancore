@@ -9,7 +9,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@radix-ui/react-dropdown-menu";
-import { Settings2, User as UserIcon } from "lucide-react";
+import {
+  Settings2,
+  User as UserIcon,
+  Volume,
+  Volume2,
+  VolumeOff,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { User } from "next-auth";
@@ -18,6 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import Settings from "../../settings/settings";
 import { useState, useTransition } from "react";
 import Profile from "@/components/profile.tsx/profile";
+import { useAudioStore } from "@/lib/stores/audio-store";
 
 const UserPanel = ({ user }: { user?: User }) => {
   const { data: session } = useSession();
@@ -25,6 +32,7 @@ const UserPanel = ({ user }: { user?: User }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { isAudioOn, toggleAudio } = useAudioStore();
 
   if (!currentUser) {
     return (
@@ -75,7 +83,7 @@ const UserPanel = ({ user }: { user?: User }) => {
               className="w-full"
               onClick={() => setIsProfileOpen(true)}
             >
-              <UserIcon />
+              <UserIcon width={18} height={18} />
               Profile
             </Button>
           </DropdownMenuItem>
@@ -85,8 +93,22 @@ const UserPanel = ({ user }: { user?: User }) => {
               className="w-full"
               onClick={() => setIsSettingsOpen(true)}
             >
-              <Settings2 />
+              <Settings2 width={18} height={18} />
               Settings
+            </Button>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Button
+              variant={"secondary"}
+              className="w-full"
+              onClick={toggleAudio}
+            >
+              {isAudioOn ? (
+                <Volume2 width={18} height={18} />
+              ) : (
+                <VolumeOff width={18} height={18} />
+              )}
+              Audio: {isAudioOn ? "On" : "Off"}
             </Button>
           </DropdownMenuItem>
 

@@ -33,7 +33,7 @@ import {
 import { Checkbox } from "../ui/checkbox";
 import { Table } from "@tanstack/react-table";
 import { useState } from "react";
-import { useLayout } from "../layout/layout-context";
+import { useLayoutStore } from "@/lib/stores/layout-store";
 
 type Props = {
   table: Table<WordWithMeanings>;
@@ -49,7 +49,7 @@ const WordFilter = ({
   isLoadingAll = false,
 }: Props) => {
   const [showFilters, setShowFilters] = useState(false);
-  const { mode } = useLayout();
+  const { mode } = useLayoutStore();
 
   const handleResetFilter = () => {
     table.resetColumnFilters();

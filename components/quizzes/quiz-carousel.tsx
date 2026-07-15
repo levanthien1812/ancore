@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import { useBeforeUnload } from "@/lib/hooks/use-before-unload";
 import { QuizWithAnswers } from "@/lib/type";
 import RetryCarousel from "./retry-carousel";
-import { useLayout } from "../layout/layout-context";
 import { Button } from "../ui/button";
 import { RotateCcw, X } from "lucide-react";
 import {
@@ -23,12 +22,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 type RetryPhase = "idle" | "prompt" | "retrying" | "done";
 
 const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const [api, setApi] = useState<CarouselApi>();
-  const { settings } = useLayout();
+  const { data: user } = useCurrentUser();
 
   // Find the first unanswered question to set as the starting point for resumed sessions
   const initialIndex = Math.max(
@@ -94,7 +95,7 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
                 .catch((err) => console.error("Audio play failed:", err));
               return;
             }
-            if (settings?.allowRetry) {
+            if (user?.settings?.allowRetry) {
               setRetryPhase("prompt");
             }
           }
@@ -103,7 +104,7 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
         toast.error("Could not save quiz results. Quiz Log ID is missing.");
       }
     }
-  }, [api, quiz.quizAnswers, startTime, settings?.allowRetry]);
+  }, [api, quiz.quizAnswers, startTime, user?.settings?.allowRetry]);
 
   // --- Retry eligible answers (wrong + skipped from the completed quiz) ---
   const retryAnswers =
@@ -121,13 +122,13 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
   const handleDeclineRetry = () => {
     setRetryPhase("done");
     const audio = new Audio("/sounds/victory-fanfare.mp3");
-    audio.play().catch((err) => console.error("Audio play failed:", err));
+    handlePlayAudio(audio);
   };
 
   const handleRetryComplete = () => {
     setRetryPhase("done");
     const audio = new Audio("/sounds/victory-fanfare.mp3");
-    audio.play().catch((err) => console.error("Audio play failed:", err));
+    handlePlayAudio(audio);
   };
 
   // --- Render: retry round ---

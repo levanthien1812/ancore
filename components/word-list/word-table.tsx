@@ -36,7 +36,7 @@ import Pagination from "./pagination";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
 import IconDisplay from "../shared/icon-display";
 import { Volume2Icon } from "lucide-react";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import { DEFAULT_WORDS_PER_PAGE_TABLE } from "@/lib/constants/constant";
 
 const WordTable = ({
@@ -93,7 +93,7 @@ const WordTable = ({
               icon={Volume2Icon}
               asButton
               size="sm"
-              onClick={() => handlePlayAudio(row.original.word)}
+              onClick={() => handlePlayPronunciation(row.original.word)}
               bgClass="bg-primary"
               hoverClass="hover:bg-primary/90"
               activeClass="active:bg-primary/80"

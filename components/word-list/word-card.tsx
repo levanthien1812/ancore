@@ -6,7 +6,7 @@ import WordMasteryLevel from "./word-mastery-level";
 import { MasteryLevel } from "@/lib/constants/enums";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
 import IconDisplay from "../shared/icon-display";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import { WordType } from "@prisma/client";
 import PartsOfSpeech from "./parts-of-speech";
 
@@ -69,7 +69,7 @@ const WordCard = ({
               icon={Volume2Icon}
               asButton
               size="sm"
-              onClick={() => handlePlayAudio(word.word)}
+              onClick={() => handlePlayPronunciation(word.word)}
             />
           </div>
           <div className="flex items-center">

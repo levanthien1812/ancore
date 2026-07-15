@@ -1,9 +1,9 @@
 import { shorten } from "@/lib/utils/shorten";
-import { useLayout } from "../layout/layout-context";
 import { normalizeText } from "@/lib/utils/normalize-text";
+import { useLayoutStore } from "@/lib/stores/layout-store";
 
 const WordDefinition = ({ meanings }: { meanings: string[] }) => {
-  const { mode } = useLayout();
+  const { mode } = useLayoutStore();
 
   if (mode === "grid") {
     return (

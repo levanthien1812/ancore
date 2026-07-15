@@ -10,7 +10,6 @@ import {
 import { startTransition, useMemo, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { updateWord } from "@/lib/actions/word.actions";
-import { useLayout } from "../layout/layout-context";
 
 const WordMasteryLevel = ({
   wordId,
@@ -20,7 +19,6 @@ const WordMasteryLevel = ({
   level: MasteryLevel;
 }) => {
   const [selectedValue, setSelectedValue] = useState<MasteryLevel>(level);
-  const { mode } = useLayout();
 
   const demonstratorStyle = useMemo(() => {
     return {

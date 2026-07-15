@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import ReviewCarousel from "@/components/review/review-carousel";
 import Link from "next/link";
@@ -15,7 +15,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Checkbox } from "../ui/checkbox";
-import { useLayout } from "../layout/layout-context";
 import { INITIAL_USER_SETTINGS } from "@/lib/constants/initial-values";
 import {
   MAXIMUM_WORDS_IN_REVIEW,
@@ -23,12 +22,14 @@ import {
 } from "@/lib/constants/constant";
 import { toast } from "sonner";
 import { MotionButton } from "../shared/motion-button";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 const ReviewIntro = ({ count }: { count: number }) => {
   const [started, setStarted] = useState(false);
-  const { settings } = useLayout();
+  const { data: user } = useCurrentUser();
   const [reviewLimit, setReviewLimit] = useState(
-    settings?.wordsPerReview ?? INITIAL_USER_SETTINGS.wordsPerReview,
+    user?.settings?.wordsPerReview ?? INITIAL_USER_SETTINGS.wordsPerReview,
   );
   const [inputValue, setInputValue] = useState(10);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -49,14 +50,14 @@ const ReviewIntro = ({ count }: { count: number }) => {
   });
 
   useEffect(() => {
-    if (!settings || !settings.wordsPerReview) return;
-    setReviewLimit(settings?.wordsPerReview);
-  }, [settings]);
+    if (!user?.settings || !user?.settings.wordsPerReview) return;
+    setReviewLimit(user?.settings?.wordsPerReview);
+  }, [user?.settings]);
 
   const handleStartReview = async () => {
     setIsStarting(true);
     const audio = new Audio("/sounds/magic-spell.mp3");
-    audio.play().catch((err) => console.error("Audio play failed:", err));
+    handlePlayAudio(audio);
 
     try {
       const id = await startStudySession();

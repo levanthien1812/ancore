@@ -19,9 +19,8 @@ import { useQueries } from "@tanstack/react-query";
 import { Skeleton } from "../ui/skeleton";
 import { RefreshCcw } from "lucide-react";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import { shorten } from "@/lib/utils/shorten";
-import { useLayout } from "../layout/layout-context";
 import { Popover, PopoverTrigger } from "../ui/popover";
 import { PopoverContent } from "@radix-ui/react-popover";
 import WordDetail from "../word-card/word-detail";
@@ -32,7 +31,6 @@ import { Separator } from "../ui/separator";
 
 const RecentWords = () => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
-  const { settings } = useLayout();
 
   const results = useQueries({
     queries: [
@@ -64,12 +62,9 @@ const RecentWords = () => {
 
   useEffect(() => {
     if (selectedIndex !== null && words[selectedIndex]) {
-      handlePlayAudio(
-        words[selectedIndex].word,
-        settings?.autoPlayPronunciation,
-      );
+      handlePlayPronunciation(words[selectedIndex].word);
     }
-  }, [selectedIndex, words, settings?.autoPlayPronunciation]);
+  }, [selectedIndex, words]);
 
   const handleRefresh = () => {
     refetch();
@@ -187,7 +182,7 @@ const RecentWords = () => {
                         backgroundColor: `${MasteryLevelColorCode[w.masteryLevel].primary}20`,
                       }}
                       onClick={() => {
-                        handlePlayAudio(w.word);
+                        handlePlayPronunciation(w.word);
                       }}
                     >
                       {w.word}
