@@ -425,10 +425,12 @@ export const saveUserSettings = async (
     });
 
     if (!validatedFields.success) {
+      const errors = validatedFields.error.flatten().fieldErrors;
+      const errorMessages = Object.values(errors).flat();
       return {
         success: false,
-        message: "Validation failed.",
-        errors: validatedFields.error.flatten().fieldErrors,
+        message: errorMessages[0],
+        errors: errors,
       };
     }
 

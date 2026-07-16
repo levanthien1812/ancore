@@ -31,6 +31,7 @@ type SidebarItem = {
   path: string;
   showPopover?: boolean;
   onDismiss?: () => void;
+  onAccept?: () => void;
   popoverContent?: React.ReactNode;
 };
 
@@ -107,6 +108,14 @@ const SidebarItem = React.memo(
               >
                 Dismiss
               </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                onClick={item.onAccept}
+              >
+                Go to review
+              </Button>
             </div>
           </PopoverContent>
         </Popover>
@@ -120,6 +129,7 @@ const Sidebar = () => {
   const [open, setOpen] = React.useState(true);
   const [popoverSide, setPopoverSide] = useState<"top" | "right">("right");
   const pathname = usePathname();
+  const router = useRouter();
 
   const [isReviewNotificationDismissed, setIsReviewNotificationDismissed] =
     useState(false);
@@ -147,10 +157,15 @@ const Sidebar = () => {
     }
   }, []);
 
-  const handleDismissNotification = () => {
+  const handleDismissNotification = React.useCallback(() => {
     setIsReviewNotificationDismissed(true);
     sessionStorage.setItem("reviewNotificationDismissed", "true");
-  };
+  }, []);
+
+  const handleAcceptNotification = React.useCallback(() => {
+    handleDismissNotification();
+    router.push("/review");
+  }, [router, handleDismissNotification]);
 
   const sidebarItems = useMemo<SidebarItem[]>(() => {
     return [
@@ -173,6 +188,7 @@ const Sidebar = () => {
           wordsToReview > 0 &&
           !isReviewNotificationDismissed,
         onDismiss: handleDismissNotification,
+        onAccept: handleAcceptNotification,
         popoverContent: "You have a review session",
       },
       {
@@ -191,7 +207,13 @@ const Sidebar = () => {
         path: "/talk",
       },
     ];
-  }, [wordsToReview, isReviewNotificationDismissed, pathname]);
+  }, [
+    wordsToReview,
+    isReviewNotificationDismissed,
+    pathname,
+    handleAcceptNotification,
+    handleDismissNotification,
+  ]);
 
   return (
     <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 md:ps-0 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
@@ -200,6 +222,7 @@ const Sidebar = () => {
           asButton
           icon={open ? ArrowLeftToLine : ArrowRightToLine}
           onClick={() => setOpen(!open)}
+          iconColor="text-primary"
         />
       </div>
       <ul className="flex flex-row md:flex-col flex-1 md:flex-none w-full md:w-auto justify-around md:justify-start gap-1">

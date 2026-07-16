@@ -148,12 +148,10 @@ const WordsPage = () => {
             variant={"outline"}
             onClick={() => fetchNextPage()}
             className="w-full sm:w-auto"
-            isLoading={isFetchingNextPage && !isFetchingAll}
-            disabled={isFetchingAll}
+            isLoading={isFetchingNextPage}
+            disabled={isFetchingAll || isFetchingNextPage}
           >
-            {isFetchingNextPage && !isFetchingAll
-              ? "Loading..."
-              : "Load more words"}
+            {isFetchingNextPage ? "Loading..." : "Load more words"}
           </Button>
           {/* Fetch all words button */}
           <Button
@@ -161,7 +159,7 @@ const WordsPage = () => {
             onClick={handleFetchAll}
             className="w-full sm:w-auto"
             isLoading={isFetchingAll}
-            disabled={isFetchingNextPage && !isFetchingAll}
+            disabled={isFetchingNextPage || isFetchingAll}
           >
             {isFetchingAll ? "Loading all..." : "Fetch all words"}
           </Button>

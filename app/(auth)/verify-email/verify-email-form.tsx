@@ -7,13 +7,13 @@ import {
   resendVerificationEmail,
 } from "@/lib/actions/user.actions";
 import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
-import { Info } from "lucide-react";
 import Link from "next/link";
 import { useActionState, startTransition, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import AlertMessage from "@/components/shared/alert-message";
 
 const VerifyEmailForm = ({ email }: { email: string }) => {
   const [data, action] = useActionState(verifyEmail, INITIAL_ACTION_STATE);
@@ -70,18 +70,7 @@ const VerifyEmailForm = ({ email }: { email: string }) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      {data.success && data.message && data.message.length > 0 && (
-        <div className="flex items-center justify-center gap-1 bg-green-50 border border-green-300 rounded-md p-2">
-          <Info width={16} height={16} className="text-green-500" />
-          <p className="text-green-500 text-sm">{data.message}</p>
-        </div>
-      )}
-      {!data.success && data.message && data.message.length > 0 && (
-        <div className="flex items-center justify-center gap-1 bg-red-50 border border-red-300 rounded-md p-2">
-          <Info width={16} height={16} className="text-destructive" />
-          <p className="text-destructive text-sm">{data.message}</p>
-        </div>
-      )}
+      <AlertMessage data={data} />
       <div className="container space-y-6 mt-4">
         <div>
           <Label htmlFor="email">Email address</Label>
