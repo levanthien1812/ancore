@@ -70,6 +70,7 @@ const WordFilter = ({
             value={(table.getState().globalFilter as string) ?? ""}
             onChange={(event) => {
               table.setGlobalFilter(event.target.value);
+              table.resetPageIndex();
             }}
             disabled={isLoadingAll}
             className="w-full text-sm md:w-52"

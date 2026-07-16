@@ -94,25 +94,29 @@ const RecentWords = () => {
       )}
       {!recentWordsQuery.isFetching && recentWordsQuery.data.length > 0 && (
         <>
-          <div className="border border-primary rounded-xl">
+          <div className="">
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-primary">
-                  <TableHead className="w-[200px] px-4">Word</TableHead>
+                  <TableHead className="min-w-[200px] px-4">Word</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Last review</TableHead>
-                  <TableHead></TableHead>
+                  <TableHead>Updated at</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {words.map((word, index) => (
-                  <TableRow key={word.id} className="border-b border-primary">
+                  <TableRow key={word.id} className="border-b">
                     <TableCell
                       className={`font-bold text-lg sm:text-xl px-2 sm:px-4 ${
                         index % 2 === 0 ? "text-primary-2" : "text-primary"
                       }`}
                     >
-                      {shorten(word.word, 20)}
+                      <button
+                        onClick={() => setSelectedIndex(index)}
+                        className="cursor-pointer hover:underline"
+                      >
+                        {shorten(word.word, 20)}
+                      </button>
                     </TableCell>
                     <TableCell>
                       <WordMasteryLevel
@@ -123,23 +127,16 @@ const RecentWords = () => {
                     <TableCell className="text-xs text-gray-600">
                       {format(word.updatedAt, "dd/MM/yyyy")}
                     </TableCell>
-                    <TableCell>
-                      <Button
-                        size={"sm"}
-                        variant={"link"}
-                        className="bg-transparent py-1 h-fit"
-                        onClick={() => setSelectedIndex(index)}
-                      >
-                        Detail
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           </div>
           <div className="flex justify-end mt-2">
-            <Link className="hover:underline text-primary" href={"/words"}>
+            <Link
+              className="text-sm text-white hover:underline rounded-full bg-primary py-1 px-4 cursor-pointer"
+              href={"/words"}
+            >
               👉 Go to word list
             </Link>
           </div>

@@ -77,47 +77,79 @@ export const onboardingFormSchema = z.object({
   dailyGoal: z.number().min(5, "Goal must be at least 5 minutes."),
 });
 
-export const userSettingsSchema = z.object({
-  wordsPerReview: z
-    .number()
-    .int()
-    .min(MINIMUM_WORDS_IN_REVIEW)
-    .max(MAXIMUM_WORDS_IN_REVIEW),
-  reviewFrequency: z.nativeEnum(ReviewFrequency),
-  // time-format: 22:00
-  reviewReminderTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
-  reviewDays: z.array(z.nativeEnum(DayOfWeek)),
-  includeWordLevels: z.array(z.nativeEnum(MasteryLevel)),
-  prioritizeWeakWords: z.boolean(),
-  autoRepeatForgottenWords: z.boolean(),
-  questionsPerQuiz: z
-    .number()
-    .int()
-    .min(MINIMUM_WORDS_IN_QUIZ)
-    .max(MAXIMUM_WORDS_IN_QUIZ),
-  quizTypes: z.array(z.nativeEnum(QuestionType)),
-  quizWordLevels: z.array(z.nativeEnum(MasteryLevel)),
-  timeLimitPerQuestion: z.number().int().min(0).max(300), // 0 for no limit, max 5 minutes
-  showResultsMode: z.nativeEnum(QuizResultMode),
-  allowRetry: z.boolean(),
-  includeAudioQuestions: z.boolean(),
-  includeFirstLetterInHint: z.boolean(),
-  showIpaPronunciation: z.boolean(),
-  autoPlayPronunciation: z.boolean(),
-  dailyNewWordsGoal: z.number().int().min(1).max(100),
-  reviewAlgorithm: z.nativeEnum(SpacedRepetitionAlgorithm),
-  forgottenInterval: z.number().int().min(1).max(365),
-  hardInterval: z.number().int().min(1).max(365),
-  mediumInterval: z.number().int().min(1).max(365),
-  goodInterval: z.number().int().min(1).max(365),
-  easyInterval: z.number().int().min(1).max(365),
-  dailyReminderEnabled: z.boolean(),
-  notificationTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
-  missedReviewReminderEnabled: z.boolean(),
-  streakReminderEnabled: z.boolean(),
-  wordOfTheDayEnabled: z.boolean(),
-  timezone: z.string().default("UTC"),
-});
+export const userSettingsSchema = z
+  .object({
+    wordsPerReview: z
+      .number()
+      .int()
+      .min(MINIMUM_WORDS_IN_REVIEW)
+      .max(MAXIMUM_WORDS_IN_REVIEW),
+    reviewFrequency: z.nativeEnum(ReviewFrequency),
+    // time-format: 22:00
+    reviewReminderTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    reviewDays: z.array(z.nativeEnum(DayOfWeek)),
+    includeWordLevels: z.array(z.nativeEnum(MasteryLevel)),
+    prioritizeWeakWords: z.boolean(),
+    autoRepeatForgottenWords: z.boolean(),
+    questionsPerQuiz: z
+      .number()
+      .int()
+      .min(MINIMUM_WORDS_IN_QUIZ)
+      .max(MAXIMUM_WORDS_IN_QUIZ),
+    quizTypes: z.array(z.nativeEnum(QuestionType)),
+    quizWordLevels: z.array(z.nativeEnum(MasteryLevel)),
+    timeLimitPerQuestion: z.number().int().min(0).max(300), // 0 for no limit, max 5 minutes
+    showResultsMode: z.nativeEnum(QuizResultMode),
+    allowRetry: z.boolean(),
+    includeAudioQuestions: z.boolean(),
+    includeFirstLetterInHint: z.boolean(),
+    showIpaPronunciation: z.boolean(),
+    autoPlayPronunciation: z.boolean(),
+    dailyNewWordsGoal: z.number().int().min(1).max(100),
+    reviewAlgorithm: z.nativeEnum(SpacedRepetitionAlgorithm),
+    forgottenInterval: z.number().int().min(1).max(365),
+    hardInterval: z.number().int().min(1).max(365),
+    mediumInterval: z.number().int().min(1).max(365),
+    goodInterval: z.number().int().min(1).max(365),
+    easyInterval: z.number().int().min(1).max(365),
+    dailyReminderEnabled: z.boolean(),
+    notificationTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
+    missedReviewReminderEnabled: z.boolean(),
+    streakReminderEnabled: z.boolean(),
+    wordOfTheDayEnabled: z.boolean(),
+    timezone: z.string().default("UTC"),
+    // validate space repetitions: forgottenInterval < hardInterval < mediumInterval < goodInterval < easyInterval
+  })
+  .superRefine((data, ctx) => {
+    if (data.forgottenInterval >= data.hardInterval) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Forgotten interval must be less than hard interval",
+        path: ["forgottenInterval"],
+      });
+    }
+    if (data.hardInterval >= data.mediumInterval) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Hard interval must be less than medium interval",
+        path: ["hardInterval"],
+      });
+    }
+    if (data.mediumInterval >= data.goodInterval) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Medium interval must be less than good interval",
+        path: ["mediumInterval"],
+      });
+    }
+    if (data.goodInterval >= data.easyInterval) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Good interval must be less than easy interval",
+        path: ["goodInterval"],
+      });
+    }
+  });
 
 export const userProfileSchema = z
   .object({

@@ -8,7 +8,7 @@ import { useSearchParams } from "next/navigation";
 import React, { startTransition, useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { INITIAL_ACTION_STATE } from "@/lib/constants/initial-values";
-import { Info } from "lucide-react";
+import AlertMessage from "@/components/shared/alert-message";
 
 const CredentialsSignupForm = () => {
   const [data, action] = useActionState(
@@ -42,12 +42,7 @@ const CredentialsSignupForm = () => {
     <form onSubmit={handleSubmit}>
       <input type="hidden" name="callbackUrl" value={callbackUrl || "/"} />
 
-      {!data.success && data.message && data.message.length > 0 && (
-        <div className="flex items-center justify-center gap-1 bg-red-50 border border-red-300 rounded-md p-2">
-          <Info width={16} height={16} className="text-destructive" />
-          <p className="text-destructive text-sm">{data.message}</p>
-        </div>
-      )}
+      <AlertMessage data={data} />
       <div className="container space-y-6 mt-4">
         <div>
           <Label htmlFor="name">Name</Label>

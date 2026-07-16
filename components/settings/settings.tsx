@@ -23,9 +23,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { startTransition, useActionState, useEffect } from "react";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
+import { Loader2 } from "lucide-react";
+import AlertMessage from "../shared/alert-message";
 
 const Settings = () => {
-  const { data: user } = useCurrentUser();
+  const { data: user, isLoading } = useCurrentUser();
   const queryClient = useQueryClient();
   const [state, action, isPending] = useActionState(
     saveUserSettings,
@@ -33,6 +35,7 @@ const Settings = () => {
   );
 
   const methods = useForm({
+    values: user?.settings || INITIAL_USER_SETTINGS,
     defaultValues: user?.settings || INITIAL_USER_SETTINGS,
   });
 
@@ -62,6 +65,14 @@ const Settings = () => {
       toast.error("Failed to save settings:" + state.message);
     }
   }, [state, queryClient]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[70vh]">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -105,6 +116,7 @@ const Settings = () => {
               </TabsTrigger>
             </TabsList>
             <div className="flex-1 flex flex-col gap-2 custom-scrollbar-y h-[70vh] custom-scrollbar-y">
+              <AlertMessage data={state} />
               <TabsContent
                 value="learning-preferences"
                 className="m-0 border-none p-0 shadow-none"

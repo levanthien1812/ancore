@@ -31,7 +31,7 @@ const Account = () => {
   const [isCorrectPassword, setIsCorrectPassword] = React.useState(false);
   const [isChecked, setIsChecked] = React.useState(false);
   const [previewImage, setPreviewImage] = React.useState<string | undefined>(
-    user!.image || "",
+    user?.image || "",
   );
 
   const email = watch("email");
@@ -71,7 +71,7 @@ const Account = () => {
         <div className="grid gap-1.5">
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" {...register("email")} />
-          {email !== user!.email && (
+          {email !== user?.email && (
             <p className="text-xs text-muted-foreground italic text-end">
               You need to verify your new email address the next time you log in
             </p>
