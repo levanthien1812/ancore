@@ -4,6 +4,7 @@ import WordDetailDialog from "./word-detail";
 import { Button } from "../ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { WordWithMeanings } from "../add-word/add-word-form";
+import { useCallback, useEffect } from "react";
 
 const WordDialog = ({
   word,
@@ -16,18 +17,33 @@ const WordDialog = ({
   setSelectedIndex: (index: number | null) => void;
   totalWord: number;
 }) => {
-  if (!word || selectedIndex === null) return null;
+  const handlePrevious = useCallback(() => {
+    if (selectedIndex !== null && selectedIndex > 0) {
+      setSelectedIndex(selectedIndex - 1);
+    }
+  }, [selectedIndex, setSelectedIndex]);
+
+  const handleNext = useCallback(() => {
+    if (selectedIndex !== null && selectedIndex < totalWord - 1) {
+      setSelectedIndex(selectedIndex + 1);
+    }
+  }, [selectedIndex, setSelectedIndex, totalWord]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        handlePrevious();
+      }
+      if (e.key === "ArrowRight") {
+        handleNext();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIndex, handleNext, handlePrevious]);
 
   const handleClose = () => {
     setSelectedIndex(null);
-  };
-
-  const handlePrevious = () => {
-    setSelectedIndex(selectedIndex - 1);
-  };
-
-  const handleNext = () => {
-    setSelectedIndex(selectedIndex + 1);
   };
 
   return (

@@ -123,11 +123,21 @@ export const updateWord = async (id: string, data: Partial<Word>) =>
       return null;
     }
 
+    const dataToUpdate = { ...data };
+
+    if (
+      dataToUpdate.masteryLevel &&
+      existingWord.masteryLevel !== dataToUpdate.masteryLevel
+    ) {
+      dataToUpdate.proficiencyScore =
+        DEFAULT_PROFICIENCY_SCORE_BY_MASTERY_LEVEL[dataToUpdate.masteryLevel];
+    }
+
     const updatedData = await prisma.word.update({
       where: {
         id,
       },
-      data,
+      data: dataToUpdate,
     });
     revalidatePath("/words");
     return updatedData;

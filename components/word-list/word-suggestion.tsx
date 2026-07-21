@@ -13,8 +13,8 @@ import {
 import { motion } from "framer-motion";
 import { useSession } from "next-auth/react";
 import React, { useEffect } from "react";
-import MotionLightBand from "../shared/motion-light-band";
 import AddOrEditWord from "../add-word/add-word";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 type CollectionItemProps = {
   name: string;
@@ -155,8 +155,7 @@ const WordSuggestion = ({ existingWords }: { existingWords?: string[] }) => {
     setSelectedCollection(collection);
     if (!audioRef.current) return;
 
-    audioRef.current.currentTime = 0;
-    audioRef.current.play();
+    handlePlayAudio(audioRef.current);
   };
 
   const handleClickWord = (word: string) => {
