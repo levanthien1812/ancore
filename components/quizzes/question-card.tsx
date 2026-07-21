@@ -17,6 +17,7 @@ import { QuizResultMode } from "@prisma/client";
 import QuestionResult from "./question-result";
 import { normalizeText } from "@/lib/utils/normalize-text";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const QuestionCard = ({
   answerId,
@@ -116,15 +117,9 @@ const QuestionCard = ({
         user?.settings?.showResultsMode === QuizResultMode.AfterEachQuestion
       ) {
         if (isCorrect) {
-          audioCorrectRef.current!.currentTime = 0;
-          audioCorrectRef
-            .current!.play()
-            .catch((err) => console.error("Audio play failed:", err));
+          handlePlayAudio(audioCorrectRef.current!);
         } else {
-          audioWrongRef.current!.currentTime = 0;
-          audioWrongRef
-            .current!.play()
-            .catch((err) => console.error("Audio play failed:", err));
+          handlePlayAudio(audioWrongRef.current!);
         }
         setLocalIsCorrect(isCorrect);
         setIsAnswered(true);
@@ -187,8 +182,7 @@ const QuestionCard = ({
 
   const progressWidth = timeLimit > 0 ? (timeLeft / timeLimit) * 100 : 0;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(() => {
     if (!isAnswered) {
       handleCheckAnswer();
       // In retry mode, always show the result (like AfterEachQuestion);
@@ -202,7 +196,29 @@ const QuestionCard = ({
     } else {
       onNext();
     }
-  };
+  }, [
+    handleCheckAnswer,
+    isAnswered,
+    isRetryMode,
+    onNext,
+    user?.settings?.showResultsMode,
+  ]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" && isAnswered && isActive) {
+        onNext();
+      }
+      // Press "Enter" to submit
+      if (e.key === "Enter" && !isAnswered && isActive) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onNext, isAnswered, handleSubmit, isActive]);
 
   const questionBody = () => {
     switch (question.type) {
@@ -250,7 +266,7 @@ const QuestionCard = ({
           />
         </div>
       )}
-      <form onSubmit={handleSubmit} className="h-full flex flex-col">
+      <div className="h-full flex flex-col">
         <CardHeader>
           {/* Display the direction */}
           <p className="text-xs py-1 px-2 rounded-full bg-primary text-white w-fit">
@@ -295,7 +311,8 @@ const QuestionCard = ({
                 user?.settings?.showResultsMode ===
                   QuizResultMode.AfterEachQuestion) && (
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={!selectedAnswer || isFinalizing}
                   className="w-full"
                   size={"lg"}
@@ -309,7 +326,7 @@ const QuestionCard = ({
                 user?.settings?.showResultsMode ===
                   QuizResultMode.AtTheEnd)) && (
               <Button
-                type="submit"
+                onClick={handleSubmit}
                 className="w-full"
                 size={"lg"}
                 disabled={selectedAnswer?.length === 0 || isFinalizing}
@@ -326,7 +343,7 @@ const QuestionCard = ({
             )}
           </div>
         </CardContent>
-      </form>
+      </div>
     </Card>
   );
 };

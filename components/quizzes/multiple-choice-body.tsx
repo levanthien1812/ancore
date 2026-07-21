@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QuizQuestion } from "@prisma/client";
 import { MotionButton } from "../shared/motion-button";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const MultipleChoiceBody = ({
   question,
@@ -41,19 +42,38 @@ const MultipleChoiceBody = ({
   );
 
   const handleClick = (option: string) => {
-    buttonPressAudioRef.current!.currentTime = 0;
-    buttonPressAudioRef.current!.play();
+    handlePlayAudio(buttonPressAudioRef.current!);
     setSelectedAnswer(option);
   };
+
+  // Press Tab to select anwser
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        if (!selectedAnswer) {
+          setSelectedAnswer(shuffledOptions[0]);
+        } else {
+          const index = shuffledOptions.indexOf(selectedAnswer);
+          if (index < shuffledOptions.length - 1) {
+            setSelectedAnswer(shuffledOptions[index + 1]);
+          } else {
+            setSelectedAnswer(shuffledOptions[0]);
+          }
+        }
+        handlePlayAudio(buttonPressAudioRef.current!);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [setSelectedAnswer, shuffledOptions, selectedAnswer]);
 
   return (
     <div className="grid grid-cols-1 gap-3">
       {shuffledOptions.map((option) => {
         const isCorrect = isAnswered && isCorrectOption(option);
         const isWrongSelected =
-          isAnswered &&
-          option === selectedAnswer &&
-          !isCorrectOption(option);
+          isAnswered && option === selectedAnswer && !isCorrectOption(option);
 
         return (
           <MotionButton

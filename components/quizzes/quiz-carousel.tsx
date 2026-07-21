@@ -90,9 +90,7 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
             if (retryEligible.length === 0) {
               setRetryPhase("done");
               const audio = new Audio("/sounds/victory-fanfare.mp3");
-              audio
-                .play()
-                .catch((err) => console.error("Audio play failed:", err));
+              handlePlayAudio(audio);
               return;
             }
             if (user?.settings?.allowRetry) {
