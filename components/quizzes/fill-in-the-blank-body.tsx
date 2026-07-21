@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { QuizQuestion } from "@prisma/client";
 import { motion } from "framer-motion";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 const FillInTheBlankBody = ({
   setSelectedAnswer,
@@ -71,8 +72,7 @@ const FillInTheBlankBody = ({
     index: number,
   ) => {
     if (!question.gapHint) return;
-    keySoundAudioRef.current!.currentTime = 0;
-    keySoundAudioRef.current!.play();
+    handlePlayAudio(keySoundAudioRef.current!);
 
     const value = e.target.value.slice(-1).toLowerCase(); // Only take the last character
     const newUserInput = [...userInput];

@@ -9,6 +9,7 @@ import { QuizQuestion } from "@prisma/client";
 import { normalizeText } from "@/lib/utils/normalize-text";
 import { XArrowStateConnector } from "./x-arrow-list-connector";
 import { motion } from "framer-motion";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 type MatchItem = {
   id: string;
@@ -62,14 +63,12 @@ const MatchingBody = ({
   const [selectedLeft, setSelectedLeft] = useState<MatchItem | null>(null);
 
   const handleLeftClick = (item: MatchItem) => {
-    buttonPressAudioRef.current!.currentTime = 0;
-    buttonPressAudioRef.current!.play();
+    handlePlayAudio(buttonPressAudioRef.current!);
     setSelectedLeft(item);
   };
 
   const handleRightClick = (rightItem: MatchItem) => {
-    buttonPressAudioRef.current!.currentTime = 0;
-    buttonPressAudioRef.current!.play();
+    handlePlayAudio(buttonPressAudioRef.current!);
     if (!selectedLeft) return toast.warning("Select a word on the left first.");
 
     const newMatches = {

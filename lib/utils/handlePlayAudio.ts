@@ -19,5 +19,6 @@ export const handlePlayPronunciation = (text: string) => {
 export const handlePlayAudio = (audio: HTMLAudioElement) => {
   const isAudioOn = useAudioStore.getState().isAudioOn;
   if (!isAudioOn) return;
+  audio.currentTime = 0;
   audio.play().catch((err) => console.error("Audio play failed:", err));
 };

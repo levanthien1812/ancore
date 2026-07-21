@@ -30,6 +30,7 @@ import {
 } from "@/lib/constants/constant";
 import { MotionButton } from "../shared/motion-button";
 import { StarBurstWrapper } from "../shared/star-burst-wrapper";
+import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 
 type Hint = Partial<
   Pick<WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">
@@ -180,10 +181,7 @@ const FrontFace = ({
 
   const handleForgotWord = () => {
     setIsReviewed(true);
-    wrongAudioRef.current!.currentTime = 0;
-    wrongAudioRef
-      .current!.play()
-      .catch((err) => console.error("Audio play failed:", err));
+    handlePlayAudio(wrongAudioRef.current!);
     setShowHint(false);
     setHintLevel(null);
     wordReviewMutate(ReviewPerformance.Forgot);
@@ -203,11 +201,7 @@ const FrontFace = ({
   }, [hintList, hintLevel, availableHints]);
 
   const handleClickMarkAsFamiliar = () => {
-    correctAudioRef.current!.currentTime = 0;
-    correctAudioRef
-      .current!.play()
-      .catch((err) => console.error("Audio play failed:", err));
-
+    handlePlayAudio(correctAudioRef.current!);
     switch (hintLevel) {
       case "guideWord":
         wordReviewMutate(ReviewPerformance.Good);
@@ -239,10 +233,7 @@ const FrontFace = ({
   const handleClickNeedMorePractice = () => {
     wordReviewMutate(ReviewPerformance.Medium);
     onPerformanceUpdate("Medium");
-    correctAudioRef.current!.currentTime = 0;
-    correctAudioRef
-      .current!.play()
-      .catch((err) => console.error("Audio play failed:", err));
+    handlePlayAudio(correctAudioRef.current!);
     setIsReviewed(true);
     setIsFlipped(true);
   };
