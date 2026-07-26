@@ -1,5 +1,5 @@
 "use client";
-import { useState, memo } from "react";
+import { useState, memo, useEffect, useRef } from "react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -70,6 +70,17 @@ const Meaning = memo(function Meaning({
       control,
       name: `meanings.${index}.examples`,
     }) || [];
+
+  const prevExamplesLengthRef = useRef(examples.length);
+  useEffect(() => {
+    if (examples.length > prevExamplesLengthRef.current) {
+      const el = document.getElementById(
+        `example-input-${index}-${examples.length - 1}`,
+      );
+      if (el) el.focus();
+    }
+    prevExamplesLengthRef.current = examples.length;
+  }, [examples.length, index]);
 
   const handleRemove = () => {
     onRemove(index);
@@ -345,6 +356,7 @@ const Meaning = memo(function Meaning({
                 {examples.map((ex, exIdx) => (
                   <div key={exIdx} className="flex gap-1">
                     <Input
+                      id={`example-input-${index}-${exIdx}`}
                       value={ex}
                       onChange={(e) =>
                         handleExampleChange(exIdx, e.target.value)
