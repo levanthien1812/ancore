@@ -31,6 +31,7 @@ import {
 import { MotionButton } from "../shared/motion-button";
 import { StarBurstWrapper } from "../shared/star-burst-wrapper";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 type Hint = Partial<
   Pick<WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">
@@ -77,6 +78,7 @@ const FrontFace = ({
   const session = useSession();
   const wrongAudioRef = useRef<HTMLAudioElement | null>(null);
   const correctAudioRef = useRef<HTMLAudioElement | null>(null);
+  const { data: user } = useCurrentUser();
 
   useEffect(() => {
     wrongAudioRef.current = new Audio("/sounds/wrong-answer-sound.mp3");
@@ -221,7 +223,8 @@ const FrontFace = ({
         onPerformanceUpdate("Easy");
         break;
     }
-    if (hintLevel) setIsFlipped(true);
+    if (hintLevel || user?.settings?.showDetailsForFamiliarWords)
+      setIsFlipped(true);
     else {
       setTimeout(() => {
         setIsReviewed(true);
