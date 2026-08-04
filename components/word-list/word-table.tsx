@@ -24,8 +24,10 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   PaginationState,
+  Row,
   SortingState,
   useReactTable,
+  Updater,
   VisibilityState,
 } from "@tanstack/react-table";
 import { Checkbox } from "../ui/checkbox";
@@ -45,12 +47,28 @@ const WordTable = ({
   globalFilter: initialGlobalFilter = "",
   onGlobalFilterChange,
   isLoadingAll = false,
+  searchFields,
+  onSearchFieldsChange,
 }: {
   words: WordWithMeanings[];
   onClickTitle: (index: number) => void;
   globalFilter?: string;
   onGlobalFilterChange?: (value: string) => void;
   isLoadingAll?: boolean;
+  searchFields?: {
+    word: boolean;
+    definitions: boolean;
+    usageNotes: boolean;
+    examples: boolean;
+  };
+  onSearchFieldsChange?: React.Dispatch<
+    React.SetStateAction<{
+      word: boolean;
+      definitions: boolean;
+      usageNotes: boolean;
+      examples: boolean;
+    }>
+  >;
 }) => {
   const columns = React.useMemo<ColumnDef<WordWithMeanings>[]>(
     () => [
@@ -216,6 +234,49 @@ const WordTable = ({
     setGlobalFilter(initialGlobalFilter);
   }, [initialGlobalFilter]);
 
+  const customGlobalFilterFn = React.useCallback(
+    (row: Row<WordWithMeanings>, columnId: string, filterValue: unknown) => {
+      const filterObj =
+        typeof filterValue === "object" && filterValue !== null
+          ? (filterValue as {
+              query?: string;
+              searchFields?: typeof searchFields;
+            })
+          : null;
+      const query = filterObj ? filterObj.query : filterValue;
+      const fields = filterObj?.searchFields
+        ? filterObj.searchFields
+        : searchFields;
+
+      const searchLower = ((query as string) || "").toLowerCase();
+      if (!searchLower) return true;
+      const word = row.original;
+
+      const matchWord =
+        fields?.word && word.word.toLowerCase().includes(searchLower);
+      const matchDefinition =
+        fields?.definitions &&
+        word.meanings.some((m) =>
+          m.definition.toLowerCase().includes(searchLower),
+        );
+      const matchUsage =
+        fields?.usageNotes &&
+        word.meanings.some((m) =>
+          m.usageNotes?.toLowerCase().includes(searchLower),
+        );
+      const matchExamples =
+        fields?.examples &&
+        word.meanings.some((m) =>
+          m.examples?.some((e) => e.toLowerCase().includes(searchLower)),
+        );
+
+      return Boolean(
+        matchWord || matchDefinition || matchUsage || matchExamples,
+      );
+    },
+    [searchFields],
+  );
+
   const table = useReactTable({
     data: words,
     columns,
@@ -226,10 +287,31 @@ const WordTable = ({
       columnVisibility,
       rowSelection,
       pagination,
-      globalFilter,
+      globalFilter: { query: globalFilter, searchFields },
     },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: (
+      updater: Updater<
+        { query: string; searchFields: typeof searchFields } | string
+      >,
+    ) => {
+      if (typeof updater === "function") {
+        const newValue = updater({ query: globalFilter, searchFields });
+        setGlobalFilter(
+          typeof newValue === "object" &&
+            newValue !== null &&
+            "query" in newValue
+            ? newValue.query
+            : (newValue as string),
+        );
+      } else {
+        setGlobalFilter(
+          typeof updater === "object" && updater !== null && "query" in updater
+            ? updater.query
+            : (updater as string),
+        );
+      }
+    },
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
@@ -238,12 +320,18 @@ const WordTable = ({
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    globalFilterFn: customGlobalFilterFn,
     autoResetPageIndex: false,
   });
 
   return (
     <div>
-      <WordFilter table={table} isLoadingAll={isLoadingAll} />
+      <WordFilter
+        table={table}
+        isLoadingAll={isLoadingAll}
+        searchFields={searchFields}
+        onSearchFieldsChange={onSearchFieldsChange}
+      />
       <Table>
         <TableCaption>Word list</TableCaption>
         <TableHeader>
