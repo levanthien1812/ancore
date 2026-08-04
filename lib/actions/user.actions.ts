@@ -392,7 +392,8 @@ export const saveUserSettings = async (
       reviewReminderTime: formData.get("reviewReminderTime"),
       reviewDays: formData.getAll("reviewDays"),
       includeWordLevels: formData.getAll("includeWordLevels"),
-      prioritizeWeakWords: formData.get("prioritizeWeakWords") === "true",
+      showDetailsForFamiliarWords:
+        formData.get("showDetailsForFamiliarWords") === "true",
       autoRepeatForgottenWords:
         formData.get("autoRepeatForgottenWords") === "true",
       questionsPerQuiz: parseInt(formData.get("questionsPerQuiz") as string),

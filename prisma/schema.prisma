@@ -347,7 +347,7 @@ model UserSettings {
   reviewReminderTime       String?         @default("08:00 PM")
   reviewDays               DayOfWeek[]     @default([Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday])
   includeWordLevels        MasteryLevel[]  @default([New, Learning, Familiar, Mastered])
-  prioritizeWeakWords      Boolean         @default(true)
+  showDetailsForFamiliarWords      Boolean         @default(true)
   autoRepeatForgottenWords Boolean         @default(true)
 
   // 2. Quiz settings

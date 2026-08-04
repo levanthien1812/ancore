@@ -186,19 +186,23 @@ const ReviewSettings = () => {
         <div className="space-y-4">
           <div className="flex flex-row items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-base" htmlFor="prioritizeWeakWords">
-                Prioritize Weak Words
+              <Label
+                className="text-base"
+                htmlFor="showDetailsForFamiliarWords"
+              >
+                Show Details for Familiar Words
               </Label>
               <p className="text-xs text-muted-foreground">
-                Focus more on words with lower mastery levels.
+                Show details for words that you have marked as
+                &quot;Familiar&quot;.
               </p>
             </div>
             <Controller
               control={control}
-              name="prioritizeWeakWords"
+              name="showDetailsForFamiliarWords"
               render={({ field }) => (
                 <Switch
-                  id="prioritizeWeakWords"
+                  id="showDetailsForFamiliarWords"
                   checked={!!field.value}
                   onCheckedChange={(val) =>
                     setTimeout(() => field.onChange(val), 0)
