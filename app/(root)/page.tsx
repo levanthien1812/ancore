@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { OnboardingDialog } from "@/components/home/onboarding-dialog";
 import WordOfTheDay from "@/components/home/word-of-the-day";
 import DailyHeatMap from "@/components/home/daily-heat-map";
+import WordProgressChart from "@/components/home/line-chart";
 
 export default async function Home() {
   return (
@@ -27,8 +28,14 @@ export default async function Home() {
           <WordCountByPeriodChart />
         </div>
         <div className="col-span-1 lg:col-span-6 2xl:col-span-3 ">
-          {/* <WordOfTheDay /> */}
           <DailyHeatMap />
+        </div>
+
+        <div className="col-span-1 lg:col-span-6 2xl:col-span-6 ">
+          <WordProgressChart />
+        </div>
+        <div className="col-span-1 lg:col-span-6 2xl:col-span-3 ">
+          <WordOfTheDay />
         </div>
       </div>
     </div>

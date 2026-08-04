@@ -777,3 +777,69 @@ export const getCurrentUser = async (userId: string) => {
   });
   return user;
 };
+
+export const getWordProgressChartData = async () =>
+  authenticationAction(async (userId) => {
+    const words = await prisma.word.findMany({
+      where: { userId },
+      select: {
+        createdAt: true,
+        updatedAt: true,
+        masteryLevel: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    const dataMap = new Map<string, { added: number; mastered: number }>();
+    let firstDate = new Date();
+    firstDate.setUTCDate(firstDate.getUTCDate() - 365); // minimum 365 days
+
+    if (words.length > 0 && words[0].createdAt < firstDate) {
+      firstDate = new Date(words[0].createdAt);
+    }
+
+    const now = new Date();
+    firstDate.setUTCHours(0, 0, 0, 0);
+
+    const currentDate = new Date(firstDate);
+    while (currentDate <= now) {
+      const dateStr = currentDate.toISOString().split("T")[0];
+      dataMap.set(dateStr, { added: 0, mastered: 0 });
+      currentDate.setUTCDate(currentDate.getUTCDate() + 1);
+    }
+
+    words.forEach((w) => {
+      const addedDateStr = w.createdAt.toISOString().split("T")[0];
+      if (dataMap.has(addedDateStr)) {
+        dataMap.get(addedDateStr)!.added += 1;
+      }
+
+      if (w.masteryLevel === MasteryLevel.Mastered) {
+        const masteredDateStr = w.updatedAt.toISOString().split("T")[0];
+        if (dataMap.has(masteredDateStr)) {
+          dataMap.get(masteredDateStr)!.mastered += 1;
+        }
+      }
+    });
+
+    const result = [];
+    let addedTotal = 0;
+    let masteredTotal = 0;
+
+    for (const [date, counts] of dataMap.entries()) {
+      addedTotal += counts.added;
+      masteredTotal += counts.mastered;
+      result.push({
+        date,
+        addedDaily: counts.added,
+        masteredDaily: counts.mastered,
+        addedTotal,
+        masteredTotal,
+      });
+    }
+
+    // Only return up to the last 365 days
+    return result.slice(-365);
+  }, []);

@@ -16,9 +16,14 @@ export const handlePlayPronunciation = (text: string) => {
   speechSynthesis.speak(utterance);
 };
 
-export const handlePlayAudio = (audio: HTMLAudioElement) => {
+export const handlePlayAudio = (
+  audio: HTMLAudioElement,
+  options?: { loop?: boolean; autoPlay?: boolean },
+) => {
   const isAudioOn = useAudioStore.getState().isAudioOn;
   if (!isAudioOn) return;
   audio.currentTime = 0;
+  audio.loop = options?.loop || false;
+  audio.autoplay = options?.autoPlay || true;
   audio.play().catch((err) => console.error("Audio play failed:", err));
 };

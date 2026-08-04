@@ -14,4 +14,5 @@ export const QUERY_KEY = {
   GET_REVIEW_STATISTICS: "getReviewStatistics",
   GET_MONTHLY_ACTIVITY: "getMonthlyActivity",
   GET_NOTABLE_WORDS: "getNotableWords",
+  GET_WORD_PROGRESS_CHART_DATA: "GET_WORD_PROGRESS_CHART_DATA",
 };

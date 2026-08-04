@@ -61,8 +61,9 @@ const QuizIntro = ({
 
   const handleStartQuiz = () => {
     const audio = new Audio("/sounds/loading.mp3");
-    audio.loop = true;
-    handlePlayAudio(audio);
+    handlePlayAudio(audio, {
+      loop: true,
+    });
     startTransition(async () => {
       const result = await createQuizSession(wordsToQuizCount, specificWords);
       if (result.success && result.quizId) {
