@@ -24,6 +24,12 @@ const WordList = ({
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const [globalFilter, setGlobalFilter] = React.useState("");
   const [debouncedGlobalFilter, setDebouncedGlobalFilter] = React.useState("");
+  const [searchFields, setSearchFields] = React.useState({
+    word: true,
+    definitions: true,
+    usageNotes: false,
+    examples: false,
+  });
 
   const word = selectedIndex !== null ? words[selectedIndex] : undefined;
   const { mode, setMode } = useLayoutStore();
@@ -38,7 +44,7 @@ const WordList = ({
     }
   }, [selectedIndex, words]);
 
-  // Debounce search input - wait 300ms after user stops typing
+  // Debounce search input - wait 800ms after user stops typing
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedGlobalFilter(globalFilter);
@@ -48,25 +54,35 @@ const WordList = ({
   }, [globalFilter]);
 
   useEffect(() => {
-    if (
-      !isFetchingNextPage &&
-      debouncedGlobalFilter.trim() &&
-      hasNextPage &&
-      onFetchNextPage
-    ) {
+    if (!isFetchingNextPage && onFetchNextPage) {
       // Count how many words match the current search
       const filteredCount = words.filter((word) => {
         const searchLower = debouncedGlobalFilter.toLowerCase();
-        return (
-          word.word.toLowerCase().includes(searchLower) ||
-          word.meanings.some((meaning) =>
-            meaning.definition.toLowerCase().includes(searchLower),
-          )
-        );
+        if (!searchLower) return true;
+
+        const matchWord =
+          searchFields.word && word.word.toLowerCase().includes(searchLower);
+        const matchDefinition =
+          searchFields.definitions &&
+          word.meanings.some((m) =>
+            m.definition.toLowerCase().includes(searchLower),
+          );
+        const matchUsage =
+          searchFields.usageNotes &&
+          word.meanings.some((m) =>
+            m.usageNotes?.toLowerCase().includes(searchLower),
+          );
+        const matchExamples =
+          searchFields.examples &&
+          word.meanings.some((m) =>
+            m.examples?.some((e) => e.toLowerCase().includes(searchLower)),
+          );
+
+        return matchWord || matchDefinition || matchUsage || matchExamples;
       }).length;
 
       // If no results found but there are more pages, load next page
-      if (filteredCount === 0) {
+      if (filteredCount === 0 && hasNextPage && debouncedGlobalFilter.trim()) {
         onFetchNextPage();
       }
     }
@@ -76,6 +92,7 @@ const WordList = ({
     isFetchingNextPage,
     onFetchNextPage,
     words,
+    searchFields,
   ]);
 
   return (
@@ -130,6 +147,8 @@ const WordList = ({
           globalFilter={globalFilter}
           onGlobalFilterChange={setGlobalFilter}
           isLoadingAll={isFetchingNextPage}
+          searchFields={searchFields}
+          onSearchFieldsChange={setSearchFields}
         />
       )}
       {mode === "list" && (
@@ -139,6 +158,8 @@ const WordList = ({
           globalFilter={globalFilter}
           onGlobalFilterChange={setGlobalFilter}
           isLoadingAll={isFetchingNextPage}
+          searchFields={searchFields}
+          onSearchFieldsChange={setSearchFields}
         />
       )}
       {word && (

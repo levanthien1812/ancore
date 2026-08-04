@@ -14,6 +14,7 @@ import {
   MousePointer2,
   MousePointer2Off,
   Trash,
+  Settings2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,6 +41,20 @@ type Props = {
   isSelectMode?: boolean;
   onToggleSelectMode?: (isActive: boolean) => void;
   isLoadingAll?: boolean;
+  searchFields?: {
+    word: boolean;
+    definitions: boolean;
+    usageNotes: boolean;
+    examples: boolean;
+  };
+  onSearchFieldsChange?: React.Dispatch<
+    React.SetStateAction<{
+      word: boolean;
+      definitions: boolean;
+      usageNotes: boolean;
+      examples: boolean;
+    }>
+  >;
 };
 
 const WordFilter = ({
@@ -47,6 +62,8 @@ const WordFilter = ({
   isSelectMode = false,
   onToggleSelectMode,
   isLoadingAll = false,
+  searchFields,
+  onSearchFieldsChange,
 }: Props) => {
   const [showFilters, setShowFilters] = useState(false);
   const { mode } = useLayoutStore();
@@ -67,7 +84,11 @@ const WordFilter = ({
         <div className="flex-1 relative flex items-center gap-1">
           <Input
             placeholder="🔎 Search for words..."
-            value={(table.getState().globalFilter as string) ?? ""}
+            value={
+              (typeof table.getState().globalFilter === "object" && table.getState().globalFilter !== null
+                ? (table.getState().globalFilter as { query?: string })?.query
+                : (table.getState().globalFilter as string)) ?? ""
+            }
             onChange={(event) => {
               table.setGlobalFilter(event.target.value);
               table.resetPageIndex();
@@ -75,14 +96,84 @@ const WordFilter = ({
             disabled={isLoadingAll}
             className="w-full text-sm md:w-52"
           />
-          {table.getState().globalFilter && (
+          {(typeof table.getState().globalFilter === "object" && table.getState().globalFilter !== null
+            ? (table.getState().globalFilter as { query?: string })?.query
+            : table.getState().globalFilter) && (
             <Button
               type="button"
               onClick={() => table.resetGlobalFilter()}
               variant="ghost"
+              className="h-8 w-8 px-0"
             >
               <Trash width={14} height={14} className="text-red-600" />
             </Button>
+          )}
+          {searchFields && onSearchFieldsChange && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 px-0"
+                  title="Search fields"
+                >
+                  <Settings2 width={16} height={16} className="text-gray-500" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">
+                  Search in
+                </div>
+                <DropdownMenuCheckboxItem
+                  checked={searchFields.word}
+                  onCheckedChange={(checked) => {
+                    onSearchFieldsChange((prev) => ({
+                      ...prev,
+                      word: !!checked,
+                    }));
+                    table.resetPageIndex();
+                  }}
+                >
+                  Word
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={searchFields.definitions}
+                  onCheckedChange={(checked) => {
+                    onSearchFieldsChange((prev) => ({
+                      ...prev,
+                      definitions: !!checked,
+                    }));
+                    table.resetPageIndex();
+                  }}
+                >
+                  Definitions
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={searchFields.usageNotes}
+                  onCheckedChange={(checked) => {
+                    onSearchFieldsChange((prev) => ({
+                      ...prev,
+                      usageNotes: !!checked,
+                    }));
+                    table.resetPageIndex();
+                  }}
+                >
+                  Usage Notes
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={searchFields.examples}
+                  onCheckedChange={(checked) => {
+                    onSearchFieldsChange((prev) => ({
+                      ...prev,
+                      examples: !!checked,
+                    }));
+                    table.resetPageIndex();
+                  }}
+                >
+                  Examples
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           {isLoadingAll && (
             <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
