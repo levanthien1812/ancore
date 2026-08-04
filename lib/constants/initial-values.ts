@@ -69,7 +69,7 @@ export const INITIAL_USER_SETTINGS: Omit<UserSettings, "id" | "userId"> = {
   reviewReminderTime: "22:00",
   reviewDays: Object.values(DayOfWeek),
   includeWordLevels: Object.values(MasteryLevel),
-  prioritizeWeakWords: true,
+  showDetailsForFamiliarWords: true,
   autoRepeatForgottenWords: true,
 
   // 2. Quiz settings

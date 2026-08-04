@@ -89,7 +89,7 @@ export const userSettingsSchema = z
     reviewReminderTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
     reviewDays: z.array(z.nativeEnum(DayOfWeek)),
     includeWordLevels: z.array(z.nativeEnum(MasteryLevel)),
-    prioritizeWeakWords: z.boolean(),
+    showDetailsForFamiliarWords: z.boolean(),
     autoRepeatForgottenWords: z.boolean(),
     questionsPerQuiz: z
       .number()
