@@ -9,9 +9,11 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
 
   // Check for Cambridge Dictionary specific classes
   const wordElement =
+    doc.querySelector(".phrase-title.dphrase-title") ||
     doc.querySelector(".headword.dhw") ||
     doc.querySelector(".hw.dsense_hw") ||
     doc.querySelector(".hw.dhw");
+
   if (!wordElement && !silent) {
     if (!silent) {
       toast.error(
@@ -52,33 +54,38 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
   // If we can't find a definition, this isn't a valid dictionary fragment
   if (!definition) return null;
 
-  const examples = Array.from(doc.querySelectorAll(".eg.deg"))
+  const defBody = doc.querySelector(".def-body.ddef_b");
+
+  const examples = Array.from(defBody?.querySelectorAll(".eg.deg") || [])
     .map((el) => el.textContent?.trim())
     .filter((t): t is string => !!t)
     .slice(0, 10);
 
   const synonyms = Array.from(
-    doc.querySelectorAll(
+    defBody?.querySelectorAll(
       ".xref.synonym .x-h.dx-h, .synonyms .x-h.dx-h, .synonym .x-h.dx-h",
-    ),
+    ) || [],
   )
     .map((el) => el.textContent?.trim())
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
   const antonyms = Array.from(
-    doc.querySelectorAll(
+    defBody?.querySelectorAll(
       ".xref.opposites .x-h.dx-h, .opposites .x-h.dx-h, .opposite .x-h.dx-h",
-    ),
+    ) || [],
   )
     .map((el) => el.textContent?.trim())
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
-  const usages = Array.from(doc.querySelectorAll(".usage.dusage"))
-    .map((el) => el.textContent?.trim())
-    .filter((t): t is string => !!t)
-    .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
+  const gram = doc.querySelector(".gram.dgram")?.textContent?.trim();
+
+  const usage = doc.querySelector(".usage.dusage")?.textContent?.trim();
+
+  const tag = doc.querySelector(".domain.ddomain")?.textContent?.trim();
+
+  const usages = `${gram} ${usage ? `[${usage}]` : ""}`;
 
   return {
     word: wordText,
@@ -90,6 +97,7 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     synonyms: synonyms.join(", "),
     antonyms: antonyms.join(", "),
     guideWord: guideWord || null,
-    usages: usages.join(", "),
+    usages: usages,
+    tags: tag,
   };
 };

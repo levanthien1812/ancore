@@ -13,7 +13,7 @@ import {
   updateQuizAnswerRetry,
 } from "@/lib/actions/quiz.actions";
 import { useMutation } from "@tanstack/react-query";
-import { QuizResultMode } from "@prisma/client";
+import { QuestionType, QuizResultMode } from "@prisma/client";
 import QuestionResult from "./question-result";
 import { normalizeText } from "@/lib/utils/normalize-text";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
@@ -65,7 +65,7 @@ const QuestionCard = ({
   const computeIsCorrect = useCallback(
     (answer: string | null): boolean => {
       if (!answer || !question.answer) return false;
-      if (question.type === "Matching") {
+      if (question.type === QuestionType.Matching) {
         try {
           const userObj = JSON.parse(answer);
           const correctObj = JSON.parse(question.answer);

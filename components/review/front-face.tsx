@@ -286,7 +286,7 @@ const FrontFace = ({
         <>
           {Object.keys(availableHints).length > 0 && !showHint && (
             <Button
-              className="text-white"
+              className="text-white w-fit mx-auto"
               onClick={handleClickShowHint}
               variant={"link"}
             >

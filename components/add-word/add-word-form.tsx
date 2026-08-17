@@ -81,7 +81,7 @@ const AddOrEditWordForm = ({
   const { data: user } = useCurrentUser();
   const processedSuccessRef = useRef(false);
   const { refetch: refetchTodayCount } = useQuery({
-    queryKey: ["wordsAddedToday"],
+    queryKey: [QUERY_KEY.GET_WORDS_ADDED_TODAY],
     queryFn: () => getWordsAddedToday(),
   });
   const [enteredWord, setEnteredWord] = useState(
@@ -345,6 +345,7 @@ const AddOrEditWordForm = ({
       antonyms,
       guideWord,
       usages,
+      tags,
     } = parsedContent;
 
     const type =
@@ -372,6 +373,9 @@ const AddOrEditWordForm = ({
         usageNotes: usages || null,
       },
     ]);
+    if (tags) {
+      setValue("tags", tags);
+    }
     setIsPasted(true);
     toast.success("Imported details from Cambridge Dictionary");
   };
@@ -388,15 +392,18 @@ const AddOrEditWordForm = ({
       handlePlayAudio(audio);
 
       processedSuccessRef.current = true;
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
-      queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });
       queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_PERIOD],
+        predicate: (query) =>
+          [
+            QUERY_KEY.GET_WORDS,
+            QUERY_KEY.GET_RECENT_WORDS,
+            QUERY_KEY.GET_WORDS_COUNT_BY_PERIOD,
+            QUERY_KEY.GET_WORDS_COUNT_BY_MASTERY_LEVEL,
+            QUERY_KEY.GET_WORD_PROGRESS_CHART_DATA,
+            QUERY_KEY.GET_MONTHLY_ACTIVITY,
+            QUERY_KEY.GET_WORDS_ADDED_TODAY,
+          ].includes(query.queryKey[0] as string),
       });
-      queryClient.invalidateQueries({
-        queryKey: [QUERY_KEY.GET_WORDS_COUNT_BY_MASTERY_LEVEL],
-      });
-      queryClient.invalidateQueries({ queryKey: ["wordsAddedToday"] });
 
       if (!word) {
         const goal =
@@ -649,7 +656,7 @@ const AddOrEditWordForm = ({
               <Badge
                 key={tag}
                 variant="secondary"
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 tracking-normal uppercase"
               >
                 {tag}
                 <button
