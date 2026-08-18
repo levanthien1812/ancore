@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "WordReview" ALTER COLUMN "wordLevelAfter" DROP NOT NULL,
+ALTER COLUMN "wordLevelAfter" DROP DEFAULT,
+ALTER COLUMN "wordLevelBefore" DROP NOT NULL,
+ALTER COLUMN "wordLevelBefore" DROP DEFAULT;

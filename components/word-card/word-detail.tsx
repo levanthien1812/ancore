@@ -16,6 +16,7 @@ import {
   Calendar,
   Clock,
   EllipsisIcon,
+  Info,
   PenIcon,
   Plus,
   RefreshCcw,
@@ -133,6 +134,7 @@ const WordDetail = ({
       value: `${reviewInfo?.reviewedTimes} times`,
       icon: <RefreshCcw className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
       display: true,
+      hasPopover: true,
     },
     {
       text: "Last Review",
@@ -268,7 +270,55 @@ const WordDetail = ({
             >
               {item.icon}
               <div className="space-y-1">
-                <p className="text-white text-xs sm:text-sm">{item.text}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-white text-xs sm:text-sm">{item.text}</p>
+                  {item.hasPopover &&
+                    reviewInfo?.reviewHistory &&
+                    reviewInfo.reviewHistory.length > 0 && (
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Info className="w-3 h-3 md:w-4 md:h-4 text-blue-300 cursor-pointer hover:text-blue-100" />
+                        </PopoverTrigger>
+                        <PopoverContent
+                          className="w-48 sm:w-64 max-h-[250px] no-scrollbar p-3 bg-blue-950 border-blue-800 text-white"
+                          side="top"
+                        >
+                          <h4 className="text-sm font-semibold mb-3">
+                            Review History
+                          </h4>
+                          <div className="relative border-l border-blue-700 ml-2 space-y-4">
+                            {reviewInfo.reviewHistory.map((review, i) => (
+                              <div key={review.id} className="relative pl-4">
+                                <div className="absolute w-2 h-2 bg-blue-500 rounded-full -left-[4.5px] top-1.5 ring-2 ring-blue-950" />
+                                <div className="text-xs text-blue-200">
+                                  <span className="font-medium">#{i + 1}</span>{" "}
+                                  &bull;{" "}
+                                  {review.completedAt
+                                    ? format(
+                                        new Date(review.completedAt),
+                                        "MMM dd, yyyy",
+                                      )
+                                    : "Pending"}
+                                </div>
+                                {review.performance && (
+                                  <div className="text-sm font-medium mt-0.5 capitalize">
+                                    {review.performance.toLowerCase()}
+                                  </div>
+                                )}
+                                {(review.wordLevelBefore ||
+                                  review.wordLevelAfter) && (
+                                  <div className="text-xs text-blue-300 mt-0.5">
+                                    {review.wordLevelBefore} &rarr;{" "}
+                                    {review.wordLevelAfter}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                </div>
                 {isLoadingReviewInfo ? (
                   <Skeleton className="h-6 w-[60px] bg-blue-800/50" />
                 ) : (
