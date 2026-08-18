@@ -278,6 +278,8 @@ model WordReview {
   completedAt  DateTime?
   intervalDays Int
   performance  ReviewPerformance?
+  wordLevelBefore    MasteryLevel? 
+  wordLevelAfter     MasteryLevel? 
 }
 
 model StudySession {

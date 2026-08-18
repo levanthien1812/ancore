@@ -99,7 +99,7 @@ const QuizCarousel = ({ quiz }: { quiz: QuizWithAnswers }) => {
           }
         });
       } else {
-        toast.error("Could not save quiz results. Quiz Log ID is missing.");
+        toast.error("Could not save quiz results. Quiz ID is missing.");
       }
     }
   }, [api, quiz.quizAnswers, startTime, user?.settings?.allowRetry]);

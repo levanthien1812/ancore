@@ -125,6 +125,8 @@ export const updateWordReview = async (
             // Save the performance rating for this specific review session
             performance: performance,
             studySessionId: studySessionId,
+            wordLevelBefore: word.masteryLevel,
+            wordLevelAfter: newMasteryLevel,
           },
         }),
       );
@@ -157,14 +159,14 @@ export const updateWordReview = async (
 
 export const startStudySession = async () =>
   authenticationAction(async (userId) => {
-    const log = await prisma.studySession.create({
+    const session = await prisma.studySession.create({
       data: {
         userId,
         completedAt: null,
         durationSeconds: 0,
       },
     });
-    return log.id;
+    return session.id;
   });
 
 export const updateReviewSession = async (
@@ -199,7 +201,7 @@ export const updateReviewSession = async (
 
 export const getStudySessions = async (date: Date) =>
   authenticationAction(async (userId) => {
-    const logs = await prisma.studySession.findMany({
+    const sessions = await prisma.studySession.findMany({
       where: {
         userId,
         completedAt: dateFilter(date),
@@ -217,8 +219,8 @@ export const getStudySessions = async (date: Date) =>
       },
     });
 
-    return logs;
-  }, []);
+    return sessions;
+  });
 
 export const getStudySessionsByMonth = async (year: number, month: number) =>
   authenticationAction(async (userId) => {
@@ -226,7 +228,7 @@ export const getStudySessionsByMonth = async (year: number, month: number) =>
     const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
     const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-    const logs = await prisma.studySession.findMany({
+    const sessions = await prisma.studySession.findMany({
       where: {
         userId,
         completedAt: {
@@ -239,13 +241,13 @@ export const getStudySessionsByMonth = async (year: number, month: number) =>
       },
     });
 
-    // Extract unique dates that have logs
+    // Extract unique dates that have sessions
     const datesWithSessions = new Set(
-      logs.map((log) => format(log.completedAt!, "yyyy-MM-dd")),
+      sessions.map((session) => format(session.completedAt!, "yyyy-MM-dd")),
     );
 
     return Array.from(datesWithSessions);
-  }, []);
+  });
 
 export const getReviewInfo = async (wordId: string) => {
   return authenticationAction(async (userId) => {
@@ -257,17 +259,20 @@ export const getReviewInfo = async (wordId: string) => {
       return null;
     }
 
+    const reviews = await prisma.wordReview.findMany({
+      where: { wordId, userId, completedAt: { not: null } },
+      orderBy: { scheduledAt: "asc" },
+    });
+
     const info: WordReviewInfo = {
       nextReviewAt: null,
       nextReviewIn: null,
       overdueIn: null,
       lastReviewAt: word.lastReviewedAt,
-      reviewedTimes: 0,
+      reviewedTimes: reviews.length,
+      reviewHistory: reviews,
     };
 
-    info.reviewedTimes = await prisma.wordReview.count({
-      where: { wordId, userId, completedAt: { not: null } },
-    });
     // 2. Get next review date from the earliest uncompleted session
     const nextScheduledReview = await prisma.wordReview.findFirst({
       where: { wordId, userId, completedAt: null }, // Look for uncompleted
@@ -381,7 +386,7 @@ async function calculateReviewStreak(
   return { currentStreak, bestStreak };
 }
 
-// Helper to process review logs and extract metrics
+// Helper to process review sessions and extract metrics
 interface ReviewMetrics {
   totalWordsReviewed: number;
   totalStudyTimeSeconds: number;
@@ -389,7 +394,7 @@ interface ReviewMetrics {
 }
 
 function calculatePerformanceMetrics(
-  logs: {
+  sessions: {
     durationSeconds: number;
     reviews: { performance: ReviewPerformance | null }[];
   }[],
@@ -404,12 +409,12 @@ function calculatePerformanceMetrics(
     Easy: 0,
   } as Record<ReviewPerformance, number>;
 
-  for (const log of logs) {
-    totalStudyTimeSeconds += log.durationSeconds;
-    for (const session of log.reviews) {
-      if (session.performance) {
+  for (const session of sessions) {
+    totalStudyTimeSeconds += session.durationSeconds;
+    for (const review of session.reviews) {
+      if (review.performance) {
         totalWordsReviewed++;
-        performanceCounts[session.performance]++;
+        performanceCounts[review.performance]++;
       }
     }
   }
@@ -449,7 +454,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       previousPeriodEnd,
     } = getPeriodDateRange(period);
 
-    // Fetch current period logs
+    // Fetch current period sessions
     const currentSessions = await prisma.studySession.findMany({
       where: {
         userId,
@@ -506,7 +511,7 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       }
     }
 
-    // Fetch previous period logs for comparison
+    // Fetch previous period sessions for comparison
     let previousMetrics: ReviewMetrics | null = null;
     if (previousPeriodStart && previousPeriodEnd) {
       const previousSessions = await prisma.studySession.findMany({
@@ -572,21 +577,21 @@ export const getReviewStatistics = async (period: ReviewPeriod) =>
       { totalWords: number; goodEasyWords: number }
     >();
 
-    for (const log of currentSessions) {
+    for (const session of currentSessions) {
       const dateKey = format(
-        startOfDay(log.completedAt || new Date()),
+        startOfDay(session.completedAt || new Date()),
         "dd/MM",
       );
       if (!dailyDataMap.has(dateKey)) {
         dailyDataMap.set(dateKey, { totalWords: 0, goodEasyWords: 0 });
       }
       const dailyStats = dailyDataMap.get(dateKey)!;
-      for (const session of log.reviews) {
-        if (session.performance) {
+      for (const review of session.reviews) {
+        if (review.performance) {
           dailyStats.totalWords++;
           if (
-            session.performance === ReviewPerformance.Good ||
-            session.performance === ReviewPerformance.Easy
+            review.performance === ReviewPerformance.Good ||
+            review.performance === ReviewPerformance.Easy
           ) {
             dailyStats.goodEasyWords++;
           }
@@ -768,7 +773,7 @@ export const sendEmailRemindReviewSessions = async () => {
           });
 
           if (error) {
-            // This will show you exactly why Resend is rejecting the request in your logs
+            // This will show you exactly why Resend is rejecting the request in your sessions
             console.error(`Resend API error for ${user.email}:`, error);
           } else if (data) {
             emailResults.push({

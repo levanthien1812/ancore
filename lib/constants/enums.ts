@@ -1,4 +1,4 @@
-import { ReviewPerformance } from "@prisma/client";
+import { ReviewPerformance, WordReview } from "@prisma/client";
 import { ReviewPeriod } from "../utils/date-helpers";
 
 export enum CEFRLevel {
@@ -164,6 +164,7 @@ export type WordReviewInfo = {
   overdueIn: number | null;
   lastReviewAt: Date | null;
   reviewedTimes: number;
+  reviewHistory: WordReview[];
 };
 
 export const REVIEW_PERIOD_LABEL: Record<ReviewPeriod, string> = {
