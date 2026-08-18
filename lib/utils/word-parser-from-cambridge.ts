@@ -79,11 +79,11 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
-  const gram = doc.querySelector(".gram.dgram")?.textContent?.trim();
+  const gram = doc.querySelector(".gram.dgram")?.textContent?.trim() || "";
 
-  const usage = doc.querySelector(".usage.dusage")?.textContent?.trim();
+  const usage = doc.querySelector(".usage.dusage")?.textContent?.trim() || "";
 
-  const tag = doc.querySelector(".domain.ddomain")?.textContent?.trim();
+  const tag = doc.querySelector(".domain.ddomain")?.textContent?.trim() || "";
 
   const usages = `${gram} ${usage ? `[${usage}]` : ""}`;
 

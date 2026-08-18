@@ -135,11 +135,19 @@ const WordGrid = ({
 
   const customGlobalFilterFn = React.useCallback(
     (row: Row<WordWithMeanings>, columnId: string, filterValue: unknown) => {
-      const filterObj = typeof filterValue === 'object' && filterValue !== null ? (filterValue as { query?: string; searchFields?: typeof searchFields }) : null;
+      const filterObj =
+        typeof filterValue === "object" && filterValue !== null
+          ? (filterValue as {
+              query?: string;
+              searchFields?: typeof searchFields;
+            })
+          : null;
       const query = filterObj ? filterObj.query : filterValue;
-      const fields = filterObj?.searchFields ? filterObj.searchFields : searchFields;
+      const fields = filterObj?.searchFields
+        ? filterObj.searchFields
+        : searchFields;
 
-      const searchLower = (query as string || "").toLowerCase();
+      const searchLower = ((query as string) || "").toLowerCase();
       if (!searchLower) return true;
       const word = row.original;
 
@@ -181,12 +189,26 @@ const WordGrid = ({
       globalFilter: { query: globalFilter, searchFields },
     },
     onSortingChange: setSorting,
-    onGlobalFilterChange: (updater: Updater<{ query: string; searchFields: typeof searchFields } | string>) => {
-      if (typeof updater === 'function') {
+    onGlobalFilterChange: (
+      updater: Updater<
+        { query: string; searchFields: typeof searchFields } | string
+      >,
+    ) => {
+      if (typeof updater === "function") {
         const newValue = updater({ query: globalFilter, searchFields });
-        setGlobalFilter(typeof newValue === "object" && newValue !== null && "query" in newValue ? newValue.query : (newValue as string));
+        setGlobalFilter(
+          typeof newValue === "object" &&
+            newValue !== null &&
+            "query" in newValue
+            ? newValue.query
+            : (newValue as string),
+        );
       } else {
-        setGlobalFilter(typeof updater === "object" && updater !== null && "query" in updater ? updater.query : (updater as string));
+        setGlobalFilter(
+          typeof updater === "object" && updater !== null && "query" in updater
+            ? updater.query
+            : (updater as string),
+        );
       }
     },
     onColumnFiltersChange: setColumnFilters,
@@ -218,6 +240,12 @@ const WordGrid = ({
         searchFields={searchFields}
         onSearchFieldsChange={onSearchFieldsChange}
       />
+      {table.getRowModel().rows.length === 0 && (
+        <div className="text-muted-foreground text-2xl p-4 min-h-48 flex items-center justify-center bg-gray-50 rounded-lg">
+          No words found.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {table.getRowModel().rows.map((row) => (
           <React.Fragment key={row.id}>

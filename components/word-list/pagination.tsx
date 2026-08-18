@@ -28,9 +28,10 @@ const Pagination = <TData,>({
     <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
       <div>
         {/* filtered word count */}
-        <span className="text-sm">
-          Page {pagination.pageIndex + 1} of {table.getPageCount()}
-        </span>{" "}
+        <span className="text-xs uppercase tracking-wider">
+          Page <span className="font-bold">{pagination.pageIndex + 1}</span> of{" "}
+          <span className="font-bold">{table.getPageCount()}</span>
+        </span>
         {table.getFilteredRowModel().rows.length !==
           table.getCoreRowModel().rows.length && (
           <span className="text-sm">
@@ -41,7 +42,9 @@ const Pagination = <TData,>({
 
       <div className="flex gap-2 w-full md:w-auto justify-between md:justify-end">
         <div className="flex gap-2 items-center">
-          <span className="text-sm">Rows per page: </span>
+          <span className="text-xs uppercase tracking-wider">
+            Rows per page:{" "}
+          </span>
           <Select
             onValueChange={(value) => table.setPageSize(Number(value))}
             value={String(table.getState().pagination.pageSize)}

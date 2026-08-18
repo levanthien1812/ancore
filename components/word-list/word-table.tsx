@@ -332,6 +332,11 @@ const WordTable = ({
         searchFields={searchFields}
         onSearchFieldsChange={onSearchFieldsChange}
       />
+      {table.getRowModel().rows.length === 0 && (
+        <div className="text-muted-foreground text-2xl p-4 min-h-48 flex items-center justify-center bg-gray-50 rounded-lg">
+          No words found.
+        </div>
+      )}
       <Table>
         <TableCaption>Word list</TableCaption>
         <TableHeader>
