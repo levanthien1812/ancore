@@ -102,7 +102,7 @@ const WordTable = ({
         accessorKey: "word",
         header: "Word",
         cell: ({ row }) => (
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center w-full min-w-0">
             <WordTitle
               word={row.original}
               onClick={() => onClickTitle(row.index)}

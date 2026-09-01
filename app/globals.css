@@ -51,6 +51,23 @@
   --color-level-forgot: var(--level-forgot);
 }
 
+@keyframes overflow-text-scroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(var(--overflow-distance));
+  }
+}
+
+.group:hover .marquee-on-group-hover {
+  display: inline-block !important;
+  overflow: visible !important;
+  max-width: none !important;
+  animation: overflow-text-scroll var(--overflow-duration) linear forwards;
+}
+
 :root {
   --radius: 0.625rem;
   --background: oklch(100% 0.00011 271.152);
@@ -170,7 +187,6 @@
 .custom-scrollbar-y::-webkit-scrollbar-thumb:active {
   background-color: #a3a3a3;
 }
-
 
 .custom-scrollbar-y::-webkit-scrollbar {
   width: 4px;
