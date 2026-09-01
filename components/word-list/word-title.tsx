@@ -2,6 +2,7 @@
 import { SquareArrowOutUpRightIcon } from "lucide-react";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { useLayoutStore } from "@/lib/stores/layout-store";
+import { OverflowText } from "./overflow-text";
 
 interface WordTitleProps {
   word: WordWithMeanings;
@@ -16,16 +17,16 @@ const WordTitle = ({ word, onClick, disabled }: WordTitleProps) => {
     <button
       type="button"
       disabled={disabled}
-      className={`min-w-0 cursor-pointer ${mode === "list" ? "text-primary" : "text-white"} group outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md transition text-left ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+      className={`flex-1 min-w-0 w-full cursor-pointer ${mode === "list" ? "text-primary" : "text-white"} group outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-md transition text-left ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       onClick={onClick}
     >
-      <div className="flex gap-1 items-center min-w-0">
-        <p
-          className="flex-1 min-w-0 font-bold text-2xl leading-tight hover:underline truncate max-w-full group-hover:text-shadow-md"
+      <div className="flex gap-1 items-center min-w-0 w-full">
+        <OverflowText
+          className="font-bold text-2xl leading-tight hover:underline group-hover:text-shadow-md"
           title={`${word.word} ${word.meanings[0]?.usageNotes ? `- ${word.meanings[0].usageNotes}` : ""}`}
         >
           {word.word}
-        </p>
+        </OverflowText>
         <SquareArrowOutUpRightIcon
           width={14}
           height={14}

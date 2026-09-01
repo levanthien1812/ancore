@@ -47,7 +47,7 @@ const WordCard = ({
     >
       <div className="flex gap-2 items-start">
         <div className="flex flex-col flex-1 items-start overflow-hidden">
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-center w-full min-w-0">
             {isSelectMode && (
               <div className="flex">
                 <input
