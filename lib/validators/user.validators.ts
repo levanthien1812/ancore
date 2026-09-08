@@ -30,11 +30,15 @@ export const signUpFormSchema = z
     password: z
       .string()
       .min(8, "Password must be at least 8 characters long")
-      .max(100),
+      .max(100)
+      .regex(/[A-Za-z]/, "Password must contain at least one letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
     confirmPassword: z
       .string()
       .min(8, "Confirm password must be at least 8 characters long")
-      .max(100),
+      .max(100)
+      .regex(/[A-Za-z]/, "Confirm password must contain at least one letter")
+      .regex(/[0-9]/, "Confirm password must contain at least one number"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -167,7 +171,42 @@ export const userProfileSchema = z
     newPassword: z.string().optional().nullable(),
     confirmNewPassword: z.string().optional().nullable(),
   })
-  .refine((data) => data.newPassword === data.confirmNewPassword, {
-    message: "Passwords do not match",
-    path: ["confirmNewPassword"],
+  .superRefine((data, ctx) => {
+    if (data.newPassword && data.newPassword.trim().length > 0) {
+      if (data.newPassword.length < 8) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Password must be at least 8 characters long",
+          path: ["newPassword"],
+        });
+      }
+      if (data.newPassword.length > 100) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Password cannot exceed 100 characters",
+          path: ["newPassword"],
+        });
+      }
+      if (!/[A-Za-z]/.test(data.newPassword)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Password must contain at least one letter",
+          path: ["newPassword"],
+        });
+      }
+      if (!/[0-9]/.test(data.newPassword)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Password must contain at least one number",
+          path: ["newPassword"],
+        });
+      }
+      if (data.newPassword !== data.confirmNewPassword) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Passwords do not match",
+          path: ["confirmNewPassword"],
+        });
+      }
+    }
   });

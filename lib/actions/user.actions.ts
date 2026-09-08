@@ -472,6 +472,7 @@ export const sendEmailVerification = async (user: User, token: string) => {
         userName: user.name || "Learner",
         email: user.email,
         token: token,
+        tokenExpiresIn: Number(process.env.VERIFY_TOKEN_EXPIRES_IN || 5),
       }),
     });
 
@@ -541,10 +542,12 @@ export const saveProfile = async (prevState: unknown, formData: FormData) =>
 
     const validatedFields = userProfileSchema.safeParse(profile);
     if (!validatedFields.success) {
+      const errors = validatedFields.error.flatten().fieldErrors;
+      const errorMessages = Object.values(errors).flat();
       return {
         success: false,
-        message: "Validation failed.",
-        errors: validatedFields.error.flatten().fieldErrors,
+        message: errorMessages[0] || "Validation failed.",
+        errors: errors,
       };
     }
 

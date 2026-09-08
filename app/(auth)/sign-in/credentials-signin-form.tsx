@@ -59,7 +59,19 @@ const CredentialsSigninForm = () => {
           }}
         />
       )}
-      <AlertMessage data={data} />
+      <AlertMessage data={data}>
+        {!data.success && data.message === "Please verify your email" && (
+          <>
+            {" "}
+            <Link
+              href="/verify-email"
+              className="underline font-semibold hover:opacity-80"
+            >
+              here
+            </Link>
+          </>
+        )}
+      </AlertMessage>
       <div className="container space-y-6 mt-4">
         <div>
           <Label htmlFor="email">Email address</Label>
