@@ -30,18 +30,35 @@ const Profile = () => {
 
   const methods = useForm({
     defaultValues: {
-      email: user?.email || "",
-      name: user?.name || "",
-      image: user?.image || "",
-      level: user?.level || UserLevel.Beginner,
-      topics: user?.topics || "",
-      nativeLanguage: user?.nativeLanguage || "English",
-      dailyGoal: user?.dailyGoal || DEFAULT_DAILY_WORD_GOAL,
+      email: "",
+      name: "",
+      image: "",
+      level: UserLevel.Beginner as UserLevel,
+      topics: "",
+      nativeLanguage: "English",
+      dailyGoal: DEFAULT_DAILY_WORD_GOAL,
       password: "",
       newPassword: "",
       confirmNewPassword: "",
     },
   });
+
+  useEffect(() => {
+    if (user) {
+      methods.reset({
+        email: user.email || "",
+        name: user.name || "",
+        image: user.image || "",
+        level: user.level || UserLevel.Beginner,
+        topics: user.topics || "",
+        nativeLanguage: user.nativeLanguage || "English",
+        dailyGoal: user.dailyGoal || DEFAULT_DAILY_WORD_GOAL,
+        password: "",
+        newPassword: "",
+        confirmNewPassword: "",
+      });
+    }
+  }, [user, methods]);
 
   const onSubmit = async (data: UserProfile) => {
     const formData = new FormData();
@@ -66,8 +83,18 @@ const Profile = () => {
       toast.success(state.message);
     } else {
       toast.error(state.message);
+      if (state.errors) {
+        for (const [key, value] of Object.entries(state.errors)) {
+          if (Array.isArray(value) && value.length > 0) {
+            methods.setError(key as keyof UserProfile, {
+              type: "manual",
+              message: value[0],
+            });
+          }
+        }
+      }
     }
-  }, [state]);
+  }, [state, methods]);
 
   return (
     <div>

@@ -25,7 +25,11 @@ import Image from "next/image";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
 const Account = () => {
-  const { register, watch } = useFormContext();
+  const {
+    register,
+    watch,
+    formState: { errors },
+  } = useFormContext();
   const { data: user } = useCurrentUser();
   const [isChangingPassword, setIsChangingPassword] = React.useState(false);
   const [isCorrectPassword, setIsCorrectPassword] = React.useState(false);
@@ -33,6 +37,12 @@ const Account = () => {
   const [previewImage, setPreviewImage] = React.useState<string | undefined>(
     user?.image || "",
   );
+
+  React.useEffect(() => {
+    if (user?.image) {
+      setPreviewImage(user.image);
+    }
+  }, [user?.image]);
 
   const email = watch("email");
 
@@ -150,6 +160,11 @@ const Account = () => {
                 type="password"
                 {...register("newPassword")}
               />
+              {errors.newPassword && (
+                <p className="text-xs text-destructive text-end font-medium">
+                  {errors.newPassword.message as string}
+                </p>
+              )}
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="confirmNewPassword">Confirm New Password</Label>
@@ -158,6 +173,15 @@ const Account = () => {
                 type="password"
                 {...register("confirmNewPassword")}
               />
+              {errors.confirmNewPassword && (
+                <p className="text-xs text-destructive text-end font-medium">
+                  {errors.confirmNewPassword.message as string}
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground mt-1 text-end italic">
+                Minimum 8 characters required.
+                <br /> Must contain both letters and numbers.
+              </p>
             </div>
           </>
         ) : (

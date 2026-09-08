@@ -22,6 +22,7 @@ const VerifyEmailForm = ({ email }: { email: string }) => {
 
   const handleResend = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    event.stopPropagation();
     if (isResending) return;
     setIsResending(true);
 
@@ -69,87 +70,90 @@ const VerifyEmailForm = ({ email }: { email: string }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <AlertMessage data={data} />
-      <div className="container space-y-6 mt-4">
-        <div>
-          <Label htmlFor="email">Email address</Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="mt-1"
-            defaultValue={email}
-          />
-        </div>
-        <div>
-          <Label htmlFor="token">Verification token</Label>
-          <Input
-            id="token"
-            name="token"
-            type="token"
-            required
-            autoComplete="token"
-            className="mt-1"
-          />
-        </div>
-        <div className="flex justify-end">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="link"
-                type="button"
+    <>
+      <form onSubmit={handleSubmit}>
+        <AlertMessage data={data} />
+        <div className="container space-y-6 mt-4">
+          <div>
+            <Label htmlFor="email">Email address</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              className="mt-1"
+              defaultValue={email}
+            />
+          </div>
+          <div>
+            <Label htmlFor="token">Verification token</Label>
+            <Input
+              id="token"
+              name="token"
+              type="token"
+              required
+              autoComplete="token"
+              className="mt-1"
+            />
+          </div>
+          <div className="flex justify-end">
+            <Button
+              variant="link"
+              type="button"
+              className="text-primary hover:underline hover:text-primary-2"
+              onClick={() => setOpen(true)}
+            >
+              Resend verification email
+            </Button>
+          </div>
+          <div>
+            <VerifyButton />
+          </div>
+          <div className="">
+            <p className="text-center text-sm">
+              Already verified your email?{" "}
+              <Link
+                href={"/sign-in"}
+                target="_self"
                 className="text-primary hover:underline hover:text-primary-2"
               >
-                Resend verification email
+                Sign in
+              </Link>
+            </p>
+          </div>
+        </div>
+      </form>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="p-4 rounded-2xl">
+          <form onSubmit={handleResend} className="space-y-4">
+            <DialogTitle className="text-2xl font-bold">
+              Resend verification email
+            </DialogTitle>
+            <div>
+              <Label htmlFor="resend-email">Email address</Label>
+              <Input
+                id="resend-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                className="mt-1"
+                defaultValue={email}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit" disabled={isResending}>
+                {isResending ? "Resending..." : "Resend verification email"}
               </Button>
-            </DialogTrigger>
-            <DialogContent className="p-4 rounded-2xl">
-              <form onSubmit={handleResend} className="space-y-4">
-                <DialogTitle className="text-2xl font-bold">
-                  Resend verification email
-                </DialogTitle>
-                <div>
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    className="mt-1"
-                    defaultValue={email}
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={isResending}>
-                    {isResending ? "Resending..." : "Resend verification email"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div>
-          <VerifyButton />
-        </div>
-        <div className="">
-          <p className="text-center text-sm">
-            Already verified your email?{" "}
-            <Link
-              href={"/sign-in"}
-              target="_self"
-              className="text-primary hover:underline hover:text-primary-2"
-            >
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </div>
-    </form>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
 export default VerifyEmailForm;
+

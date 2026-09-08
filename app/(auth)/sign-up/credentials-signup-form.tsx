@@ -76,6 +76,10 @@ const CredentialsSignupForm = () => {
             autoComplete="password"
             className="mt-1"
           />
+          <p className="text-xs text-muted-foreground mt-1 text-end italic">
+            Minimum 8 characters required.
+            <br /> Must contain both letters and numbers.
+          </p>
         </div>
         <div>
           <Label htmlFor="confirm-password">Confirm Password</Label>
