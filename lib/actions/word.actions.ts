@@ -588,9 +588,29 @@ export const getWordsToReviewCount = async () =>
           },
         },
       },
+      _min: {
+        scheduledAt: true,
+      },
     });
 
-    return reviews.length;
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    let dueToday = 0;
+    let dueInPast = 0;
+
+    for (const item of reviews) {
+      if (item._min.scheduledAt && item._min.scheduledAt < startOfToday) {
+        dueInPast++;
+      } else {
+        dueToday++;
+      }
+    }
+
+    return {
+      dueToday,
+      dueInPast,
+    };
   });
 
 export const deleteWords = async (prevState: unknown, formData: FormData) =>

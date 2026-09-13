@@ -11,7 +11,7 @@ import {
   Mic,
 } from "lucide-react";
 import Link from "next/link";
-import React, { useMemo, useState, useEffect, useTransition } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { signOutUser } from "@/lib/actions/user.actions";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -25,11 +25,10 @@ import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { getWordsToReviewCount } from "@/lib/actions/word.actions";
 
-type SidebarItem = {
+type SidebarItemConfig = {
   title: string;
   icon: React.ReactNode;
   path: string;
-  showPopover?: boolean;
   onDismiss?: () => void;
   onAccept?: () => void;
   popoverContent?: React.ReactNode;
@@ -40,37 +39,28 @@ const SidebarItem = React.memo(
     item,
     open,
     isActive,
+    showPopover,
     popoverSide,
   }: {
-    item: SidebarItem;
+    item: SidebarItemConfig;
     open: boolean;
     isActive: boolean;
+    showPopover?: boolean;
     popoverSide: "top" | "right";
   }) => {
     const router = useRouter();
-    const [isPending, startTransition] = useTransition();
 
-    const handleNavigate = (e: React.MouseEvent) => {
-      // Allow standard browser behavior for modified clicks (e.g., cmd+click to open in new tab)
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return;
-
-      // Don't trigger transition if already on the active route
-      if (isActive) return;
-
-      e.preventDefault();
-      startTransition(() => {
-        router.push(item.path);
-      });
+    const handleMouseEnter = () => {
+      router.prefetch(item.path);
     };
 
     const linkContent = (
       <Link
         href={item.path}
-        onClick={handleNavigate}
+        onMouseEnter={handleMouseEnter}
         className={cn(
           "flex flex-col md:flex-row justify-between items-center md:justify-center gap-0 md:gap-2 py-0.5 md:py-2 px-2 md:px-4 bg-white hover:bg-primary-2 hover:text-white transition-all ease-in duration-150 rounded-sm md:rounded-l-none md:rounded-r-md",
           isActive && "bg-primary-2 text-white",
-          isPending && "animate-pulse opacity-70 bg-primary-2/30",
         )}
       >
         <span className="">{item.icon}</span>
@@ -82,13 +72,13 @@ const SidebarItem = React.memo(
       </Link>
     );
 
-    if (!item.showPopover) {
+    if (!showPopover) {
       return <li className="flex-1 md:flex-none">{linkContent}</li>;
     }
 
     return (
       <li className="flex-1 md:flex-none">
-        <Popover open={item.showPopover}>
+        <Popover open={showPopover}>
           <PopoverTrigger asChild>{linkContent}</PopoverTrigger>
           <PopoverContent
             side={popoverSide}
@@ -137,7 +127,7 @@ const Sidebar = () => {
   const { data: wordsToReview } = useQuery({
     queryKey: ["get-word-counts"],
     queryFn: () => getWordsToReviewCount(),
-    initialData: 0,
+    initialData: { dueToday: 0, dueInPast: 0 },
   });
 
   useEffect(() => {
@@ -167,7 +157,7 @@ const Sidebar = () => {
     router.push("/review");
   }, [router, handleDismissNotification]);
 
-  const sidebarItems = useMemo<SidebarItem[]>(() => {
+  const sidebarItems = useMemo<SidebarItemConfig[]>(() => {
     return [
       {
         title: "Home",
@@ -183,10 +173,6 @@ const Sidebar = () => {
         title: "Review",
         icon: <Star width={22} />,
         path: "/review",
-        showPopover:
-          pathname !== "/review" &&
-          wordsToReview > 0 &&
-          !isReviewNotificationDismissed,
         onDismiss: handleDismissNotification,
         onAccept: handleAcceptNotification,
         popoverContent: "You have a review session",
@@ -207,13 +193,15 @@ const Sidebar = () => {
         path: "/talk",
       },
     ];
-  }, [
-    wordsToReview,
-    isReviewNotificationDismissed,
-    pathname,
-    handleAcceptNotification,
-    handleDismissNotification,
-  ]);
+  }, [handleAcceptNotification, handleDismissNotification]);
+
+  const totalWordsToReview =
+    (wordsToReview?.dueToday ?? 0) + (wordsToReview?.dueInPast ?? 0);
+
+  const isReviewPopoverVisible =
+    pathname !== "/review" &&
+    totalWordsToReview > 0 &&
+    !isReviewNotificationDismissed;
 
   return (
     <div className="w-full md:w-fit bg-white h-auto md:h-full shadow-md p-1 md:p-1.5 md:ps-0 sm:p-2 md:pt-8 md:pb-2 flex flex-row md:flex-col gap-2 group justify-between md:justify-start border-t md:border-t-0 md:border-r">
@@ -232,6 +220,7 @@ const Sidebar = () => {
             item={item}
             open={open}
             popoverSide={popoverSide}
+            showPopover={item.path === "/review" ? isReviewPopoverVisible : false}
             isActive={
               item.path === "/"
                 ? pathname === "/"

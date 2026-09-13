@@ -25,7 +25,11 @@ import { MotionButton } from "../shared/motion-button";
 import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
 
-const ReviewIntro = ({ count }: { count: number }) => {
+const ReviewIntro = ({
+  count,
+}: {
+  count: { dueToday: number; dueInPast: number };
+}) => {
   const [started, setStarted] = useState(false);
   const { data: user } = useCurrentUser();
   const [reviewLimit, setReviewLimit] = useState(
@@ -35,6 +39,8 @@ const ReviewIntro = ({ count }: { count: number }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [studySessionId, setStudySessionId] = useState<string | null>(null);
   const [isStarting, setIsStarting] = useState(false);
+
+  const totalCount = (count?.dueToday ?? 0) + (count?.dueInPast ?? 0);
 
   const {
     data: words,
@@ -90,7 +96,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
     refetch();
   };
 
-  if (count === 0) {
+  if (totalCount === 0) {
     return (
       <div className="flex flex-col justify-center items-center gap-4 rounded-[24px] shadow-[0px_4px_20px_0px_rgba(0,0,0,0.1)] p-4 text-center h-full">
         <p className="text-2xl font-semibold">No words to review!</p>
@@ -123,13 +129,25 @@ const ReviewIntro = ({ count }: { count: number }) => {
         Keep your streak alive and strengthen your memory.
       </p>
       <Image src={reviewIllustration} alt="review illustration" height={240} />
+
+      <div className="flex justify-center items-center gap-3 my-1">
+        <div className="flex flex-col items-center px-4 py-2 rounded-xl bg-blue-50 border border-blue-200">
+          <span className="text-xs text-blue-700 font-medium">Due today</span>
+          <span className="text-lg font-bold text-blue-900">{count.dueToday}</span>
+        </div>
+        <div className="flex flex-col items-center px-4 py-2 rounded-xl bg-amber-50 border border-amber-200">
+          <span className="text-xs text-amber-700 font-medium">Due in past</span>
+          <span className="text-lg font-bold text-amber-900">{count.dueInPast}</span>
+        </div>
+      </div>
+
       <div>
         <div className="text-muted-foreground text-center">
-          {count > reviewLimit ? (
+          {totalCount > reviewLimit ? (
             <p>
               You have{" "}
-              <span className="font-bold text-foreground">{count} words</span>{" "}
-              due. This session will cover{" "}
+              <span className="font-bold text-foreground">{totalCount} words</span>{" "}
+              due in total. This session will cover{" "}
               <span className="font-bold text-primary text-lg">
                 {reviewLimit}
               </span>{" "}
@@ -139,7 +157,7 @@ const ReviewIntro = ({ count }: { count: number }) => {
             <p>
               You are about to review all{" "}
               <span className="font-bold text-primary text-lg">
-                {count} words
+                {totalCount} words
               </span>{" "}
               ready for review.
             </p>
