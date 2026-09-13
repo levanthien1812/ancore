@@ -2,7 +2,7 @@
 import { WordWithMeanings } from "../add-word/add-word-form";
 import {
   MASTERY_LEVELS,
-  PARTS_OF_SPEECH,
+  PARTS_OF_SPEECH_WORDS,
   PARTS_OF_SPEECH_PHRASES,
 } from "@/lib/constants/enums";
 import { Button } from "../ui/button";
@@ -85,7 +85,8 @@ const WordFilter = ({
           <Input
             placeholder="🔎 Search for words..."
             value={
-              (typeof table.getState().globalFilter === "object" && table.getState().globalFilter !== null
+              (typeof table.getState().globalFilter === "object" &&
+              table.getState().globalFilter !== null
                 ? (table.getState().globalFilter as { query?: string })?.query
                 : (table.getState().globalFilter as string)) ?? ""
             }
@@ -96,7 +97,8 @@ const WordFilter = ({
             disabled={isLoadingAll}
             className="w-full text-sm md:w-52"
           />
-          {(typeof table.getState().globalFilter === "object" && table.getState().globalFilter !== null
+          {(typeof table.getState().globalFilter === "object" &&
+          table.getState().globalFilter !== null
             ? (table.getState().globalFilter as { query?: string })?.query
             : table.getState().globalFilter) && (
             <Button
@@ -279,11 +281,13 @@ const WordFilter = ({
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                {[...PARTS_OF_SPEECH, ...PARTS_OF_SPEECH_PHRASES].map((pos) => (
-                  <SelectItem key={pos} value={pos}>
-                    {pos}
-                  </SelectItem>
-                ))}
+                {[...PARTS_OF_SPEECH_WORDS, ...PARTS_OF_SPEECH_PHRASES].map(
+                  (pos) => (
+                    <SelectItem key={pos} value={pos}>
+                      {pos}
+                    </SelectItem>
+                  ),
+                )}
               </SelectGroup>
             </SelectContent>
           </Select>

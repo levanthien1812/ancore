@@ -48,7 +48,7 @@ export enum PartOfSpeech {
   Collocation = "collocation",
 }
 
-export const PARTS_OF_SPEECH: PartOfSpeech[] = [
+export const PARTS_OF_SPEECH_WORDS: PartOfSpeech[] = [
   PartOfSpeech.Noun,
   PartOfSpeech.Verb,
   PartOfSpeech.Adjective,

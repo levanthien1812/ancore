@@ -44,6 +44,8 @@ import {
   CEFRLevel,
   MASTERY_LEVELS,
   NotificationType,
+  PartOfSpeech,
+  PARTS_OF_SPEECH_WORDS,
 } from "@/lib/constants/enums";
 import FieldError from "../shared/field-error";
 import { WordOfTheDay } from "../home/word-of-the-day";
@@ -349,7 +351,8 @@ const AddOrEditWordForm = ({
     } = parsedContent;
 
     const type =
-      parsedWord.trim().split(/\s+/).length > 1
+      parsedWord.trim().split(/\s+/).length > 1 &&
+      !PARTS_OF_SPEECH_WORDS.includes(pos as PartOfSpeech)
         ? WordType.Phrase
         : WordType.Word;
 
