@@ -7,7 +7,10 @@ import ReviewHistory from "@/components/review/review-history";
 import ReviewStats from "@/components/review/review-stats";
 
 interface ReviewTabsWrapperProps {
-  count: number;
+  count: {
+    dueToday: number;
+    dueInPast: number;
+  };
   activeTab: string;
 }
 
