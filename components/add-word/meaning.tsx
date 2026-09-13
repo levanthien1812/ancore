@@ -15,7 +15,7 @@ import FieldError from "../shared/field-error";
 import {
   CEFR_LEVELS,
   CEFRLevel,
-  PARTS_OF_SPEECH,
+  PARTS_OF_SPEECH_WORDS,
   PARTS_OF_SPEECH_PHRASES,
 } from "@/lib/constants/enums";
 import { WordWithMeanings } from "./add-word-form";
@@ -249,7 +249,7 @@ const Meaning = memo(function Meaning({
               <SelectContent>
                 <SelectGroup>
                   {(entryType === WordType.Word
-                    ? PARTS_OF_SPEECH
+                    ? PARTS_OF_SPEECH_WORDS
                     : PARTS_OF_SPEECH_PHRASES
                   ).map((part) => (
                     <SelectItem key={part} value={part}>

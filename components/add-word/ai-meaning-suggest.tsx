@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../ui/select";
-import { PARTS_OF_SPEECH } from "@/lib/constants/enums";
+import { PARTS_OF_SPEECH_WORDS } from "@/lib/constants/enums";
 import { useMutation } from "@tanstack/react-query";
 import { fillWithAI } from "@/lib/actions/word.actions";
 import { toast } from "sonner";
@@ -114,7 +114,7 @@ const AiMeaningSuggest = ({
                 <SelectValue placeholder="Select Part of Speech" />
               </SelectTrigger>
               <SelectContent>
-                {PARTS_OF_SPEECH.map((pos) => (
+                {PARTS_OF_SPEECH_WORDS.map((pos) => (
                   <SelectItem key={pos} value={pos}>
                     {pos}
                   </SelectItem>
