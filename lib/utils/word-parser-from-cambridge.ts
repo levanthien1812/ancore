@@ -56,10 +56,9 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
 
   const defBody = doc.querySelector(".def-body.ddef_b");
 
-  const examples = Array.from(defBody?.querySelectorAll(".eg.deg") || [])
-    .map((el) => el.textContent?.trim())
-    .filter((t): t is string => !!t)
-    .slice(0, 10);
+  const examples = defBody
+    ? extractCambridgeExamples(defBody).slice(0, 10)
+    : extractCambridgeExamples(doc).slice(0, 10);
 
   const synonyms = Array.from(
     defBody?.querySelectorAll(
@@ -100,4 +99,47 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     usages: usages,
     tags: tag,
   };
+};
+
+export const extractCambridgeExamples = (
+  container: Document | Element,
+): string[] => {
+  const exampleBlocks = Array.from(
+    container.querySelectorAll(".examp.dexamp, .examp, .dataset, .eg-block"),
+  );
+
+  if (exampleBlocks.length > 0) {
+    const results: string[] = [];
+    for (const block of exampleBlocks) {
+      const italicEl = block.querySelector(".eg.deg, .eg, .deg");
+      const boldEl = block.querySelector(".lu.dlu, .lu, .dlu");
+
+      if (italicEl && italicEl.textContent?.trim()) {
+        results.push(italicEl.textContent.trim());
+      } else if (boldEl && boldEl.textContent?.trim()) {
+        results.push(boldEl.textContent.trim());
+      }
+    }
+    if (results.length > 0) {
+      return results;
+    }
+  }
+
+  const italicElements = Array.from(
+    container.querySelectorAll(".eg.deg, .eg, .deg"),
+  )
+    .map((el) => el.textContent?.trim())
+    .filter((t): t is string => !!t);
+
+  if (italicElements.length > 0) {
+    return italicElements;
+  }
+
+  const boldElements = Array.from(
+    container.querySelectorAll(".lu.dlu, .lu, .dlu"),
+  )
+    .map((el) => el.textContent?.trim())
+    .filter((t): t is string => !!t);
+
+  return boldElements;
 };

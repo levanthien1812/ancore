@@ -16,4 +16,6 @@ export const QUERY_KEY = {
   GET_NOTABLE_WORDS: "getNotableWords",
   GET_WORD_PROGRESS_CHART_DATA: "getWordProgressChartData",
   GET_WORDS_ADDED_TODAY: "getWordsAddedToday",
+  GET_REVIEW_INFO: "getReviewInfo",
+  GET_WORD: "getWord",
 };

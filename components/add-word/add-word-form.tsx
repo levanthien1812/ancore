@@ -408,6 +408,10 @@ const AddOrEditWordForm = ({
           ].includes(query.queryKey[0] as string),
       });
 
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEY.GET_WORD, word?.id],
+      });
+
       if (!word) {
         const goal =
           user?.settings?.dailyNewWordsGoal ??
