@@ -29,7 +29,7 @@ import { formatPronunciation } from "@/lib/utils/pronunciation";
 import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import IconDisplay from "../shared/icon-display";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { deleteWords, updateWord } from "@/lib/actions/word.actions";
+import { deleteWords, getWord, updateWord } from "@/lib/actions/word.actions";
 import { getReviewInfo } from "@/lib/actions/review.actions";
 import { WordReviewInfo } from "@/lib/constants/enums";
 import { format } from "date-fns";
@@ -59,6 +59,14 @@ const WordDetail = ({
     INITIAL_ACTION_STATE,
   );
 
+  const { data: refetchWord } = useQuery<WordWithMeanings | null>({
+    queryKey: [QUERY_KEY.GET_WORD, word.id],
+    queryFn: async () => {
+      const response = await getWord(word.id);
+      return response;
+    },
+  });
+
   const { mutate: updateWordMutation, isPending: isUpdating } = useMutation({
     mutationKey: ["update-word"],
     mutationFn: async (payload: Partial<WordWithMeanings>) => {
@@ -67,13 +75,16 @@ const WordDetail = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_WORDS] });
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY.GET_RECENT_WORDS] });
+      queryClient.invalidateQueries({
+        queryKey: [QUERY_KEY.GET_WORD, word.id],
+      });
       toast.success("Word updated");
     },
   });
 
   const { data: reviewInfo, isLoading: isLoadingReviewInfo } =
     useQuery<WordReviewInfo | null>({
-      queryKey: ["review-info", word.id],
+      queryKey: [QUERY_KEY.GET_REVIEW_INFO, word.id],
       queryFn: async () => {
         const response = await getReviewInfo(word.id);
         return response;
@@ -110,11 +121,9 @@ const WordDetail = ({
     });
   };
 
-  // useEffect(() => {
-  //   setCurrent(0)
-  // }, [word])
+  if (!refetchWord) return null;
 
-  const currentMeaning = word.meanings[current];
+  const currentMeaning = refetchWord.meanings[current];
 
   const reviewStatsItems = [
     {
@@ -146,7 +155,9 @@ const WordDetail = ({
     },
     {
       text: "Added At",
-      value: word.createdAt ? format(word.createdAt, "dd/MM/yyyy") : "--",
+      value: refetchWord.createdAt
+        ? format(refetchWord.createdAt, "dd/MM/yyyy")
+        : "--",
       icon: <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
       display: true,
     },
@@ -161,7 +172,9 @@ const WordDetail = ({
               {currentMeaning?.cefrLevel}
             </Badge>
           )}
-          <div className="text-4xl font-bold text-white">{word.word}</div>
+          <div className="text-4xl font-bold text-white">
+            {refetchWord.word}
+          </div>
           {currentMeaning?.pronunciation && (
             <p className="text-sm text-white">
               {formatPronunciation(currentMeaning?.pronunciation)}
@@ -172,12 +185,12 @@ const WordDetail = ({
           <IconDisplay
             icon={Volume2Icon}
             asButton
-            onClick={() => handlePlayPronunciation(word.word)}
+            onClick={() => handlePlayPronunciation(refetchWord.word)}
             additionalClasses="hidden md:block"
           />
           <div className="hidden md:block">
             <AddOrEditWord
-              word={word}
+              word={refetchWord}
               triggerButton={<IconDisplay icon={PenIcon} asButton />}
             />
           </div>
@@ -191,23 +204,25 @@ const WordDetail = ({
                 <Button
                   variant={"link"}
                   onClick={() =>
-                    updateWordMutation({ highlighted: !word.highlighted })
+                    updateWordMutation({
+                      highlighted: !refetchWord.highlighted,
+                    })
                   }
                   isLoading={isUpdating}
                 >
-                  {word.highlighted ? "Unfavorite" : "Add to Favorite"}
+                  {refetchWord.highlighted ? "Unfavorite" : "Add to Favorite"}
                 </Button>
               </div>
               <div className="border-t block md:hidden">
                 <AddOrEditWord
-                  word={word}
+                  word={refetchWord}
                   triggerButton={<Button variant={"link"}>Edit</Button>}
                 />
               </div>
               <div className="border-t block md:hidden">
                 <Button
                   variant={"link"}
-                  onClick={() => handlePlayPronunciation(word.word)}
+                  onClick={() => handlePlayPronunciation(refetchWord.word)}
                 >
                   Play audio
                 </Button>
@@ -218,7 +233,7 @@ const WordDetail = ({
                   setShowDialog={setShowDeleteDialog}
                   handleDelete={handleDelete}
                   title="Delete word"
-                  message={`Are you sure you want to delete "${word.word}"?`}
+                  message={`Are you sure you want to delete "${refetchWord.word}"?`}
                   isLoading={isDeleting}
                   triggerButton={
                     <Button variant={"link"} className="text-red-600">
@@ -235,13 +250,13 @@ const WordDetail = ({
 
       <Carousel setApi={setApi} className="w-full mt-2 md:mt-4 relative">
         <CarouselContent>
-          {word.meanings.map((meaning) => (
+          {refetchWord.meanings.map((meaning) => (
             <CarouselItem key={meaning.id}>
-              <WordMeaning meaning={meaning} word={word.word} />
+              <WordMeaning meaning={meaning} word={refetchWord.word} />
             </CarouselItem>
           ))}
         </CarouselContent>
-        {word.meanings.length > 1 && (
+        {refetchWord.meanings.length > 1 && (
           <div className="flex gap-1 absolute bottom-1 right-1">
             <IconDisplay
               asButton

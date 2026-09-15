@@ -55,6 +55,34 @@ export const getWordListByFilter = async (wordFilter: WordFitler) =>
     { words: [], totalCount: 0 },
   );
 
+export const getAllWords = async (filter?: Partial<WordFitler>) =>
+  authenticationAction(async (userId) => {
+    const where = {
+      userId,
+      ...(filter?.masteryLevel && {
+        masteryLevel: filter.masteryLevel,
+      }),
+      ...(filter?.tags &&
+        filter.tags.length > 0 && {
+          tags: {
+            hasEvery: filter.tags,
+          },
+        }),
+    };
+
+    const words = await prisma.word.findMany({
+      where,
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        meanings: true,
+      },
+    });
+
+    return words;
+  }, []);
+
 export const getRecentWords = async () =>
   authenticationAction(async (userId) => {
     return await prisma.word.findMany({
