@@ -30,7 +30,10 @@ import {
 import { ChevronUp, Ellipsis, Plus, Trash, Volume2Icon } from "lucide-react";
 import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
-import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
+import {
+  extractCambridgeExamples,
+  parseWordFromCambridge,
+} from "@/lib/utils/word-parser-from-cambridge";
 import { INITIAL_MEANING } from "@/lib/constants/initial-values";
 import IconDisplay from "../shared/icon-display";
 import { cn } from "@/lib/utils";
@@ -93,13 +96,7 @@ const Meaning = memo(function Meaning({
     if (htmlData) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlData, "text/html");
-      // Detect Cambridge Dictionary example elements
-      const elements = doc.querySelectorAll(".eg.deg");
-      if (elements.length > 0) {
-        newItems = Array.from(elements)
-          .map((el) => el.textContent?.trim())
-          .filter((t): t is string => !!t);
-      }
+      newItems = extractCambridgeExamples(doc);
     }
 
     // Fallback to splitting by newline if no structured HTML examples were found
