@@ -30,9 +30,15 @@ export const getWordListByFilter = async (wordFilter: WordFitler) =>
         ...(wordFilter.masteryLevel && {
           masteryLevel: wordFilter.masteryLevel,
         }),
-        ...(wordFilter.tags && {
-          hasEvery: wordFilter.tags,
-        }),
+        ...(wordFilter.tags &&
+          wordFilter.tags.length > 0 && {
+            AND: wordFilter.tags.map((tag) => ({
+              tags: {
+                contains: tag,
+                mode: "insensitive" as const,
+              },
+            })),
+          }),
       };
 
       const [words, totalCount] = await Promise.all([
@@ -64,9 +70,12 @@ export const getAllWords = async (filter?: Partial<WordFitler>) =>
       }),
       ...(filter?.tags &&
         filter.tags.length > 0 && {
-          tags: {
-            hasEvery: filter.tags,
-          },
+          AND: filter.tags.map((tag) => ({
+            tags: {
+              contains: tag,
+              mode: "insensitive" as const,
+            },
+          })),
         }),
     };
 
