@@ -1,8 +1,8 @@
 "use client";
 
 import WordList from "@/components/word-list/word-list";
-import { getWordListByFilter } from "@/lib/actions/word.actions";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { getWordListByFilter, getAllWords } from "@/lib/actions/word.actions";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,8 @@ import { useLayoutStore } from "@/lib/stores/layout-store";
 
 const WordsPage = () => {
   const [isExploring, setIsExploring] = useState(false);
+  const queryClient = useQueryClient();
+
   const {
     data,
     fetchNextPage,
@@ -40,6 +42,11 @@ const WordsPage = () => {
       }
     },
     getNextPageParam: (lastPage, allPages) => {
+      const currentFetchedCount = allPages.reduce(
+        (acc, page) => acc + page.words.length,
+        0,
+      );
+      if (currentFetchedCount >= lastPage.totalCount) return undefined;
       return lastPage.words.length === DEFAULT_WORDS_PER_FETCH
         ? allPages.length + 1
         : undefined;
@@ -51,12 +58,22 @@ const WordsPage = () => {
 
   const handleFetchAll = async () => {
     setIsFetchingAll(true);
-    let currentHasNextPage = hasNextPage;
-    while (currentHasNextPage) {
-      const res = await fetchNextPage();
-      currentHasNextPage = res.hasNextPage;
+    try {
+      const allWords = await getAllWords();
+      queryClient.setQueryData([QUERY_KEY.GET_WORDS], {
+        pages: [
+          {
+            words: allWords,
+            totalCount: allWords.length,
+          },
+        ],
+        pageParams: [1],
+      });
+    } catch (err) {
+      console.error("Failed to fetch all words:", err);
+    } finally {
+      setIsFetchingAll(false);
     }
-    setIsFetchingAll(false);
   };
 
   const allWords = data?.pages.flatMap((page) => page.words) || [];
@@ -140,7 +157,9 @@ const WordsPage = () => {
         totalCount={totalCount}
         hasNextPage={hasNextPage}
         onFetchNextPage={fetchNextPage}
+        onFetchAllWords={handleFetchAll}
         isFetchingNextPage={isFetchingNextPage}
+        isFetchingAll={isFetchingAll}
       />
       {hasNextPage && (
         <div className="mt-4 flex flex-col sm:flex-row gap-2">

@@ -13,13 +13,17 @@ const WordList = ({
   totalCount,
   hasNextPage = false,
   onFetchNextPage,
+  onFetchAllWords,
   isFetchingNextPage = false,
+  isFetchingAll = false,
 }: {
   words: WordWithMeanings[];
   totalCount: number;
   hasNextPage?: boolean;
   onFetchNextPage?: () => void;
+  onFetchAllWords?: () => void;
   isFetchingNextPage?: boolean;
+  isFetchingAll?: boolean;
 }) => {
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
   const [globalFilter, setGlobalFilter] = React.useState("");
@@ -54,7 +58,7 @@ const WordList = ({
   }, [globalFilter]);
 
   useEffect(() => {
-    if (!isFetchingNextPage && onFetchNextPage) {
+    if (!isFetchingNextPage && !isFetchingAll && (onFetchAllWords || onFetchNextPage)) {
       // Count how many words match the current search
       const filteredCount = words.filter((word) => {
         const searchLower = debouncedGlobalFilter.toLowerCase();
@@ -81,19 +85,27 @@ const WordList = ({
         return matchWord || matchDefinition || matchUsage || matchExamples;
       }).length;
 
-      // If no results found but there are more pages, load next page
+      // If no results found but there are more pages, fetch all words directly
       if (filteredCount === 0 && hasNextPage && debouncedGlobalFilter.trim()) {
-        onFetchNextPage();
+        if (onFetchAllWords) {
+          onFetchAllWords();
+        } else if (onFetchNextPage) {
+          onFetchNextPage();
+        }
       }
     }
   }, [
     debouncedGlobalFilter,
     hasNextPage,
     isFetchingNextPage,
+    isFetchingAll,
     onFetchNextPage,
+    onFetchAllWords,
     words,
     searchFields,
   ]);
+
+  const isLoadingAll = isFetchingNextPage || isFetchingAll;
 
   return (
     <div>
@@ -146,7 +158,7 @@ const WordList = ({
           onClickTitle={handleTitleClick}
           globalFilter={globalFilter}
           onGlobalFilterChange={setGlobalFilter}
-          isLoadingAll={isFetchingNextPage}
+          isLoadingAll={isLoadingAll}
           searchFields={searchFields}
           onSearchFieldsChange={setSearchFields}
         />
@@ -157,7 +169,7 @@ const WordList = ({
           onClickTitle={handleTitleClick}
           globalFilter={globalFilter}
           onGlobalFilterChange={setGlobalFilter}
-          isLoadingAll={isFetchingNextPage}
+          isLoadingAll={isLoadingAll}
           searchFields={searchFields}
           onSearchFieldsChange={setSearchFields}
         />

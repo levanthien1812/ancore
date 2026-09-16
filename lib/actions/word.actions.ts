@@ -30,9 +30,15 @@ export const getWordListByFilter = async (wordFilter: WordFitler) =>
         ...(wordFilter.masteryLevel && {
           masteryLevel: wordFilter.masteryLevel,
         }),
-        ...(wordFilter.tags && {
-          hasEvery: wordFilter.tags,
-        }),
+        ...(wordFilter.tags &&
+          wordFilter.tags.length > 0 && {
+            AND: wordFilter.tags.map((tag) => ({
+              tags: {
+                contains: tag,
+                mode: "insensitive" as const,
+              },
+            })),
+          }),
       };
 
       const [words, totalCount] = await Promise.all([
@@ -54,6 +60,37 @@ export const getWordListByFilter = async (wordFilter: WordFitler) =>
     },
     { words: [], totalCount: 0 },
   );
+
+export const getAllWords = async (filter?: Partial<WordFitler>) =>
+  authenticationAction(async (userId) => {
+    const where = {
+      userId,
+      ...(filter?.masteryLevel && {
+        masteryLevel: filter.masteryLevel,
+      }),
+      ...(filter?.tags &&
+        filter.tags.length > 0 && {
+          AND: filter.tags.map((tag) => ({
+            tags: {
+              contains: tag,
+              mode: "insensitive" as const,
+            },
+          })),
+        }),
+    };
+
+    const words = await prisma.word.findMany({
+      where,
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        meanings: true,
+      },
+    });
+
+    return words;
+  }, []);
 
 export const getRecentWords = async () =>
   authenticationAction(async (userId) => {
