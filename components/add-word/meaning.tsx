@@ -181,6 +181,7 @@ const Meaning = memo(function Meaning({
         examples: parsed.examples.length > 0 ? parsed.examples : [""],
         synonyms: parsed.synonyms || null,
         antonyms: parsed.antonyms || null,
+        tags: parsed.tags,
       };
 
       setValue(`meanings.${index}.definition`, newMeaning.definition);
@@ -191,6 +192,16 @@ const Meaning = memo(function Meaning({
       setValue(`meanings.${index}.examples`, newMeaning.examples);
       setValue(`meanings.${index}.synonyms`, newMeaning.synonyms);
       setValue(`meanings.${index}.antonyms`, newMeaning.antonyms);
+
+      if (newMeaning.tags) {
+        const currentTags = (getValues("tags") || "")
+          .split(", ")
+          .filter((tag) => tag !== "");
+        const newTags = newMeaning.tags
+          .split(", ")
+          .filter((tag) => !currentTags.includes(tag));
+        setValue("tags", [...currentTags, ...newTags].join(", "));
+      }
 
       toast.success("Populated current meaning block");
       return;

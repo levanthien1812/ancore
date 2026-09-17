@@ -376,8 +376,15 @@ const AddOrEditWordForm = ({
         usageNotes: usages || null,
       },
     ]);
+
     if (tags) {
-      setValue("tags", tags);
+      const currentTags = (getValues("tags") || "")
+        .split(", ")
+        .filter((tag) => tag !== "");
+      const newTags = tags
+        .split(", ")
+        .filter((tag) => !currentTags.includes(tag));
+      setValue("tags", [...currentTags, ...newTags].join(", "));
     }
     setIsPasted(true);
     toast.success("Imported details from Cambridge Dictionary");

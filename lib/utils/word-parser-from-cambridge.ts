@@ -82,9 +82,19 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
 
   const usage = doc.querySelector(".usage.dusage")?.textContent?.trim() || "";
 
-  const tag = doc.querySelector(".domain.ddomain")?.textContent?.trim() || "";
+  const tags = Array.from(doc.querySelectorAll(".domain.ddomain"))
+    .map((el) => el.textContent?.trim())
+    .filter((t): t is string => !!t)
+    .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
-  const usages = `${gram} ${usage ? `[${usage}]` : ""}`;
+  const variants =
+    doc.querySelector(".var.dvar, .spellvar.dspellvar")?.textContent?.trim() ||
+    "";
+
+  const usages = [gram, usage, variants]
+    .filter((t): t is string => !!t)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join("\n");
 
   return {
     word: wordText,
@@ -97,7 +107,7 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     antonyms: antonyms.join(", "),
     guideWord: guideWord || null,
     usages: usages,
-    tags: tag,
+    tags: tags.join(", "),
   };
 };
 
