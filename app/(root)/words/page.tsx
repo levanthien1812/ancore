@@ -29,19 +29,33 @@ const WordsPage = () => {
     error,
   } = useInfiniteQuery({
     queryKey: [QUERY_KEY.GET_WORDS],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: async ({ pageParam = 1 }: { pageParam?: number | "all" }) => {
       try {
+        if (pageParam === "all") {
+          const allWords = await getAllWords();
+          return {
+            words: allWords,
+            totalCount: allWords.length,
+            isAll: true,
+          };
+        }
+
         const result = await getWordListByFilter({
           page: pageParam as number,
           limit: DEFAULT_WORDS_PER_FETCH,
         });
-        return result;
+        return {
+          ...result,
+          isAll: false,
+        };
       } catch (err) {
         console.error("Failed to fetch words:", err);
         throw err;
       }
     },
     getNextPageParam: (lastPage, allPages) => {
+      if (lastPage.isAll) return undefined;
+
       const currentFetchedCount = allPages.reduce(
         (acc, page) => acc + page.words.length,
         0,
@@ -51,7 +65,7 @@ const WordsPage = () => {
         ? allPages.length + 1
         : undefined;
     },
-    initialPageParam: 1,
+    initialPageParam: 1 as number | "all",
   });
 
   const [isFetchingAll, setIsFetchingAll] = useState(false);
@@ -65,9 +79,10 @@ const WordsPage = () => {
           {
             words: allWords,
             totalCount: allWords.length,
+            isAll: true,
           },
         ],
-        pageParams: [1],
+        pageParams: ["all"],
       });
     } catch (err) {
       console.error("Failed to fetch all words:", err);

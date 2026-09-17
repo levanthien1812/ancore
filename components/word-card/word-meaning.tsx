@@ -35,7 +35,7 @@ const WordMeaning = ({
   return (
     <div
       key={meaning.id}
-      className="text-white border border-white/40 rounded-lg p-4 max-h-[420px] no-scrollbar overflow-y-auto h-full"
+      className="text-white bg-white/5 border border-white/40 rounded-lg p-4 max-h-[420px] no-scrollbar overflow-y-auto h-full"
     >
       <div className="">
         {meaning.partOfSpeech && (
@@ -123,7 +123,9 @@ const WordMeaning = ({
               <IconDisplay icon={NotebookPen} bgClass="bg-purple-400" />
               <div className="">
                 <p className="text-md font-bold">Usage Notes:</p>
-                <p className="mt-1 text-sm">{meaning.usageNotes}</p>
+                <p className="mt-1 text-sm whitespace-pre-wrap">
+                  {meaning.usageNotes}
+                </p>
               </div>
             </div>
           </>

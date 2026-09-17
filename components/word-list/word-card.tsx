@@ -9,6 +9,7 @@ import IconDisplay from "../shared/icon-display";
 import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
 import { WordType } from "@prisma/client";
 import PartsOfSpeech from "./parts-of-speech";
+import { Badge } from "../ui/badge";
 
 const WordCard = ({
   word,
@@ -38,6 +39,10 @@ const WordCard = ({
     },
   );
 
+  const uniqueCefrLevel = [
+    ...new Set(word.meanings.map((m) => m.cefrLevel)),
+  ].filter((level) => level !== null && level.length > 0);
+
   return (
     <div
       className={`p-3 sm:p-4 rounded-lg shadow-sm shadow-primary bg-primary group relative transition-colors duration-200 md:hover:shadow-md md:hover:bg-primary-2 md:hover:shadow-primary-2 ${
@@ -47,7 +52,7 @@ const WordCard = ({
     >
       <div className="flex gap-2 items-start">
         <div className="flex flex-col flex-1 items-start overflow-hidden">
-          <div className="flex gap-2 items-center w-full min-w-0">
+          <div className="flex gap-1 items-center w-full min-w-0">
             {isSelectMode && (
               <div className="flex">
                 <input
@@ -71,6 +76,11 @@ const WordCard = ({
               size="sm"
               onClick={() => handlePlayPronunciation(word.word)}
             />
+            {word.highlighted && <div className="ms-auto">⭐</div>}
+            <WordMasteryLevel
+              level={word.masteryLevel as MasteryLevel}
+              wordId={word.id}
+            />
           </div>
           <div className="flex items-center">
             <p className="text-sm text-white">
@@ -85,15 +95,15 @@ const WordCard = ({
                 wordType={word.type as string}
               />
             )}
+            {uniquePos.length > 0 && uniqueCefrLevel.length > 0 && (
+              <Dot width={16} height={16} color="white" opacity={0.5} />
+            )}
+            {uniqueCefrLevel.length > 0 && (
+              <Badge className="bg-primary-2 text-primary text-[10px] font-bold py-0 px-1 rounded-sm">
+                {uniqueCefrLevel.join("/")}
+              </Badge>
+            )}
           </div>
-        </div>
-        <div></div>
-        <div className="flex gap-1 items-center">
-          {word.highlighted && <div className="ms-auto">⭐</div>}
-          <WordMasteryLevel
-            level={word.masteryLevel as MasteryLevel}
-            wordId={word.id}
-          />
         </div>
       </div>
 
