@@ -87,7 +87,14 @@ export const parseWordFromCambridge = (html: string, silent = false) => {
     .filter((t): t is string => !!t)
     .filter((v, i, a) => a.indexOf(v) === i); // Remove duplicates
 
-  const usages = `${gram} ${usage ? `[${usage}]` : ""}`;
+  const variants =
+    doc.querySelector(".var.dvar, .spellvar.dspellvar")?.textContent?.trim() ||
+    "";
+
+  const usages = [gram, usage, variants]
+    .filter((t): t is string => !!t)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join("\n");
 
   return {
     word: wordText,
