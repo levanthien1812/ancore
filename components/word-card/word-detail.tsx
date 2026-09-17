@@ -121,9 +121,10 @@ const WordDetail = ({
     });
   };
 
-  if (!refetchWord) return null;
+  const displayWord = refetchWord ?? word;
 
-  const currentMeaning = refetchWord.meanings[current];
+  const currentMeaning =
+    displayWord.meanings[current] || displayWord.meanings[0];
 
   const reviewStatsItems = [
     {
@@ -155,8 +156,8 @@ const WordDetail = ({
     },
     {
       text: "Added At",
-      value: refetchWord.createdAt
-        ? format(refetchWord.createdAt, "dd/MM/yyyy")
+      value: displayWord.createdAt
+        ? format(displayWord.createdAt, "dd/MM/yyyy")
         : "--",
       icon: <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-blue-500" />,
       display: true,
@@ -168,12 +169,12 @@ const WordDetail = ({
       <div className="flex gap-2">
         <div className="space-y-1 flex-1">
           {currentMeaning?.cefrLevel && (
-            <Badge className="bg-primary-2 text-white">
+            <Badge className="bg-primary-2 rounded-md text-primary font-bold">
               {currentMeaning?.cefrLevel}
             </Badge>
           )}
           <div className="text-4xl font-bold text-white">
-            {refetchWord.word}
+            {displayWord.word}
           </div>
           {currentMeaning?.pronunciation && (
             <p className="text-sm text-white">
@@ -185,12 +186,12 @@ const WordDetail = ({
           <IconDisplay
             icon={Volume2Icon}
             asButton
-            onClick={() => handlePlayPronunciation(refetchWord.word)}
+            onClick={() => handlePlayPronunciation(displayWord.word)}
             additionalClasses="hidden md:block"
           />
           <div className="hidden md:block">
             <AddOrEditWord
-              word={refetchWord}
+              word={displayWord}
               triggerButton={<IconDisplay icon={PenIcon} asButton />}
             />
           </div>
@@ -205,24 +206,24 @@ const WordDetail = ({
                   variant={"link"}
                   onClick={() =>
                     updateWordMutation({
-                      highlighted: !refetchWord.highlighted,
+                      highlighted: !displayWord.highlighted,
                     })
                   }
                   isLoading={isUpdating}
                 >
-                  {refetchWord.highlighted ? "Unfavorite" : "Add to Favorite"}
+                  {displayWord.highlighted ? "Unfavorite" : "Add to Favorite"}
                 </Button>
               </div>
               <div className="border-t block md:hidden">
                 <AddOrEditWord
-                  word={refetchWord}
+                  word={displayWord}
                   triggerButton={<Button variant={"link"}>Edit</Button>}
                 />
               </div>
               <div className="border-t block md:hidden">
                 <Button
                   variant={"link"}
-                  onClick={() => handlePlayPronunciation(refetchWord.word)}
+                  onClick={() => handlePlayPronunciation(displayWord.word)}
                 >
                   Play audio
                 </Button>
@@ -233,7 +234,7 @@ const WordDetail = ({
                   setShowDialog={setShowDeleteDialog}
                   handleDelete={handleDelete}
                   title="Delete word"
-                  message={`Are you sure you want to delete "${refetchWord.word}"?`}
+                  message={`Are you sure you want to delete "${displayWord.word}"?`}
                   isLoading={isDeleting}
                   triggerButton={
                     <Button variant={"link"} className="text-red-600">
@@ -250,13 +251,13 @@ const WordDetail = ({
 
       <Carousel setApi={setApi} className="w-full mt-2 md:mt-4 relative">
         <CarouselContent>
-          {refetchWord.meanings.map((meaning) => (
+          {displayWord.meanings.map((meaning) => (
             <CarouselItem key={meaning.id}>
-              <WordMeaning meaning={meaning} word={refetchWord.word} />
+              <WordMeaning meaning={meaning} word={displayWord.word} />
             </CarouselItem>
           ))}
         </CarouselContent>
-        {refetchWord.meanings.length > 1 && (
+        {displayWord.meanings.length > 1 && (
           <div className="flex gap-1 absolute bottom-1 right-1">
             <IconDisplay
               asButton
