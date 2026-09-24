@@ -186,6 +186,17 @@ const WordTable = ({
         accessorKey: "cefrLevel",
         header: "CEFR level",
         enableSorting: true,
+        filterFn: (row, columnId, value) => {
+          if (!value) return true;
+          const meanings = row.original.meanings;
+          if (value === "none") {
+            return (
+              meanings.length === 0 ||
+              meanings.some((meaning) => !meaning.cefrLevel)
+            );
+          }
+          return meanings.some((meaning) => meaning.cefrLevel === value);
+        },
         cell: ({ row }) => (
           <>
             {row.original.meanings.map((meaning) => (
@@ -193,6 +204,14 @@ const WordTable = ({
             ))}
           </>
         ),
+      },
+      {
+        id: "partOfSpeech",
+        filterFn: (row, columnId, value) => {
+          if (!value) return true;
+          const meanings = row.original.meanings;
+          return meanings.some((meaning) => meaning.partOfSpeech === value);
+        },
       },
       {
         accessorKey: "createdAt",

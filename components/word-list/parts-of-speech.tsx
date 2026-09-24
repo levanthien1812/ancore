@@ -8,7 +8,7 @@ const PartsOfSpeech = ({
   wordType: string;
 }) => {
   return (
-    <p className="font-bold text-sm text-blue-300">
+    <p className="font-bold text-sm text-blue-300 group-hover:text-primary">
       {uniquePos.length > 0 ? uniquePos.join("/") : wordType}
     </p>
   );

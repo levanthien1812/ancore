@@ -80,18 +80,33 @@ const WordGrid = ({
       {
         accessorKey: "type",
         header: "Type",
-        enableSorting: true,
-        enableGlobalFilter: true,
+        enableSorting: false,
+      },
+      {
+        accessorKey: "cefrLevel",
+        header: "CEFR Level",
+        enableSorting: false,
+        filterFn: (row, columnId, value) => {
+          if (!value) return true;
+          const meanings = row.original.meanings;
+          if (value === "none") {
+            return (
+              meanings.length === 0 ||
+              meanings.some((meaning) => !meaning.cefrLevel)
+            );
+          }
+          return meanings.some((meaning) => meaning.cefrLevel === value);
+        },
       },
       {
         accessorKey: "masteryLevel",
         header: "Mastery level",
-        enableSorting: true,
+        enableSorting: false,
       },
       {
         accessorKey: "highlighted",
         header: "Highlighted",
-        enableSorting: true,
+        enableSorting: false,
         enableColumnFilter: true,
         filterFn: "equals",
       },

@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { WordWithMeanings } from "../add-word/add-word-form";
 import { Dot, Volume2Icon } from "lucide-react";
 import WordTitle from "./word-title";
@@ -7,7 +9,6 @@ import { MasteryLevel } from "@/lib/constants/enums";
 import { formatPronunciation } from "@/lib/utils/pronunciation";
 import IconDisplay from "../shared/icon-display";
 import { handlePlayPronunciation } from "@/lib/utils/handlePlayAudio";
-import { WordType } from "@prisma/client";
 import PartsOfSpeech from "./parts-of-speech";
 import { Badge } from "../ui/badge";
 
@@ -24,6 +25,8 @@ const WordCard = ({
   isSelected?: boolean;
   onSelect?: (wordId: string) => void;
 }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   const handleCardClick = () => {
     if (isSelectMode) {
       onSelect?.(word.id);
@@ -32,16 +35,22 @@ const WordCard = ({
     }
   };
 
-  const uniquePos = [...new Set(word.meanings.map((m) => m.partOfSpeech))].map(
-    (pos) => {
-      if (pos && pos.length > 0) return pos;
-      return word.type as WordType;
-    },
-  );
+  const currentMeaning = word.meanings[currentIndex] ?? word.meanings[0];
 
-  const uniqueCefrLevel = [
-    ...new Set(word.meanings.map((m) => m.cefrLevel)),
-  ].filter((level) => level !== null && level.length > 0);
+  const currentPos =
+    currentMeaning?.partOfSpeech && currentMeaning.partOfSpeech.length > 0
+      ? [currentMeaning.partOfSpeech]
+      : word.type
+        ? [word.type as string]
+        : [];
+
+  const currentCefrLevel =
+    currentMeaning?.cefrLevel && currentMeaning.cefrLevel.length > 0
+      ? currentMeaning.cefrLevel
+      : null;
+
+  const currentPronunciation =
+    currentMeaning?.pronunciation || word.meanings[0]?.pronunciation;
 
   return (
     <div
@@ -84,23 +93,23 @@ const WordCard = ({
           </div>
           <div className="flex items-center">
             <p className="text-sm text-white">
-              {formatPronunciation(word.meanings[0]?.pronunciation)}
+              {formatPronunciation(currentPronunciation)}
             </p>
-            {word.meanings[0].pronunciation && uniquePos.length > 0 && (
+            {currentPronunciation && currentPos.length > 0 && (
               <Dot width={16} height={16} color="white" opacity={0.5} />
             )}
-            {uniquePos.length > 0 && (
+            {currentPos.length > 0 && (
               <PartsOfSpeech
-                uniquePos={uniquePos}
+                uniquePos={currentPos}
                 wordType={word.type as string}
               />
             )}
-            {uniquePos.length > 0 && uniqueCefrLevel.length > 0 && (
+            {currentPos.length > 0 && currentCefrLevel && (
               <Dot width={16} height={16} color="white" opacity={0.5} />
             )}
-            {uniqueCefrLevel.length > 0 && (
-              <Badge className="bg-primary-2 text-primary text-[10px] font-bold py-0 px-1 rounded-sm">
-                {uniqueCefrLevel.join("/")}
+            {currentCefrLevel && (
+              <Badge className="bg-primary-2 text-primary text-[10px] font-bold py-0 px-1 rounded-sm group-hover:bg-primary group-hover:text-white">
+                {currentCefrLevel}
               </Badge>
             )}
           </div>
@@ -110,7 +119,29 @@ const WordCard = ({
       <div className="mt-2">
         <WordDefinition
           meanings={word.meanings.map((meaning) => meaning.definition)}
+          wordIndex={currentIndex}
         />
+        {word.meanings.length > 1 && (
+          <div className="flex items-center gap-1.5 mt-2">
+            {word.meanings.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(index);
+                }}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 cursor-pointer focus:outline-none ${
+                  index === currentIndex
+                    ? "bg-white scale-125"
+                    : "bg-white/40 hover:bg-white/70"
+                }`}
+                title={`Meaning ${index + 1}`}
+                aria-label={`View meaning ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
