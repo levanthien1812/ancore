@@ -26,16 +26,20 @@ const Pagination = <TData,>({
 }) => {
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
-      <div>
+      <div className="text-xs uppercase tracking-wider">
         {/* filtered word count */}
-        <span className="text-xs uppercase tracking-wider">
+        <span>
           Page <span className="font-bold">{pagination.pageIndex + 1}</span> of{" "}
           <span className="font-bold">{table.getPageCount()}</span>
         </span>
         {table.getFilteredRowModel().rows.length !==
           table.getCoreRowModel().rows.length && (
-          <span className="text-sm">
-            ({table.getFilteredRowModel().rows.length} results)
+          <span className="ml-2 ">
+            (
+            <span className="font-bold">
+              {table.getFilteredRowModel().rows.length}
+            </span>{" "}
+            results)
           </span>
         )}
       </div>

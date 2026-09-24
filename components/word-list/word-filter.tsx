@@ -4,6 +4,7 @@ import {
   MASTERY_LEVELS,
   PARTS_OF_SPEECH_WORDS,
   PARTS_OF_SPEECH_PHRASES,
+  CEFR_LEVELS,
 } from "@/lib/constants/enums";
 import { Button } from "../ui/button";
 import {
@@ -267,6 +268,30 @@ const WordFilter = ({
       </div>
       {showFilters && (
         <div className="flex flex-col md:flex-row justify-start md:justify-end items-start md:items-center gap-2 p-2 border rounded-md mt-1 bg-blue-200 bg-diagonal-stripes">
+          {/* Select CEFR Level */}
+          <Select
+            onValueChange={(value) =>
+              table.getColumn("cefrLevel")?.setFilterValue(value)
+            }
+            value={
+              (table.getColumn("cefrLevel")?.getFilterValue() as string) || ""
+            }
+          >
+            <SelectTrigger className="w-full md:w-[180px] bg-white">
+              <SelectValue placeholder="Select CEFR Level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="none">No CEFR Level</SelectItem>
+                {CEFR_LEVELS.map((level) => (
+                  <SelectItem key={level} value={level}>
+                    {level.toUpperCase()}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+          {/* Select Part of Speech */}
           <Select
             onValueChange={(value) =>
               table.getColumn("partOfSpeech")?.setFilterValue(value)
@@ -291,6 +316,7 @@ const WordFilter = ({
               </SelectGroup>
             </SelectContent>
           </Select>
+          {/* Select Mastery Level */}
           <Select
             onValueChange={(value) =>
               table.getColumn("masteryLevel")?.setFilterValue(value)
@@ -313,6 +339,7 @@ const WordFilter = ({
               </SelectGroup>
             </SelectContent>
           </Select>
+          {/* Select Type */}
           <Select
             onValueChange={(value) =>
               table.getColumn("type")?.setFilterValue(value)

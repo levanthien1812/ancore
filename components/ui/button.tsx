@@ -12,17 +12,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-primary/90 border-primary-2 hover:border-b-3 hover:border-r-2",
+          "bg-primary text-primary-foreground hover:bg-primary/90 active:bg-primary/80 border-primary-2 hover:border-b-3 hover:border-r-2",
         default2:
-          "bg-primary-2 text-primary-foreground hover:bg-primary-2/90 border-primary hover:border hover:border-b-3 hover:border-r-2",
+          "bg-primary-2 text-primary-foreground hover:bg-primary-2/90 active:bg-primary-2/80 border-primary hover:border hover:border-b-3 hover:border-r-2",
         destructive:
-          "bg-destructive text-white hover:border hover:border-b-3 hover:border-r-2 hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
+          "bg-destructive text-white hover:border hover:border-b-3 hover:border-r-2 hover:bg-destructive/90 active:bg-destructive/80 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border border-border-2 hover:border-b-3 hover:border-r-2 bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border border-border-2 hover:border-b-3 hover:border-r-2 bg-background shadow-xs hover:bg-accent active:bg-accent/90 hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:border hover:border-b-3 hover:border-r-2",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:border hover:border-b-3 hover:border-r-2 active:bg-secondary/70",
         ghost:
-          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
+          "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 active:bg-accent/90",
         link: "text-primary underline-offset-4 hover:underline",
         magic:
           "bg-linear-to-r from-indigo-500 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-colors hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-slate-900",
