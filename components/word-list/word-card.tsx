@@ -102,6 +102,7 @@ const WordCard = ({
               <PartsOfSpeech
                 uniquePos={currentPos}
                 wordType={word.type as string}
+                additionalClasses="group-hover:text-primary"
               />
             )}
             {currentPos.length > 0 && currentCefrLevel && (

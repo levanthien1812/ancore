@@ -296,13 +296,13 @@ const WordDetail = ({
                           <Info className="w-3 h-3 md:w-4 md:h-4 text-blue-300 cursor-pointer hover:text-blue-100" />
                         </PopoverTrigger>
                         <PopoverContent
-                          className="w-48 sm:w-64 max-h-[250px] no-scrollbar p-3 bg-blue-950 border-blue-800 text-white"
+                          className="w-48 sm:w-64 p-3 bg-blue-950 border-blue-800 text-white"
                           side="top"
                         >
                           <h4 className="text-sm font-semibold mb-3">
                             Review History
                           </h4>
-                          <div className="relative border-l border-blue-700 ml-2 space-y-4">
+                          <div className="relative border-l border-blue-700 ml-2 space-y-4 max-h-[250px] custom-scrollbar-y">
                             {reviewInfo.reviewHistory.map((review, i) => (
                               <div key={review.id} className="relative pl-4">
                                 <div className="absolute w-2 h-2 bg-blue-500 rounded-full -left-[4.5px] top-1.5 ring-2 ring-blue-950" />
