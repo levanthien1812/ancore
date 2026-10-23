@@ -52,12 +52,22 @@ import { WordOfTheDay } from "../home/word-of-the-day";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Checkbox } from "../ui/checkbox";
 import { QUERY_KEY } from "@/lib/constants/queryKey";
-import { BookOpen, Info, Layers2, Plus, X } from "lucide-react";
+import {
+  BookOpen,
+  Info,
+  Layers2,
+  Plus,
+  X,
+  AlertCircle,
+  Eye,
+} from "lucide-react";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 import { WordDefinitionOutput } from "@/app/services/fill-word-with-ai";
 import { parseWordFromCambridge } from "@/lib/utils/word-parser-from-cambridge";
 import PasteWordTips from "./paste-word-tips";
+import WordDialog from "../word-card/word-dialog";
+import { cn } from "@/lib/utils";
 import { createNotification } from "@/lib/actions/notification.actions";
 import { MotionButton } from "../shared/motion-button";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
@@ -94,6 +104,10 @@ const AddOrEditWordForm = ({
     word?.type || WordType.Word,
   );
   const [wordExistsError, setWordExistsError] = useState<string | null>(null);
+  const [existingWord, setExistingWord] = useState<WordWithMeanings | null>(
+    null,
+  );
+  const [showWordDetail, setShowWordDetail] = useState(false);
   const session = useSession();
   const [generated, setGenerated] = useState(false);
   const [isPasted, setIsPasted] = useState(false);
@@ -148,13 +162,15 @@ const AddOrEditWordForm = ({
       const exists = await checkWordExists(wordToCheck);
       return exists;
     },
-    onSuccess: (exists) => {
-      if (exists) {
+    onSuccess: (existing) => {
+      if (existing) {
         setWordExistsError(
-          `The word "${enteredWord}" already exists in your vocabulary.`,
+          `The word "${existing.word}" already exists in your vocabulary.`,
         );
+        setExistingWord(existing);
       } else {
         setWordExistsError(null);
+        setExistingWord(null);
       }
     },
   });
@@ -164,6 +180,7 @@ const AddOrEditWordForm = ({
       // Don't check if we are editing the same word
       if (word && word.word.toLowerCase() === wordToCheck.toLowerCase()) {
         setWordExistsError(null);
+        setExistingWord(null);
         return;
       }
       checkWordExistsMutate(wordToCheck);
@@ -264,6 +281,13 @@ const AddOrEditWordForm = ({
       const trimmedValue = value.trim();
       setEnteredWord(value);
       setValue("word", value);
+      if (
+        existingWord &&
+        existingWord.word.toLowerCase() !== trimmedValue.toLowerCase()
+      ) {
+        setWordExistsError(null);
+        setExistingWord(null);
+      }
       if (trimmedValue.length > 0) {
         debouncedCheckWord(trimmedValue);
       } else {
@@ -273,11 +297,12 @@ const AddOrEditWordForm = ({
           reset({ ...INITIAL_WORD, meanings: [INITIAL_MEANING] });
         }
         setWordExistsError(null);
+        setExistingWord(null);
         setIsPasted(false);
         setGenerated(false);
       }
     },
-    [debouncedCheckWord, reset, setValue, setEnteredWord, word],
+    [debouncedCheckWord, reset, setValue, setEnteredWord, word, existingWord],
   );
 
   const onSubmit = (data: WordWithMeanings) => {
@@ -450,269 +475,334 @@ const AddOrEditWordForm = ({
   }, [state, onClose, queryClient, word, user, refetchTodayCount]);
 
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="max-h-[70vh] no-scrollbar overflow-y-auto"
-    >
-      {/* Add a hidden input for the word ID if it exists */}
-      {word?.id && <input type="hidden" {...register("id")} value={word.id} />}
-      <div className="rounded-lg border border-gray-200">
-        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50 rounded-t-lg">
-          <div className="flex gap-2">
-            <Info
-              width={20}
-              height={20}
-              className="text-blue-600 my-auto hidden md:block"
-            />
-            <div>
-              <p className="text-lg font-bold">1. Basic information</p>
-              <p className="text-xs text-muted-foreground">
-                Core details about this word
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-1">
-            <Button
-              type="button"
-              variant={entryType === WordType.Word ? "default" : "outline"}
-              className="py-1 px-2 sm:px-4 rounded-full h-fit"
-              onClick={() => setEntryType(WordType.Word)}
-            >
-              Word
-            </Button>
-            <Button
-              type="button"
-              variant={entryType === WordType.Phrase ? "default" : "outline"}
-              className="py-1 px-2 sm:px-4 rounded-full h-fit"
-              onClick={() => setEntryType(WordType.Phrase)}
-            >
-              Phrase
-            </Button>
-          </div>
-        </div>
-        <div className="w-full border-t border-gray-200 p-2 sm:p-4">
-          <div className="grid grid-cols-1 md:grid-cols-12">
-            <div className="col-span-7 pe-0 border-e-0 md:pe-4 md:border-e">
-              <div className="flex gap-2 items-end">
-                <WordSuggest
-                  enteredWord={enteredWord}
-                  setEnteredWord={handleWordChange}
-                  existingWord={word?.word || wordOfTheDay?.word}
-                  entryType={entryType}
-                  onPaste={handlePasteWord}
-                />
-                <Button
-                  type="button"
-                  variant={"magic"}
-                  onClick={handleClickFillWithAi}
-                  disabled={
-                    enteredWord.trim().length === 0 ||
-                    isFillingWithAi ||
-                    !!wordExistsError ||
-                    generated
-                  }
-                >
-                  {isPasted
-                    ? "✨"
-                    : isFillingWithAi
-                      ? "✨ Generating..."
-                      : generated
-                        ? `Generated by AI`
-                        : `✨ Auto-fill details`}
-                </Button>
-              </div>
-            </div>
-            <div className="col-span-5 flex gap-2 ps-0 mt-3 md:ps-4 md:mt-0">
-              <div className="grid gap-1 w-full">
-                <Label htmlFor="masteryLevel" className="text-right">
-                  Mastery Level
-                </Label>
-                <Controller
-                  control={control}
-                  name="masteryLevel"
-                  render={({ field }) => (
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value || undefined}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select mastery level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {MASTERY_LEVELS.map((level) => (
-                            <SelectItem key={level} value={level}>
-                              {level}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-            </div>
-            <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
-          </div>
-          {(wordExistsError || !state?.success) && (
-            <FieldError error={wordExistsError || state?.message} />
-          )}
-          <div className="flex justify-between gap-2 items-end">
-            <div className="flex gap-2 mt-4">
-              <Checkbox
-                id="highlighted"
-                {...register("highlighted")}
-                checked={highlighted}
-                onCheckedChange={(value) => setValue("highlighted", !!value)}
+    <>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="max-h-[70vh] no-scrollbar overflow-y-auto"
+      >
+        {/* Add a hidden input for the word ID if it exists */}
+        {word?.id && (
+          <input type="hidden" {...register("id")} value={word.id} />
+        )}
+        <div className="rounded-lg border border-gray-200">
+          <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50 rounded-t-lg">
+            <div className="flex gap-2">
+              <Info
+                width={20}
+                height={20}
+                className="text-blue-600 my-auto hidden md:block"
               />
               <div>
-                <Label htmlFor="highlighted" className="text-right">
-                  Highlighed
-                </Label>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Mark this word as highlighted in your content
+                <p className="text-lg font-bold">1. Basic information</p>
+                <p className="text-xs text-muted-foreground">
+                  Core details about this word
                 </p>
               </div>
             </div>
-            <PasteWordTips />
-          </div>
-        </div>
-      </div>
-      <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
-        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
-          <div className="flex gap-2">
-            <BookOpen
-              width={20}
-              height={20}
-              className="text-blue-600 my-auto hidden md:block"
-            />
-            <div>
-              <p className="text-lg font-bold">2. Meaning ({fields.length})</p>
-              <p className="text-xs text-muted-foreground">
-                A word can have multiple meanings. Each meaning has its own
-                pronunication and CEFR level.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-1">
-            <Button
-              variant={"outline"}
-              type="button"
-              size={"sm"}
-              onClick={handleClickAddMeaning}
-            >
-              <Plus width={14} height={14} className="text-blue-600" />
-              Add meaning
-            </Button>
-          </div>
-        </div>
-        <div className="w-full border-t border-gray-200">
-          <div className="flex justify-end">
-            <AiMeaningSuggest
-              enteredWord={enteredWord}
-              existingMeanings={meanings}
-              onSuccess={handleAiSuccess}
-            />
-          </div>
-          <div>
-            {fields.map((field, index) => (
-              <Meaning
-                key={field.id}
-                index={index}
-                onRemove={handleRemoveMeaning}
-                register={register}
-                setValue={setValue}
-                getValues={getValues}
-                control={control}
-                errors={state?.errors?.meanings}
-                entryType={entryType}
-                count={fields.length}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
-        <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
-          <div className="flex gap-2">
-            <Layers2
-              width={20}
-              height={20}
-              className="text-blue-600 my-auto hidden md:block"
-            />
-            <div>
-              <p className="text-lg font-bold">3. Additional Infomation</p>
-              <p className="text-xs text-muted-foreground">
-                Related tags for this words
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="w-full border-t border-gray-200 p-2 sm:p-4">
-          <div className="grid gap-1">
-            <Label htmlFor="tags" className="text-right">
-              Tags
-            </Label>
-            <Input
-              id="tags"
-              placeholder="Add tags ..."
-              value={currentTagInput}
-              onChange={(e) => setCurrentTagInput(e.target.value)}
-              onKeyDown={handleAddTag}
-            />
-            <FieldError error={state?.errors?.tags?.join(", ")} />
-            <p className="text-xs text-muted-foreground">
-              Press Enter to add a tag
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {parsedTags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="flex items-center gap-1 tracking-normal uppercase"
+            <div className="flex gap-1">
+              <Button
+                type="button"
+                variant={entryType === WordType.Word ? "default" : "outline"}
+                className="py-1 px-2 sm:px-4 rounded-full h-fit"
+                onClick={() => setEntryType(WordType.Word)}
               >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => handleRemoveTag(tag)}
-                  className="ml-1 text-muted-foreground hover:text-foreground"
-                >
-                  <X width={12} height={12} />
-                </button>
-              </Badge>
-            ))}
+                Word
+              </Button>
+              <Button
+                type="button"
+                variant={entryType === WordType.Phrase ? "default" : "outline"}
+                className="py-1 px-2 sm:px-4 rounded-full h-fit"
+                onClick={() => setEntryType(WordType.Phrase)}
+              >
+                Phrase
+              </Button>
+            </div>
+          </div>
+          <div className="w-full border-t border-gray-200 p-2 sm:p-4">
+            <div className="grid grid-cols-1 md:grid-cols-12">
+              <div className="col-span-7 pe-0 border-e-0 md:pe-4 md:border-e">
+                <div className="flex gap-2 items-end">
+                  <WordSuggest
+                    enteredWord={enteredWord}
+                    setEnteredWord={handleWordChange}
+                    existingWord={word?.word || wordOfTheDay?.word}
+                    entryType={entryType}
+                    onPaste={handlePasteWord}
+                  />
+                  <Button
+                    type="button"
+                    variant={"magic"}
+                    onClick={handleClickFillWithAi}
+                    disabled={
+                      enteredWord.trim().length === 0 ||
+                      isFillingWithAi ||
+                      !!wordExistsError ||
+                      generated
+                    }
+                  >
+                    {isPasted
+                      ? "✨"
+                      : isFillingWithAi
+                        ? "✨ Generating..."
+                        : generated
+                          ? `Generated by AI`
+                          : `✨ Auto-fill details`}
+                  </Button>
+                </div>
+              </div>
+              <div className="col-span-5 flex gap-2 ps-0 mt-3 md:ps-4 md:mt-0">
+                <div className="grid gap-1 w-full">
+                  <Label htmlFor="masteryLevel" className="text-right">
+                    Mastery Level
+                  </Label>
+                  <Controller
+                    control={control}
+                    name="masteryLevel"
+                    render={({ field }) => (
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || undefined}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select mastery level" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            {MASTERY_LEVELS.map((level) => (
+                              <SelectItem key={level} value={level}>
+                                {level}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+              <FieldError error={state?.errors?.masteryLevel?.join(", ")} />
+            </div>
+            {wordExistsError && (
+              <div
+                className={cn(
+                  "flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-2 p-2.5 px-3 rounded-lg text-sm",
+                  existingWord
+                    ? "bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400"
+                    : "bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400",
+                )}
+              >
+                <div className="flex items-center gap-1.5">
+                  <AlertCircle
+                    className={cn(
+                      "w-4 h-4 shrink-0",
+                      existingWord ? "text-amber-500" : "text-red-500",
+                    )}
+                  />
+                  <span>{wordExistsError}</span>
+                </div>
+                {existingWord && (
+                  <div className="self-end sm:self-auto flex gap-1 items-center">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setShowWordDetail(true)}
+                      className="h-7 text-xs font-semibold gap-1.5 border-amber-500/40 hover:bg-amber-500/20 hover:text-amber-900 dark:hover:text-amber-200 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      View word
+                    </Button>
+                    <Button
+                      variant={"outline"}
+                      size={"sm"}
+                      type="button"
+                      className="h-7 text-xs font-semibold gap-1.5 border-amber-500/40 hover:bg-amber-500/20 hover:text-amber-900 dark:hover:text-amber-200 cursor-pointer"
+                      onClick={() => {
+                        handleWordChange("");
+                      }}
+                    >
+                      <X width={18} height={18} />
+                      Clear
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+            {!wordExistsError && !state?.success && state?.message && (
+              <FieldError error={state.message} />
+            )}
+            <div className="flex justify-between gap-2 items-end">
+              <div className="flex gap-2 mt-4">
+                <Checkbox
+                  id="highlighted"
+                  {...register("highlighted")}
+                  checked={highlighted}
+                  onCheckedChange={(value) => setValue("highlighted", !!value)}
+                />
+                <div>
+                  <Label htmlFor="highlighted" className="text-right">
+                    Highlighed
+                  </Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Mark this word as highlighted in your content
+                  </p>
+                </div>
+              </div>
+              <PasteWordTips />
+            </div>
           </div>
         </div>
-      </div>
-      <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 bg-blue-200 bg-diagonal-stripes">
-        {word && (
+        <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
+          <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
+            <div className="flex gap-2">
+              <BookOpen
+                width={20}
+                height={20}
+                className="text-blue-600 my-auto hidden md:block"
+              />
+              <div>
+                <p className="text-lg font-bold">
+                  2. Meaning ({fields.length})
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  A word can have multiple meanings. Each meaning has its own
+                  pronunication and CEFR level.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <Button
+                variant={"outline"}
+                type="button"
+                size={"sm"}
+                onClick={handleClickAddMeaning}
+              >
+                <Plus width={14} height={14} className="text-blue-600" />
+                Add meaning
+              </Button>
+            </div>
+          </div>
+          <div className="w-full border-t border-gray-200">
+            <div className="flex justify-end">
+              <AiMeaningSuggest
+                enteredWord={enteredWord}
+                existingMeanings={meanings}
+                onSuccess={handleAiSuccess}
+              />
+            </div>
+            <div>
+              {fields.map((field, index) => (
+                <Meaning
+                  key={field.id}
+                  index={index}
+                  onRemove={handleRemoveMeaning}
+                  register={register}
+                  setValue={setValue}
+                  getValues={getValues}
+                  control={control}
+                  errors={state?.errors?.meanings}
+                  entryType={entryType}
+                  count={fields.length}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
+          <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
+            <div className="flex gap-2">
+              <Layers2
+                width={20}
+                height={20}
+                className="text-blue-600 my-auto hidden md:block"
+              />
+              <div>
+                <p className="text-lg font-bold">3. Additional Infomation</p>
+                <p className="text-xs text-muted-foreground">
+                  Related tags for this words
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="w-full border-t border-gray-200 p-2 sm:p-4">
+            <div className="grid gap-1">
+              <Label htmlFor="tags" className="text-right">
+                Tags
+              </Label>
+              <Input
+                id="tags"
+                placeholder="Add tags ..."
+                value={currentTagInput}
+                onChange={(e) => setCurrentTagInput(e.target.value)}
+                onKeyDown={handleAddTag}
+              />
+              <FieldError error={state?.errors?.tags?.join(", ")} />
+              <p className="text-xs text-muted-foreground">
+                Press Enter to add a tag
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 mt-2">
+              {parsedTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="flex items-center gap-1 tracking-normal uppercase"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTag(tag)}
+                    className="ml-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <X width={12} height={12} />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 bg-blue-200 bg-diagonal-stripes">
+          {word && (
+            <Button
+              variant={"secondary"}
+              type="button"
+              onClick={onClose}
+              className="text-red-600"
+            >
+              Delete
+            </Button>
+          )}
           <Button
             variant={"secondary"}
             type="button"
             onClick={onClose}
-            className="text-red-600"
+            className="ms-auto"
           >
-            Delete
+            Cancel
           </Button>
-        )}
-        <Button
-          variant={"secondary"}
-          type="button"
-          onClick={onClose}
-          className="ms-auto"
-        >
-          Cancel
-        </Button>
-        <MotionButton
-          type="submit"
-          disabled={isLoading || !!wordExistsError}
-          isLoading={isLoading}
-        >
-          {!isLoading ? "Save changes" : "Saving changes..."}
-        </MotionButton>
-      </div>
-    </form>
+          <MotionButton
+            type="submit"
+            disabled={isLoading || !!wordExistsError}
+            isLoading={isLoading}
+          >
+            {!isLoading ? "Save changes" : "Saving changes..."}
+          </MotionButton>
+        </div>
+      </form>
+
+      {existingWord && (
+        <WordDialog
+          word={existingWord}
+          open={showWordDetail}
+          onOpenChange={(open) => {
+            setShowWordDetail(open);
+            if (!open && enteredWord.trim()) {
+              checkWord(enteredWord.trim());
+            }
+          }}
+        />
+      )}
+    </>
   );
 };
 
