@@ -704,16 +704,25 @@ export const bulkUpdateWords = async (prevState: unknown, formData: FormData) =>
   });
 
 export const checkWordExists = async (word: string) =>
-  authenticationAction(async (userId) => {
-    const existingWord = await prisma.word.findFirst({
-      where: {
-        userId,
-        word: word.toLowerCase(),
-      },
-    });
+  authenticationAction(
+    async (userId) => {
+      const trimmed = word?.trim().toLowerCase();
+      if (!trimmed) return null;
 
-    return existingWord !== null;
-  });
+      const existingWord = await prisma.word.findFirst({
+        where: {
+          userId,
+          word: trimmed,
+        },
+        include: {
+          meanings: true,
+        },
+      });
+
+      return existingWord;
+    },
+    null,
+  );
 
 export const fillWithAI = async (
   word: string,
