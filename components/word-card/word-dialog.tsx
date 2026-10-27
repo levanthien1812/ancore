@@ -79,10 +79,7 @@ const WordDialog = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       {word && (
-        <DialogContent
-          className="bg-primary z-[60] sm:max-w-xl max-h-[90vh] overflow-y-auto text-white [&_[data-slot=dialog-close]]:text-white"
-          overlayClassName="z-[60]"
-        >
+        <DialogContent className="bg-primary">
           <DialogTitle className="text-white">Word details</DialogTitle>
           <WordDetailDialog word={word} />
           <DialogFooter>
