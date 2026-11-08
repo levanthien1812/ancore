@@ -15,6 +15,7 @@ import WordSuggestion from "@/components/word-list/word-suggestion";
 import AddOrEditWord from "@/components/add-word/add-word";
 import { MotionButton } from "@/components/shared/motion-button";
 import { useLayoutStore } from "@/lib/stores/layout-store";
+import { ArrowBigDownDash, ArrowDownFromLine } from "lucide-react";
 
 const WordsPage = () => {
   const [isExploring, setIsExploring] = useState(false);
@@ -185,6 +186,7 @@ const WordsPage = () => {
             isLoading={isFetchingNextPage}
             disabled={isFetchingAll || isFetchingNextPage}
           >
+            <ArrowDownFromLine width={16} />
             {isFetchingNextPage ? "Loading..." : "Load more words"}
           </Button>
           {/* Fetch all words button */}
@@ -195,6 +197,7 @@ const WordsPage = () => {
             isLoading={isFetchingAll}
             disabled={isFetchingNextPage || isFetchingAll}
           >
+            <ArrowBigDownDash width={16} />
             {isFetchingAll ? "Loading all..." : "Fetch all words"}
           </Button>
         </div>
