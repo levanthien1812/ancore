@@ -10,6 +10,7 @@ import {
   FlipHorizontal2,
   Lightbulb,
   Sun,
+  Volume2Icon,
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { buildReviewHintsPrompt } from "@/lib/ai-prompts/review-hints";
@@ -30,8 +31,12 @@ import {
 } from "@/lib/constants/constant";
 import { MotionButton } from "../shared/motion-button";
 import { StarBurstWrapper } from "../shared/star-burst-wrapper";
-import { handlePlayAudio } from "@/lib/utils/handlePlayAudio";
+import {
+  handlePlayAudio,
+  handlePlayPronunciation,
+} from "@/lib/utils/handlePlayAudio";
 import { useCurrentUser } from "@/lib/hooks/use-current-user";
+import IconDisplay from "../shared/icon-display";
 
 type Hint = Partial<
   Pick<WordMeaning, "synonyms" | "antonyms" | "examples" | "guideWord">
@@ -277,8 +282,16 @@ const FrontFace = ({
           />
         )}
         {distinctPronunciations.length > 0 && (
-          <div className="text-sm text-white/80 mt-1 text-center">
-            {distinctPronunciations.join(", ")}
+          <div className="flex items-center gap-2 mt-2">
+            <div className="text-sm text-white/80 text-center">
+              {distinctPronunciations.join(", ")}{" "}
+            </div>
+            <IconDisplay
+              icon={Volume2Icon}
+              size="sm"
+              asButton
+              onClick={() => handlePlayPronunciation(word.word)}
+            />
           </div>
         )}
       </div>
