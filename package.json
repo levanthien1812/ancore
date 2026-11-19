@@ -7,7 +7,8 @@
     "build": "prisma generate && next build",
     "start2": "next start",
     "lint": "eslint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:update-words-reviewed-count": "ts-node db/update-words-reviewed-count.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
