@@ -484,8 +484,8 @@ const AddOrEditWordForm = ({
         {word?.id && (
           <input type="hidden" {...register("id")} value={word.id} />
         )}
-        <div className="rounded-lg border border-gray-200">
-          <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50 rounded-t-lg">
+        <div className="">
+          <div className="sticky top-0 z-20 w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50 rounded-t-lg border border-gray-200">
             <div className="flex gap-2">
               <Info
                 width={20}
@@ -518,7 +518,7 @@ const AddOrEditWordForm = ({
               </Button>
             </div>
           </div>
-          <div className="w-full border-t border-gray-200 p-2 sm:p-4">
+          <div className="w-full p-2 sm:p-4 border border-gray-200 rounded-b-lg">
             <div className="grid grid-cols-1 md:grid-cols-12">
               <div className="col-span-7 pe-0 border-e-0 md:pe-4 md:border-e">
                 <div className="flex gap-2 items-end">
@@ -652,8 +652,8 @@ const AddOrEditWordForm = ({
             </div>
           </div>
         </div>
-        <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
-          <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
+        <div className="mt-2">
+          <div className="sticky top-0 z-20 w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50 rounded-t-lg border border-gray-200">
             <div className="flex gap-2">
               <BookOpen
                 width={20}
@@ -682,7 +682,7 @@ const AddOrEditWordForm = ({
               </Button>
             </div>
           </div>
-          <div className="w-full border-t border-gray-200">
+          <div className="w-full border border-gray-200 rounded-b-lg">
             <div className="flex justify-end">
               <AiMeaningSuggest
                 enteredWord={enteredWord}
@@ -708,8 +708,8 @@ const AddOrEditWordForm = ({
             </div>
           </div>
         </div>
-        <div className="rounded-lg border border-gray-200 overflow-hidden mt-2">
-          <div className="w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50">
+        <div className="mt-2">
+          <div className="sticky top-0 z-20 w-full px-2 sm:px-4 py-2 flex items-center justify-between gap-2 bg-gray-50 rounded-t-lg border border-gray-200">
             <div className="flex gap-2">
               <Layers2
                 width={20}
@@ -724,7 +724,7 @@ const AddOrEditWordForm = ({
               </div>
             </div>
           </div>
-          <div className="w-full border-t border-gray-200 p-2 sm:p-4">
+          <div className="w-full p-2 sm:p-4 border border-gray-200 rounded-b-lg">
             <div className="grid gap-1">
               <Label htmlFor="tags" className="text-right">
                 Tags
@@ -761,7 +761,7 @@ const AddOrEditWordForm = ({
             </div>
           </div>
         </div>
-        <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 bg-blue-200 bg-diagonal-stripes">
+        <div className="flex gap-2 mt-2 p-2 w-full rounded-md border sticky bottom-0 z-30 bg-blue-200 bg-diagonal-stripes">
           {word && (
             <Button
               variant={"secondary"}
