@@ -9,6 +9,7 @@ import {
   LogOut,
   NotebookPen,
   Mic,
+  CalendarDays,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo, useState, useEffect } from "react";
@@ -191,6 +192,11 @@ const Sidebar = () => {
         title: "Talk",
         icon: <Mic width={22} />,
         path: "/talk",
+      },
+      {
+        title: "Activities",
+        icon: <CalendarDays width={22} />,
+        path: "/activities",
       },
     ];
   }, [handleAcceptNotification, handleDismissNotification]);

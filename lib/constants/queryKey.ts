@@ -18,4 +18,5 @@ export const QUERY_KEY = {
   GET_WORDS_ADDED_TODAY: "getWordsAddedToday",
   GET_REVIEW_INFO: "getReviewInfo",
   GET_WORD: "getWord",
+  GET_DAILY_ACTIVITIES: "getDailyActivities",
 };
