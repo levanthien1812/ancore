@@ -173,6 +173,7 @@ export const updateReviewSession = async (
   studySessionId: string,
   summary: {
     durationSeconds: number;
+    wordsReviewedCount?: number;
   },
 ) =>
   authenticationAction(async (userId) => {
