@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/carousel";
 import type { CarouselApi } from "@/components/ui/carousel";
 import { WordWithMeanings } from "../add-word/add-word-form";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { updateReviewSession } from "@/lib/actions/review.actions";
 import {
@@ -38,6 +38,7 @@ const ReviewCarousel = ({
     useState<StudySessionWithWordReviews | null>(null);
   const { data: user } = useCurrentUser();
   const [reviewQueue, setReviewQueue] = useState(words);
+  const reviewedWordIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!api) {
@@ -110,6 +111,9 @@ const ReviewCarousel = ({
     const currentWord = reviewQueue[current];
     if (!currentWord) return;
 
+    reviewedWordIdsRef.current.add(currentWord.id);
+    const wordsReviewedCount = reviewedWordIdsRef.current.size;
+
     const isForgotten = performance === ReviewPerformance.Forgot;
     // Only allow words from the original batch to be re-queued.
     // This ensures that "extra" words are only shown once, even if forgotten again.
@@ -126,7 +130,10 @@ const ReviewCarousel = ({
       (new Date().getTime() - startTime.getTime()) / 1000,
     );
     if (studySessionId) {
-      updateReviewSession(studySessionId, { durationSeconds });
+      updateReviewSession(studySessionId, {
+        durationSeconds,
+        wordsReviewedCount,
+      });
     }
   };
 
@@ -134,10 +141,13 @@ const ReviewCarousel = ({
     const durationSeconds = Math.floor(
       (new Date().getTime() - startTime.getTime()) / 1000,
     );
+    const wordsReviewedCount = reviewedWordIdsRef.current.size;
+
     startTransition(async () => {
       if (studySessionId) {
         const studySession = await updateReviewSession(studySessionId, {
           durationSeconds,
+          wordsReviewedCount,
         });
         setStudySession(studySession);
       }
