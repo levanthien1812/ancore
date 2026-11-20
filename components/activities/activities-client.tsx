@@ -162,7 +162,7 @@ export default function ActivitiesClient() {
     (activities ?? []).filter((a) => a.type === type).length;
 
   return (
-    <div className="mx-auto p-2 sm:p-4 bg-gray-100 min-h-full space-y-3 sm:space-y-4">
+    <div className="mx-auto p-2 sm:p-4 bg-gray-50 min-h-full space-y-3 sm:space-y-4">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
@@ -252,9 +252,9 @@ export default function ActivitiesClient() {
       </div>
 
       {/* Stats Summary Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {/* Total Summary */}
-        <div className="col-span-2 sm:col-span-1 bg-white p-3 rounded-2xl border shadow-xs flex flex-col justify-between">
+        <div className="col-span-1 bg-white p-3 rounded-2xl border shadow-xs flex flex-col justify-start sm:justify-between">
           <span className="text-xs font-medium text-muted-foreground">
             Total Activities
           </span>
@@ -267,45 +267,47 @@ export default function ActivitiesClient() {
         </div>
 
         {/* 4 Type Badges */}
-        {ALL_TYPES.map((type) => {
-          const { label, Icon, countClass, dotClass } = typeConfig[type];
-          const count = isLoading ? "-" : countByType(type);
-          const isSelected = selectedTypes.includes(type);
+        <div className="gap-2 col-span-2 sm:col-span-4 grid grid-cols-2 sm:grid-cols-4">
+          {ALL_TYPES.map((type) => {
+            const { label, Icon, countClass, dotClass } = typeConfig[type];
+            const count = isLoading ? "-" : countByType(type);
+            const isSelected = selectedTypes.includes(type);
 
-          return (
-            <button
-              key={type}
-              type="button"
-              onClick={() => toggleType(type)}
-              className={cn(
-                "bg-white p-3 rounded-2xl border shadow-xs text-left transition-all cursor-pointer flex flex-col justify-between hover:border-gray-300",
-                isSelected
-                  ? "ring-2 ring-primary/20 border-primary/30"
-                  : "opacity-60 grayscale-[30%]",
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-600">
-                  {label}
-                </span>
-                <div
-                  className={cn("w-2 h-2 rounded-full", isSelected ? dotClass : "bg-gray-300")}
-                />
-              </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <span className="text-xl font-bold text-gray-900">{count}</span>
-                <div
-                  className={cn(
-                    "p-1.5 rounded-lg",
-                    countClass,
-                  )}
-                >
-                  <Icon width={14} height={14} />
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => toggleType(type)}
+                className={cn(
+                  "bg-white p-3 rounded-2xl border shadow-xs text-left transition-all cursor-pointer flex flex-col justify-between hover:border-gray-300",
+                  isSelected
+                    ? "ring-2 ring-primary/20 border-primary/30"
+                    : "opacity-60 grayscale-[30%]",
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-600">
+                    {label}
+                  </span>
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full",
+                      isSelected ? dotClass : "bg-gray-300",
+                    )}
+                  />
                 </div>
-              </div>
-            </button>
-          );
-        })}
+                <div className="flex items-center justify-between mt-1.5">
+                  <span className="text-xl font-bold text-gray-900">
+                    {count}
+                  </span>
+                  <div className={cn("p-1.5 rounded-lg", countClass)}>
+                    <Icon width={14} height={14} />
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Filter Chips Bar */}
@@ -324,7 +326,9 @@ export default function ActivitiesClient() {
                 size="sm"
                 className={cn(
                   "gap-1.5 text-xs h-7 px-2.5 font-medium rounded-xl transition-all",
-                  isActive ? activeClass : "bg-white text-gray-600 hover:bg-gray-50",
+                  isActive
+                    ? activeClass
+                    : "bg-white text-gray-600 hover:bg-gray-50",
                 )}
                 onClick={() => toggleType(type)}
               >
@@ -365,20 +369,24 @@ export default function ActivitiesClient() {
               No activities found
             </p>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-sm mt-1">
-              {activities && activities.length > 0 && selectedTypes.length < ALL_TYPES.length
+              {activities &&
+              activities.length > 0 &&
+              selectedTypes.length < ALL_TYPES.length
                 ? "Activities exist for this day but are hidden by your filter. Try enabling more activity types."
                 : `No activity was recorded on ${formatSelectedDate(selectedDate)}.`}
             </p>
-            {activities && activities.length > 0 && selectedTypes.length < ALL_TYPES.length && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={selectAllTypes}
-                className="mt-4 rounded-xl text-xs font-semibold"
-              >
-                Reset filters
-              </Button>
-            )}
+            {activities &&
+              activities.length > 0 &&
+              selectedTypes.length < ALL_TYPES.length && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={selectAllTypes}
+                  className="mt-4 rounded-xl text-xs font-semibold"
+                >
+                  Reset filters
+                </Button>
+              )}
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
