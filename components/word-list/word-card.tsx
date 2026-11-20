@@ -79,6 +79,7 @@ const WordCard = ({
               onClick={handleCardClick}
               disabled={isSelectMode}
             />
+
             <IconDisplay
               icon={Volume2Icon}
               asButton
