@@ -43,13 +43,13 @@ const ReviewTabsWrapper = ({ count, activeTab }: ReviewTabsWrapperProps) => {
           Statictics
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="start" className="flex-1">
+      <TabsContent value="start" className="flex-1 bg-white">
         <ReviewIntro count={count} />
       </TabsContent>
-      <TabsContent value="history" className="flex-1">
+      <TabsContent value="history" className="flex-1 bg-white">
         <ReviewHistory />
       </TabsContent>
-      <TabsContent value="statistics" className="flex-1">
+      <TabsContent value="statistics" className="flex-1 bg-white">
         <ReviewStats />
       </TabsContent>
     </Tabs>

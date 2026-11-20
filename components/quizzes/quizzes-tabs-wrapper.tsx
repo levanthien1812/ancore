@@ -34,14 +34,14 @@ const QuizzesTabsWrapper = ({
         <TabsTrigger value="start">Start Quiz</TabsTrigger>
         <TabsTrigger value="history">Recent Quizzes</TabsTrigger>
       </TabsList>
-      <TabsContent value="start">
+      <TabsContent value="start" className="bg-white">
         <QuizIntro
           wordsToQuizCount={words.length}
           estimatedTime={estimatedTimeInMinutes}
           specificWords={wordsParam ? words.map((w) => w.word) : undefined}
         />
       </TabsContent>
-      <TabsContent value="history">
+      <TabsContent value="history" className="bg-white">
         <RecentQuizzes />
       </TabsContent>
     </Tabs>

@@ -18,7 +18,7 @@ export default async function RootLayout({
       <Header />
       <div className="flex w-full grow overflow-hidden flex-col-reverse md:flex-row">
         <Sidebar />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-gray-50">{children}</main>
       </div>
     </div>
   );
